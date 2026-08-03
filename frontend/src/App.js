@@ -1,53 +1,125 @@
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { AuthProvider } from "@/lib/auth-context";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Layout } from "@/components/Layout";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
+import Discover from "@/pages/Discover";
+import VenueDetail from "@/pages/VenueDetail";
+import CheckIn from "@/pages/CheckIn";
+import Wallet from "@/pages/Wallet";
+import Redeem from "@/pages/Redeem";
+import Profile from "@/pages/Profile";
+import StaffDashboard from "@/pages/StaffDashboard";
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+function AppRoutes() {
   return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/discover"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Discover />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/venues/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <VenueDetail />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/checkin/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CheckIn />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wallet"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Wallet />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/redeem"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Redeem />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Profile />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff"
+        element={
+          <ProtectedRoute staff>
+            <Layout>
+              <StaffDashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
-};
+}
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <AppRoutes />
+          <Toaster
+            theme="dark"
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: "#161616",
+                border: "1px solid #2A2A2A",
+                color: "#F4F4EE",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: "0.85rem",
+                letterSpacing: "0.02em",
+                borderRadius: "2px",
+              },
+            }}
+          />
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );

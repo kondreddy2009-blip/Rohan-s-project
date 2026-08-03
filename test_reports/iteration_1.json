@@ -1,0 +1,35 @@
+{
+  "summary": "First-pass MVP testing of Ritual cross-venue loyalty platform. Backend pytest: 19/20 passed, 1 skipped (dependent). Frontend Playwright E2E: full critical path passes — admin login → /discover with 6 venues + Day/Night filters → venue detail → /checkin → confirm arrival (+100 pts) → feedback → /wallet (balance updated, ledger + Held in reserve shown) → /redeem picks Lumen + Complimentary Signature (500) → reservation code R-XXXXXXXX generated. Staff login lands on /staff (Lumen only), status button 'Filling In' updates venue and shows 'Room set to Filling In' toast. Regular member Alex is correctly redirected from /staff to /discover. Backend authorization checks (staff cross-venue 403, non-staff 403) all pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/wallet/redeem", "issue": "Tier gate check runs AFTER balance check. A Regular member trying `inner_experience` (1000 pts, Devotee-required) with insufficient balance gets 400 'Not enough Ritual Points' instead of the intended 403 'reserved for Devotee'. Request explicitly stated 'Backend should return 403 if bypassed'. Reorder: perform tier-gate check BEFORE balance check in /app/backend/server.py around line 476."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Reorder tier-gate vs balance check in POST /api/wallet/redeem so tier gate returns 403 before the 400 balance error (server.py ~line 476-486)."
+  ],
+  "critical_code_review_comments": [
+    "server.py /wallet/redeem: tier check should precede balance check (see minor issue).",
+    "server.py: no rate limiting / brute force lockout on /api/auth/login — playbook mentions expected lockout after 5 fails. Not implemented. Consider adding if required by playbook.",
+    "server.py: seed_database() runs on every startup and overwrites venue status/capacity via `$set` of the full doc — a staff status update will be reset if backend restarts. Non-critical for demo but worth noting.",
+    "server.py seed_database preserves user ID on existing users (good) but always rewrites password_hash — this is correct for admin-password rotation via env.",
+    "server.py: JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD are read at import via os.environ[...] — will crash fast if missing (good). bcrypt hash format $2b$ confirmed via login test.",
+    "server.py: CORS 'allow_origins=[\"*\"]' fallback combined with allow_credentials=True is invalid per browsers; current .env sets explicit origins so it works, but the default fallback in code would break if CORS_ORIGINS is unset.",
+    "Frontend axios `withCredentials: true` and httpOnly SameSite=None cookies verified working across preview domain."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "95% (19/20 passing, 1 minor tier-gate ordering)", "frontend": "100% of tested critical flows"},
+  "test_credentials": "Read from /app/memory/test_credentials.md — all 5 accounts valid, admin=bhandariyashvee@gmail.com/ritual2026.",
+  "seed_data_creation": "None; used pre-seeded fixtures. Test created 1 event titled 'TEST_Event' at Lumen and 3 admin redemptions during E2E (admin balance dropped from 1240 to 940 across test runs — safe for demo).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest at /app/backend/tests/backend_test.py runs via `pytest backend/tests/backend_test.py -v`. The tier-gate test asserts 403 which currently fails as 400 — main agent should fix ordering in wallet/redeem then this test will pass. Admin balance may be depleted across runs (was 940 after run); reseed by restarting won't reset balance since users are updated in-place. Frontend flows confirmed end-to-end on mobile viewport 390x844.",
+  "rca of the issue": "Tier gate 400 vs 403: server.py /wallet/redeem checks `balance < perk.cost` (returns 400) before `user_tier_idx < perk_tier_idx` (returns 403). For low-balance Regular users this masks the tier violation. Fix: swap the two blocks so tier check runs first."
+}

@@ -1,0 +1,108 @@
+{
+  "theme": "dark",
+  "design_philosophy": "Ritual is an ultra-premium, cross-venue loyalty platform. It must feel like an exclusive members' club or airline elite-status program, drawing heavily from editorial, fashion-magazine aesthetics (think Kinfolk or a NYT editorial spread). Reject food delivery or standard nightlife app cliches. Design should be expensive, restrained, and considered.",
+  "colors": {
+    "background": "#0F0F0F",
+    "surface": "#161616",
+    "surface_elevated": "#1E1E1E",
+    "text_primary": "#F4F4EE",
+    "text_secondary": "#8E8E8E",
+    "accent_primary": "#C2A36B",
+    "accent_hover": "#D1B37D",
+    "border": "#2A2A2A"
+  },
+  "typography": {
+    "heading_font": "Cormorant Garamond, Playfair Display, serif",
+    "body_font": "Manrope, Helvetica Neue, sans-serif",
+    "h1": "text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-[#F4F4EE]",
+    "h2": "text-2xl sm:text-3xl lg:text-4xl font-normal text-[#F4F4EE]",
+    "h3": "text-xl sm:text-2xl font-normal text-[#F4F4EE]",
+    "body": "text-base leading-relaxed text-[#8E8E8E] font-light",
+    "labels_and_overline": "text-xs font-semibold tracking-[0.2em] uppercase text-[#8E8E8E]"
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Generous. Use p-8, p-12, or py-24 for section breathing room.",
+    "cards": "Invitations, not listings. Large imagery, minimal text overlay, subtle gradients (from-black/80 to-transparent). Avoid hard borders.",
+    "grids": "Asymmetric grids. Avoid default equal columns. Mix large dominant hero cells with supporting smaller ones.",
+    "general": "No more than one primary action per screen. Generous negative space."
+  },
+  "components": {
+    "button_primary": "bg-[#C2A36B] text-[#0F0F0F] hover:bg-[#D1B37D] px-8 py-3 rounded-none transition-colors duration-300 font-medium tracking-wide text-sm",
+    "button_secondary": "border border-[#2A2A2A] text-[#F4F4EE] hover:bg-[#1E1E1E] px-8 py-3 rounded-none transition-colors duration-300 tracking-wide text-sm",
+    "navigation": "Glassmorphism header (backdrop-blur-xl bg-[#0F0F0F]/60) with subtle bottom border (border-white/5). Never use a fully transparent header over content.",
+    "icons": "Thin-line icons only (use lucide-react with strokeWidth={1} or {1.5}). No filled or cartoon icons."
+  },
+  "motion": {
+    "transitions": "Subtle fade/slide transitions, duration-500 to duration-700, ease-out. No bouncy or playful animations.",
+    "interactions": "Every interaction should feel deliberate and unhurried."
+  },
+  "image_urls": {
+    "venue_dining": [
+      {
+        "url": "https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHw0fHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "category": "hero_venue",
+        "description": "Moody fine dining restaurant interior"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1643101570532-88c8ecc07c1f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwyfHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "category": "venue_card",
+        "description": "Dining room place settings"
+      }
+    ],
+    "venue_nightlife": [
+      {
+        "url": "https://images.unsplash.com/photo-1575444758702-4a6b9222336e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxsb3clMjBsaWdodCUyMGNvY2t0YWlsJTIwYmFyfGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "category": "venue_card",
+        "description": "Low light cocktail bar interior"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHxsb3clMjBsaWdodCUyMGNvY2t0YWlsJTIwYmFyfGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "category": "drink_detail",
+        "description": "Martini glass at a dark bar"
+      }
+    ],
+    "daytime_cafe": [
+      {
+        "url": "https://images.pexels.com/photos/34041969/pexels-photo-34041969.jpeg",
+        "category": "venue_card",
+        "description": "Marble cafe table morning"
+      }
+    ],
+    "culinary_detail": [
+      {
+        "url": "https://images.unsplash.com/photo-1564844536308-50b114a1d946?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHw0fHxjaGVmJTIwcGxhdGV8ZW58MHx8fHwxNzgzNTkyMzE2fDA&ixlib=rb-4.1.0&q=85",
+        "category": "dish_detail",
+        "description": "Chef plating a dish"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Ensure dark theme is implemented by default with deep charcoal (#0F0F0F) rather than pure black.",
+    "Use a single, restrained accent color (Warm Gold/Champagne). Apply it strictly for key actions, tier indicators, and primary CTAs.",
+    "Use 'Cormorant Garamond' (or similar elegant serif) for large numerical displays (e.g., Ritual Points balance) and Venue Names.",
+    "Structure UI hierarchically with massive scale contrast. Huge thin serifs paired with tiny, widely tracked all-caps overlines (e.g., 'MEMBER SINCE', 'RITUAL POINTS').",
+    "Avoid typical food app metrics (no bright star ratings, no red/orange notification dots). Use words like 'Quiet', 'Filling In', 'At Capacity' for venue status.",
+    "Language must be editorial: 'A table awaits', 'Your Ritual continues', 'Inner Circle Access'.",
+    "Implement Mobile-First layout. Navigation must be seamless for one-handed use.",
+    "Do NOT use standard Shadcn cards with thick borders or bright drop shadows. Make surfaces blend organically or use subtle 1px white/5 borders.",
+    "Image overlays should never exceed bg-black/50, ensuring photography remains a focal point.",
+    "For the check-in flow and wallet, mimic the UX of a premium airline boarding pass or high-end hotel digital key.",
+    "Status tiers should be presented visually: Guest -> Regular -> Devotee -> Inner Circle."
+  ],
+  "accessibility": {
+    "text_contrast": "Ensure off-white/cream text on charcoal backgrounds passes APCA and WCAG AA guidelines.",
+    "focus_states": "Focus outlines should be a subtle 1px ring in Warm Gold."
+  },
+  "testing": {
+    "data_testid_rule": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case."
+  },
+  "universal_guidelines_for_main_agent": [
+    "Do not apply universal transition. e.g.: transition: all. Add transitions for specific interactive elements like button, input excluding transforms.",
+    "Do not center align the app container. No .App { text-align: center; }.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations separate good from extraordinary.",
+    "NEVER use placeholder text for missing images. Use provided image URLs.",
+    "Use sonner for toasts.",
+    "Avoid generic, on-distribution outputs like typical SaaS blue/gray. Make it distinctive."
+  ]
+}

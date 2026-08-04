@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { cn } from "@/lib/utils";
 
-const TIER_ORDER = ["Guest", "Regular", "Devotee", "Inner Circle"];
+const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
 export default function Redeem() {
   const { user, refresh } = useAuth();
@@ -242,7 +242,7 @@ export default function Redeem() {
               {redemption.perk_name} at {redemption.venue_name}.
             </h2>
             <p className="text-[#8E8E8E] font-light mt-4">
-              Present this code on arrival. The room already knows you're coming.
+              Present this code on arrival. The room already knows you&apos;re coming.
             </p>
 
             <div className="mt-10 border border-[#C2A36B]/40 p-8">

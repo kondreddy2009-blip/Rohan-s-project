@@ -137,7 +137,7 @@ function EventForm({ venueId, onCreated }) {
         >
           <option value="">Open to all members</option>
           <option value="Regular">Regular and above</option>
-          <option value="Devotee">Devotee and above</option>
+          <option value="Insider">Insider and above</option>
           <option value="Inner Circle">Inner Circle only</option>
         </select>
       </div>

@@ -45,7 +45,7 @@ export default function Landing() {
               Enter the Collective
             </Link>
             <div className="overline">
-              Guest · Regular · Devotee · Inner Circle
+              Guest · Regular · Insider · Inner Circle
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function Landing() {
         <div className="absolute inset-x-0 bottom-0 p-8 lg:p-12">
           <div className="overline mb-3 text-[#F4F4EE]/80">Currently</div>
           <div className="font-serif-display text-2xl lg:text-3xl italic text-[#F4F4EE]">
-            "A room that keeps its own hours."
+            {`"A room that keeps its own hours."`}
           </div>
           <div className="overline mt-3 text-[#C2A36B]">— Verre, West Village</div>
         </div>

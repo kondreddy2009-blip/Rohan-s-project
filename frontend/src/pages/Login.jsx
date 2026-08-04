@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 
 const DEMO_ACCOUNTS = [
-  { email: "bhandariyashvee@gmail.com", label: "Owner · Admin (Devotee)", password: "ritual2026" },
+  { email: "bhandariyashvee@gmail.com", label: "Owner · Admin (Insider)", password: "ritual2026" },
   { email: "mila@ritual.app", label: "Mila · Inner Circle", password: "ritual2026" },
   { email: "alex@ritual.app", label: "Alex · Regular", password: "ritual2026" },
   { email: "staff.lumen@ritual.app", label: "Staff · Lumen", password: "ritual2026" },

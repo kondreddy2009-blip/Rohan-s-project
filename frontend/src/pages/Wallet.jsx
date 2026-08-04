@@ -79,7 +79,7 @@ export default function Wallet() {
         <div>
           <div className="overline">Ritual Wallet</div>
           <h1 className="font-serif-display text-3xl sm:text-4xl mt-2">
-            {user?.name?.split(" ")[0]}'s balance
+            {user?.name?.split(" ")[0]}&apos;s balance
           </h1>
         </div>
         <TierBadge tier={wallet.tier} testId="wallet-tier-badge" />

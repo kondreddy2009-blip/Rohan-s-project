@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { cn } from "@/lib/utils";
 
-const TIER_ORDER = ["Guest", "Regular", "Devotee", "Inner Circle"];
+const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
 export default function VenueDetail() {
   const { id } = useParams();

@@ -47,24 +47,6 @@ export function Layout({ children }) {
             </div>
           </Link>
           <div className="flex items-center gap-4">
-            {user && (user.role === "staff" || user.role === "admin") && !isStaffContext && (
-              <Link
-                to="/staff"
-                data-testid="nav-staff-link"
-                className="overline hidden sm:inline-block hover:text-[#C2A36B] transition-colors duration-300"
-              >
-                Staff
-              </Link>
-            )}
-            {user && isStaffContext && (
-              <Link
-                to="/discover"
-                data-testid="nav-member-link"
-                className="overline hidden sm:inline-block hover:text-[#C2A36B] transition-colors duration-300"
-              >
-                Member view
-              </Link>
-            )}
             {user && (
               <button
                 onClick={handleLogout}

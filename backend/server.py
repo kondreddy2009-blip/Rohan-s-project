@@ -43,11 +43,11 @@ logger = logging.getLogger("ritual")
 # ---------------------------------------------------------------------------
 POINTS_PER_CHECKIN = 100
 
-TIER_ORDER = ["Guest", "Regular", "Devotee", "Inner Circle"]
+TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"]
 TIER_THRESHOLDS = {
     "Guest": 0,
     "Regular": 500,
-    "Devotee": 1500,
+    "Insider": 1500,
     "Inner Circle": 3000,
 }
 
@@ -78,7 +78,7 @@ PERKS = [
         "name": "Inner Circle Experience",
         "cost": 1000,
         "description": "A curated tasting, chef's counter, or off-menu pour.",
-        "tier_required": "Devotee",
+        "tier_required": "Insider",
     },
 ]
 
@@ -225,7 +225,7 @@ class EventIn(BaseModel):
     description: str
     date: str  # ISO date
     time: str  # e.g. "21:00"
-    tier_required: Optional[Literal["Guest", "Regular", "Devotee", "Inner Circle"]] = None
+    tier_required: Optional[Literal["Guest", "Regular", "Insider", "Inner Circle"]] = None
 
 
 class OfferingFeedbackIn(BaseModel):
@@ -472,11 +472,7 @@ async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
     venue = await db.venues.find_one({"id": payload.venue_id}, {"_id": 0})
     if not venue:
         raise HTTPException(status_code=404, detail="Venue not found")
-    balance = user.get("ritual_points_balance", 0)
-    if balance < perk["cost"]:
-        raise HTTPException(status_code=400, detail="Not enough Ritual Points")
-
-    # Tier gate
+    # Tier gate — checked BEFORE balance so a tier violation reads clearly
     user_tier_idx = TIER_ORDER.index(user.get("tier", "Guest"))
     perk_tier_idx = TIER_ORDER.index(perk["tier_required"])
     if user_tier_idx < perk_tier_idx:
@@ -484,6 +480,10 @@ async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
             status_code=403,
             detail=f"This perk is reserved for {perk['tier_required']} and above",
         )
+
+    balance = user.get("ritual_points_balance", 0)
+    if balance < perk["cost"]:
+        raise HTTPException(status_code=400, detail="Not enough Ritual Points")
 
     now = _now_iso()
     new_balance = balance - perk["cost"]
@@ -838,7 +838,7 @@ SEED_EVENTS = [
         "description": "A five-course seasonal menu, silverware only.",
         "date": "2026-03-08",
         "time": "20:30",
-        "tier_required": "Devotee",
+        "tier_required": "Insider",
     },
     {
         "venue_id": "venue-noctis",

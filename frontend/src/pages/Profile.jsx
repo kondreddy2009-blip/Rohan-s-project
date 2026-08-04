@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { TierBadge } from "@/components/TierBadge";
 import { cn } from "@/lib/utils";
 
-const TIER_ORDER = ["Guest", "Regular", "Devotee", "Inner Circle"];
+const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
 function TierJourney({ current, next, pointsToNext, progressPercent }) {
   return (
@@ -86,7 +86,7 @@ function TimelineEntry({ item, index }) {
         </div>
         {item.item_ordered && (
           <div className="mt-3 font-serif italic text-[#F4F4EE]/85">
-            "{item.item_ordered}"{" "}
+            {`"${item.item_ordered}"`}{" "}
             {item.would_return === true && (
               <span className="overline-accent ml-2">Would return</span>
             )}

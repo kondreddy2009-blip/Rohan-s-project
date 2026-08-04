@@ -93,10 +93,10 @@ export default function CheckIn() {
             </div>
             <div className="overline-accent mt-6">Welcomed</div>
             <h2 className="font-serif-display text-4xl mt-3">
-              Your Ritual continues at {venue.name}.
+              Your Nocturne continues at {venue.name}.
             </h2>
             <div className="mt-10">
-              <div className="overline mb-2">Ritual Points earned</div>
+              <div className="overline mb-2">Nocturne Points earned</div>
               <div
                 className="font-serif-display text-7xl text-[#C2A36B]"
                 data-testid="points-earned"

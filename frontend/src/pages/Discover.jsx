@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { VenueCard } from "@/components/VenueCard";
@@ -6,9 +6,14 @@ import { TierBadge } from "@/components/TierBadge";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
-  { key: "all", label: "All" },
-  { key: "day", label: "Day" },
-  { key: "night", label: "Night" },
+  { key: "all", label: "All", match: () => true },
+  { key: "bar", label: "Bars", match: (v) => /bar|speakeasy/i.test(v.type) },
+  { key: "lounge", label: "Lounges", match: (v) => /lounge/i.test(v.type) },
+  {
+    key: "table",
+    label: "Tables",
+    match: (v) => /bistro|club|dining/i.test(v.type),
+  },
 ];
 
 export default function Discover() {
@@ -22,8 +27,7 @@ export default function Discover() {
     async function load() {
       setLoading(true);
       try {
-        const params = filter === "all" ? {} : { daypart: filter };
-        const { data } = await api.get("/venues", { params });
+        const { data } = await api.get("/venues");
         if (!cancelled) setVenues(data);
       } finally {
         if (!cancelled) setLoading(false);
@@ -33,11 +37,21 @@ export default function Discover() {
     return () => {
       cancelled = true;
     };
-  }, [filter]);
+  }, []);
+
+  const activeFilter = FILTERS.find((f) => f.key === filter) || FILTERS[0];
+  const filtered = useMemo(
+    () => venues.filter(activeFilter.match),
+    [venues, activeFilter],
+  );
 
   const hour = new Date().getHours();
   const timeGreeting =
-    hour < 11 ? "This morning" : hour < 17 ? "This afternoon" : hour < 22 ? "This evening" : "Late tonight";
+    hour >= 22 || hour < 4
+      ? "Late tonight"
+      : hour >= 17
+        ? "This evening"
+        : "The night ahead";
 
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 pb-16" data-testid="discover-page">
@@ -47,14 +61,14 @@ export default function Discover() {
           <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl leading-[1.02]">
             <span className="italic text-[#C2A36B]">{user?.name?.split(" ")[0] || "Guest"}</span>,
             <br />
-            your Ritual continues.
+            your Nocturne continues.
           </h1>
           <TierBadge tier={user?.tier} testId="header-tier-badge" />
         </div>
       </div>
 
       <div
-        className="mt-10 flex items-center gap-1 border-b border-[#2A2A2A]"
+        className="mt-10 flex items-center gap-1 border-b border-[#2A2A2A] overflow-x-auto"
         role="tablist"
         data-testid="discover-filters"
       >
@@ -66,7 +80,7 @@ export default function Discover() {
             role="tab"
             aria-selected={filter === f.key}
             className={cn(
-              "px-5 py-3 overline transition-colors duration-300 border-b -mb-px",
+              "px-5 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
               filter === f.key
                 ? "text-[#C2A36B] border-[#C2A36B]"
                 : "text-[#8E8E8E] border-transparent hover:text-[#F4F4EE]",
@@ -81,14 +95,14 @@ export default function Discover() {
         <div className="mt-16 overline text-center">Loading rooms…</div>
       ) : (
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {venues.map((v, i) => (
+          {filtered.map((v, i) => (
             <VenueCard venue={v} index={i} key={v.id} />
           ))}
         </div>
       )}
 
-      {!loading && venues.length === 0 && (
-        <div className="mt-16 text-center overline">No rooms in this daypart.</div>
+      {!loading && filtered.length === 0 && (
+        <div className="mt-16 text-center overline">No rooms in this category tonight.</div>
       )}
     </div>
   );

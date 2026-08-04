@@ -165,7 +165,7 @@ export default function Redeem() {
                       {!p.tier_ok
                         ? `${p.tier_required} tier required`
                         : !p.affordable
-                          ? "Not enough Ritual Points yet"
+                          ? "Not enough Nocturne Points yet"
                           : `Reserved for ${p.tier_required}+`}
                     </div>
                   </div>

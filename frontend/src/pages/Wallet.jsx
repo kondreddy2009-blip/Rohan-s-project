@@ -77,7 +77,7 @@ export default function Wallet() {
     <div className="mx-auto max-w-3xl px-5 sm:px-8 py-8 sm:py-14" data-testid="wallet-page">
       <div className="flex items-start justify-between gap-4 animate-fade-up">
         <div>
-          <div className="overline">Ritual Wallet</div>
+          <div className="overline">Nocturne Wallet</div>
           <h1 className="font-serif-display text-3xl sm:text-4xl mt-2">
             {user?.name?.split(" ")[0]}&apos;s balance
           </h1>
@@ -87,7 +87,7 @@ export default function Wallet() {
 
       {/* Balance card */}
       <div className="mt-10 animate-fade-up delay-100">
-        <div className="overline mb-4">Ritual Points</div>
+        <div className="overline mb-4">Nocturne Points</div>
         <div
           className="font-serif-display text-8xl sm:text-9xl leading-none text-[#F4F4EE] tabular-nums"
           data-testid="wallet-balance"

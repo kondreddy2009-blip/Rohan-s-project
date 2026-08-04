@@ -186,7 +186,7 @@ export default function VenueDetail() {
         <div className="hairline-t pt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 animate-fade-up">
           <div>
             <div className="overline mb-2">A moment awaits</div>
-            <div className="font-serif-display text-3xl">Begin your Ritual at {venue.name}.</div>
+            <div className="font-serif-display text-3xl">Begin your Nocturne at {venue.name}.</div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -202,7 +202,7 @@ export default function VenueDetail() {
               data-testid="begin-ritual-button"
               className="btn-primary text-center"
             >
-              Begin Ritual
+              Begin Nocturne
             </Link>
           </div>
         </div>

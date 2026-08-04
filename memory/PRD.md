@@ -1,10 +1,7 @@
-# Ritual — Product Requirements Doc
+# Nocturne — Product Requirements Doc
 
 ## Original problem statement
-Build a web app called "Ritual" — an ultra-premium, cross-venue loyalty and live-access platform spanning both daytime dining (restaurants, cafes) and nightlife (bars, clubs, lounges) in a single city / neighborhood. Feels like a members' app for people who move between a quiet lunch and a late night out — a private members' club crossed with an airline elite-status program.
-
-## Core concept
-Points ("Ritual Points") earned at any partner venue can be redeemed at ANY other partner venue in the network, day or night. Cross-venue redemption is the entire pitch — your loyalty follows you.
+Originally built as "Ritual" — an ultra-premium cross-venue loyalty and live-access platform. Pivoted to **Nocturne**, a nightlife-only members' collective. Points earned at any partner venue can be redeemed at ANY other partner venue in the network. Cross-venue redemption is the entire pitch — your night follows you.
 
 ## User personas
 - **Member (Guest / Regular / Insider / Inner Circle)** — moves between rooms across the day. Wants to be recognized, wants perks, wants a quiet elegant experience.

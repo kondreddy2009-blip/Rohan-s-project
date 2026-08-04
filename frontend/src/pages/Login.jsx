@@ -65,7 +65,7 @@ export default function Login() {
       <div className="flex items-center justify-center px-6 sm:px-12 py-16">
         <div className="w-full max-w-sm animate-fade-up">
           <Link to="/" data-testid="login-brand-link" className="overline-accent">
-            Ritual
+            Nocturne
           </Link>
           <h1 className="font-serif-display text-4xl mt-4 mb-10">Sign in</h1>
 

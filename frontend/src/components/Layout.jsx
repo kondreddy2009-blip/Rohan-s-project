@@ -41,7 +41,7 @@ export function Layout({ children }) {
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#0F0F0F]/70 border-b border-white/[0.04]">
         <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
           <Link to={user ? "/discover" : "/"} data-testid="brand-home-link" className="group">
-            <div className="overline-accent">Ritual</div>
+            <div className="overline-accent">Nocturne</div>
             <div className="font-serif-display text-lg leading-none text-[#F4F4EE] mt-0.5">
               {isStaffContext ? "Staff" : "Members"}
             </div>

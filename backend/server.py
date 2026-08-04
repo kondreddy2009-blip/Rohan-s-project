@@ -31,11 +31,11 @@ JWT_SECRET = os.environ["JWT_SECRET"]
 ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
-app = FastAPI(title="Ritual API")
+app = FastAPI(title="Nocturne API")
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("ritual")
+logger = logging.getLogger("nocturne")
 
 
 # ---------------------------------------------------------------------------
@@ -495,7 +495,7 @@ async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
 
     balance = user.get("ritual_points_balance", 0)
     if balance < perk["cost"]:
-        raise HTTPException(status_code=400, detail="Not enough Ritual Points")
+        raise HTTPException(status_code=400, detail="Not enough Nocturne Points")
 
     now = _now_iso()
     new_balance = balance - perk["cost"]
@@ -778,36 +778,16 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 SEED_VENUES = [
     {
-        "id": "venue-aureus",
-        "name": "Aureus",
-        "type": "Cafe",
-        "neighborhood": "Marais",
-        "daypart": "day",
-        "status": "Quiet",
-        "capacity_percent": 30,
-        "hours": "07:00 – 16:00",
-        "tagline": "A quiet morning ritual.",
-        "description": "A slow-pour specialty coffee bar tucked behind a bookshop courtyard. Marble counters, morning light, single-origin only.",
-        "image_url": "https://images.pexels.com/photos/34041969/pexels-photo-34041969.jpeg",
-        "seed_offerings": [
-            {"name": "Kyoto Cold Brew", "order_count": 84},
-            {"name": "Cardamom Latte", "order_count": 71},
-            {"name": "Miel & Butter Toast", "order_count": 62},
-            {"name": "Almond Croissant", "order_count": 48},
-        ],
-        "featured": True,
-    },
-    {
         "id": "venue-verre",
         "name": "Verre",
-        "type": "Dining",
+        "type": "Bistro",
         "neighborhood": "West Village",
-        "daypart": "both",
+        "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 65,
-        "hours": "12:00 – 23:00",
+        "hours": "18:00 – 01:00",
         "tagline": "A bistro that stays until the last conversation.",
-        "description": "A candlelit bistro serving natural wine and seasonal small plates. The same room, an entirely different mood after dark.",
+        "description": "A candlelit bistro serving natural wine and seasonal small plates well into the night. Reservations rarely required, patience always rewarded.",
         "image_url": "https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHw0fHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
         "seed_offerings": [
             {"name": "Beef Tartare", "order_count": 156},
@@ -854,12 +834,12 @@ SEED_VENUES = [
             {"name": "Mezcal Sazerac", "order_count": 143},
             {"name": "Champagne Coupe", "order_count": 87},
         ],
-        "featured": False,
+        "featured": True,
     },
     {
         "id": "venue-salle-privee",
         "name": "Salle Privée",
-        "type": "Club",
+        "type": "Supper Club",
         "neighborhood": "Financial District",
         "daypart": "night",
         "status": "Filling In",
@@ -877,22 +857,41 @@ SEED_VENUES = [
         "featured": False,
     },
     {
-        "id": "venue-miel",
-        "name": "Pâtisserie Miel",
-        "type": "Cafe",
-        "neighborhood": "Upper East",
-        "daypart": "day",
-        "status": "Filling In",
-        "capacity_percent": 55,
-        "hours": "08:00 – 19:00",
-        "tagline": "Small pastries, considered.",
-        "description": "A tiny pâtisserie run by a former three-star pastry chef. Six items daily, always finished by four.",
-        "image_url": "https://images.unsplash.com/photo-1564844536308-50b114a1d946?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHw0fHxjaGVmJTIwcGxhdGV8ZW58MHx8fHwxNzgzNTkyMzE2fDA&ixlib=rb-4.1.0&q=85",
+        "id": "venue-aureole",
+        "name": "Auréole",
+        "type": "Wine Bar",
+        "neighborhood": "Belleville",
+        "daypart": "night",
+        "status": "Quiet",
+        "capacity_percent": 35,
+        "hours": "18:00 – 01:00",
+        "tagline": "Natural wine, poured with patience.",
+        "description": "A tiny natural wine bar with two counters, no menu, and a rotating list read aloud by the sommelier.",
+        "image_url": "https://images.unsplash.com/photo-1470337458703-46ad1756a187?crop=entropy&cs=srgb&fm=jpg&q=85",
         "seed_offerings": [
-            {"name": "Paris-Brest", "order_count": 134},
-            {"name": "Canelé", "order_count": 118},
-            {"name": "Honey Tart", "order_count": 89},
-            {"name": "Passionfruit Éclair", "order_count": 76},
+            {"name": "Loire Chenin", "order_count": 88},
+            {"name": "Jura Poulsard", "order_count": 74},
+            {"name": "Anchovy Toast", "order_count": 66},
+            {"name": "Comté & Honey", "order_count": 52},
+        ],
+        "featured": False,
+    },
+    {
+        "id": "venue-chambre",
+        "name": "Chambre No. 7",
+        "type": "Speakeasy",
+        "neighborhood": "Mayfair",
+        "daypart": "night",
+        "status": "Filling In",
+        "capacity_percent": 60,
+        "hours": "22:00 – 03:00",
+        "tagline": "A room behind a room.",
+        "description": "A speakeasy tucked inside a hotel corridor. Green velvet, a single piano, and a doorman who remembers your name.",
+        "image_url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "seed_offerings": [
+            {"name": "Reserve Manhattan", "order_count": 167},
+            {"name": "Corpse Reviver No. 2", "order_count": 112},
+            {"name": "Champagne 75", "order_count": 94},
         ],
         "featured": False,
     },
@@ -912,15 +911,7 @@ SEED_EVENTS = [
         "title": "Natural Wine Table",
         "description": "A guided five-glass flight from the Loire, poured tableside.",
         "date": "2026-02-27",
-        "time": "19:30",
-        "tier_required": None,
-    },
-    {
-        "venue_id": "venue-aureus",
-        "title": "Single-Origin Sunday",
-        "description": "A rotating pour-over showcase with the roaster in attendance.",
-        "date": "2026-03-01",
-        "time": "10:00",
+        "time": "20:30",
         "tier_required": None,
     },
     {
@@ -940,12 +931,20 @@ SEED_EVENTS = [
         "tier_required": None,
     },
     {
-        "venue_id": "venue-miel",
-        "title": "The Honey Course",
-        "description": "A pâtisserie course paired with a single-varietal honey tasting.",
+        "venue_id": "venue-aureole",
+        "title": "The Sommelier's Table",
+        "description": "A four-glass flight, poured and narrated at the counter.",
         "date": "2026-03-05",
-        "time": "16:00",
+        "time": "20:00",
         "tier_required": "Regular",
+    },
+    {
+        "venue_id": "venue-chambre",
+        "title": "Piano After Midnight",
+        "description": "A house pianist and three uninterrupted hours of jazz.",
+        "date": "2026-03-10",
+        "time": "23:30",
+        "tier_required": "Inner Circle",
     },
 ]
 
@@ -1043,10 +1042,10 @@ async def seed_database():
         if existing_ledger == 0:
             base = datetime.now(timezone.utc) - timedelta(days=20)
             seed_ledger = [
-                {"venue": "venue-aureus", "delta": 100, "type": "earn", "desc": "Check-in at Aureus", "days_ago": 20},
-                {"venue": "venue-verre", "delta": 100, "type": "earn", "desc": "Check-in at Verre", "days_ago": 15},
+                {"venue": "venue-verre", "delta": 100, "type": "earn", "desc": "Check-in at Verre", "days_ago": 20},
+                {"venue": "venue-aureole", "delta": 100, "type": "earn", "desc": "Check-in at Auréole", "days_ago": 15},
                 {"venue": "venue-lumen", "delta": 100, "type": "earn", "desc": "Check-in at Lumen", "days_ago": 12},
-                {"venue": "venue-miel", "delta": 100, "type": "earn", "desc": "Check-in at Pâtisserie Miel", "days_ago": 10},
+                {"venue": "venue-chambre", "delta": 100, "type": "earn", "desc": "Check-in at Chambre No. 7", "days_ago": 10},
                 {"venue": "venue-salle-privee", "delta": -250, "type": "redeem", "desc": "Priority Seating at Salle Privée", "days_ago": 7},
                 {"venue": "venue-verre", "delta": 100, "type": "earn", "desc": "Check-in at Verre", "days_ago": 5},
                 {"venue": "venue-lumen", "delta": 100, "type": "earn", "desc": "Check-in at Lumen", "days_ago": 3},
@@ -1077,7 +1076,7 @@ async def seed_database():
 @app.on_event("startup")
 async def on_startup():
     await seed_database()
-    logger.info("Ritual API ready. Seed complete.")
+    logger.info("Nocturne API ready. Seed complete.")
 
 
 @app.on_event("shutdown")
@@ -1087,4 +1086,4 @@ async def on_shutdown():
 
 @api.get("/")
 async def root():
-    return {"service": "ritual", "status": "ok"}
+    return {"service": "nocturne", "status": "ok"}

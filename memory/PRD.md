@@ -30,12 +30,22 @@ Points ("Ritual Points") earned at any partner venue can be redeemed at ANY othe
 - [x] Feedback feeds signature offerings (aggregated by `would_return`)
 - [x] Wallet: giant serif balance, tier badge, lifetime / visits / tier, ledger, held redemptions
 - [x] Redeem flow: pick any venue → pick perk (tier-gated, disabled if unaffordable/locked) → confirm → reservation code
-- [x] Profile: tier journey ladder, progress %, curated timeline of past visits
+- [x] Profile: tier journey ladder, progress %, curated timeline of past visits, correspondence section
 - [x] Staff dashboard: multi-venue selector for admin, status control (Quiet / Filling In / At Capacity), analytics (checkins week/total, points issued vs redeemed, top offerings), redemptions list, event posting with tier gate
 - [x] Role-based routing (staff → /staff, member → /discover, unauthorized → /discover)
-- [x] Bottom nav (Discover / Wallet / Profile) for members
+- [x] Bottom nav (Discover / Scan / Wallet / Profile) for members
 - [x] Toaster (sonner) with dark editorial styling
 - [x] End-to-end demo flow verified: check-in Aureus (day cafe) → redeem at Lumen (night lounge) with reservation code
+
+### Feb 4 — Concierge + Live QR Scan
+- [x] Personal Concierge — member can send a note to any venue (hold a table / preview the menu / general request) with optional party size + arrival time
+- [x] Correspondence section on member Profile with real-time status (pending → acknowledged / fulfilled / regrets) + room's reply
+- [x] Staff Dashboard "Correspondence" tab — inbox with pending badge count, quiet reply textarea, three actions (Acknowledge / Mark fulfilled / Send regrets)
+- [x] Staff Dashboard "QR Code" tab — displays a scannable QR encoding the venue's check-in URL (for the host stand)
+- [x] `/scan` page with live camera scanner (html5-qrcode) + graceful fallback venue selector for environments without camera
+- [x] "Speak with the room" button on venue detail opens the concierge modal
+- [x] Removed Staff link from member Layout header — staff have their own dedicated interface at `/staff`
+- [x] Tier ladder finalised as Guest → Regular → Insider → Inner Circle
 
 ## Test coverage
 - Backend pytest 20/20 (after tier-gate ordering fix)

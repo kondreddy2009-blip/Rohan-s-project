@@ -234,6 +234,18 @@ class OfferingFeedbackIn(BaseModel):
     would_return: bool
 
 
+class ConciergeIn(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+    request_type: Literal["hold_table", "preview_menu", "request"]
+    party_size: Optional[int] = None
+    arrival_time: Optional[str] = None
+
+
+class ConciergeUpdateIn(BaseModel):
+    status: Literal["acknowledged", "declined", "fulfilled"]
+    response: Optional[str] = None
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -665,6 +677,85 @@ async def venue_redemptions(venue_id: str, user: dict = Depends(require_staff_or
         r["member_name"] = m.get("name")
         r["member_tier"] = m.get("tier")
     return items
+
+
+# ---------------------------------------------------------------------------
+# Concierge (messaging) endpoints
+# ---------------------------------------------------------------------------
+CONCIERGE_TYPE_LABEL = {
+    "hold_table": "Hold a table",
+    "preview_menu": "Preview the menu",
+    "request": "A quiet request",
+}
+
+
+@api.post("/venues/{venue_id}/concierge")
+async def create_concierge_message(
+    venue_id: str,
+    payload: ConciergeIn,
+    user: dict = Depends(get_current_user),
+):
+    if user.get("role") not in ("member", "admin"):
+        raise HTTPException(status_code=403, detail="Members only")
+    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    msg = {
+        "id": str(uuid.uuid4()),
+        "member_id": user["id"],
+        "member_name": user["name"],
+        "member_tier": user.get("tier", "Guest"),
+        "venue_id": venue_id,
+        "venue_name": venue["name"],
+        "message": payload.message.strip(),
+        "request_type": payload.request_type,
+        "party_size": payload.party_size,
+        "arrival_time": payload.arrival_time,
+        "status": "pending",
+        "response": None,
+        "created_at": _now_iso(),
+        "responded_at": None,
+    }
+    await db.concierge_messages.insert_one(msg)
+    msg.pop("_id", None)
+    return msg
+
+
+@api.get("/members/me/concierge")
+async def my_concierge(user: dict = Depends(get_current_user)):
+    items = await db.concierge_messages.find(
+        {"member_id": user["id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return items
+
+
+@api.get("/staff/venues/{venue_id}/concierge")
+async def venue_concierge_inbox(venue_id: str, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    items = await db.concierge_messages.find(
+        {"venue_id": venue_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return items
+
+
+@api.patch("/staff/concierge/{msg_id}")
+async def update_concierge_message(
+    msg_id: str,
+    payload: ConciergeUpdateIn,
+    user: dict = Depends(require_staff_or_admin),
+):
+    msg = await db.concierge_messages.find_one({"id": msg_id}, {"_id": 0})
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    _assert_staff_can_manage(user, msg["venue_id"])
+    updates = {
+        "status": payload.status,
+        "responded_at": _now_iso(),
+    }
+    if payload.response is not None:
+        updates["response"] = payload.response.strip() or None
+    await db.concierge_messages.update_one({"id": msg_id}, {"$set": updates})
+    return {"ok": True, **updates}
 
 
 # ---------------------------------------------------------------------------

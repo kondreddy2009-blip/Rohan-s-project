@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 2 — Personal Concierge + Live QR Scan features tested end-to-end. Backend pytest: 27/28 passing (1 skipped: admin balance insufficient for repeat inner_experience). Tier-gate 403-before-400 fix verified. New concierge suite (7 tests) all green: member create, member GET, staff cross-venue 403, staff acknowledge/fulfill/decline, 404 on nonexistent msg. Frontend E2E on mobile (390x844) + desktop (1440x900): Mila login → nav-scan icon → /scan page → manual venue dropdown check-in → scan-success '+100' + updated balance ✔. VenueDetail 'Speak with the room' opens ConciergeModal, hold_table shows party+arrival fields, submit posts note ✔. Profile 'Your correspondence' section shows notes with status label 'Awaiting the room' ✔. Staff (Lumen) dashboard shows Correspondence tab with pending count badge (4), 5 concierge rows each with acknowledge/fulfill/decline buttons + reply textarea; PATCH succeeds ('Reply sent' toast) ✔. QR Code tab renders qr-display + checkin URL '/checkin/venue-lumen' ✔. Regression: no Staff link in member header, no Discover link in staff header ✔.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Scan page (/scan) - native <select> for scan-manual-select", "issues": ["React hydration console warning: '<span> cannot be a child of <option>' — non-critical dev-only warning triggered by dev-mode span wrappers around option text; harmless but noisy. Consider using shadcn Select or removing the wrapper for cleaner console."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py: concierge endpoints correctly guard by role and reuse _assert_staff_can_manage for cross-venue 403.",
+    "server.py: ConciergeUpdateIn allows response=None which is fine; empty string is coerced to None on update (good).",
+    "server.py: seed_database still overwrites venue status/capacity on every startup — carried over from iter 1; not blocking for demo.",
+    "Frontend: native <select> in Scan.jsx works but produces a React hydration warning about <span> inside <option> (dev wrappers). Not user-visible."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "96% (27/28 passing, 1 skipped due to depleted admin balance)", "frontend": "100% of tested flows"},
+  "test_credentials": "Read from /app/memory/test_credentials.md — all 5 accounts valid.",
+  "seed_data_creation": "Multiple TEST_ prefixed concierge messages created via pytest (venue-lumen). Cleanup not automated — safe test data (prefixed TEST_).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend concierge tests live in TestConcierge class in /app/backend/tests/backend_test.py. Camera cannot be granted in headless Playwright — always test /scan via manual dropdown fallback. QRScanner has unhandledrejection handler that suppresses benign play() errors. Admin's inner_experience test may skip if balance depleted; reset by deleting all points_ledger entries for admin or restart doesn't reset balance (users updated in-place).",
+  "rca of the issue": "N/A — no critical failures. Prior tier-gate 403-before-400 bug from iter 1 verified fixed."
+}

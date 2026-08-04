@@ -11,6 +11,7 @@ import Login from "@/pages/Login";
 import Discover from "@/pages/Discover";
 import VenueDetail from "@/pages/VenueDetail";
 import CheckIn from "@/pages/CheckIn";
+import Scan from "@/pages/Scan";
 import Wallet from "@/pages/Wallet";
 import Redeem from "@/pages/Redeem";
 import Profile from "@/pages/Profile";
@@ -48,6 +49,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <CheckIn />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/scan"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Scan />
             </Layout>
           </ProtectedRoute>
         }

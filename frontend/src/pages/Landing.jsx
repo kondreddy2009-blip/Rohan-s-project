@@ -51,8 +51,7 @@ export default function Landing() {
         </div>
 
         <footer className="hairline-t pt-6 mt-10 flex flex-wrap items-center justify-between gap-4">
-          <div className="overline">Six rooms · One membership</div>
-          <div className="overline">A quiet correspondence</div>
+          <div className="overline">Est. 2026</div>
         </footer>
       </div>
 

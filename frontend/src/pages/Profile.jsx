@@ -7,6 +7,19 @@ import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
+const CONCIERGE_TYPE_LABEL = {
+  hold_table: "Hold a table",
+  preview_menu: "Preview the menu",
+  request: "A request",
+};
+
+const CONCIERGE_STATUS_LABEL = {
+  pending: "Awaiting the room",
+  acknowledged: "The room has replied",
+  declined: "Regrets",
+  fulfilled: "Fulfilled",
+};
+
 function TierJourney({ current, next, pointsToNext, progressPercent }) {
   return (
     <div>
@@ -101,12 +114,18 @@ export default function Profile() {
   const { user } = useAuth();
   const [wallet, setWallet] = useState(null);
   const [history, setHistory] = useState([]);
+  const [correspondence, setCorrespondence] = useState([]);
 
   useEffect(() => {
     async function load() {
-      const [w, h] = await Promise.all([api.get("/wallet"), api.get("/members/me/history")]);
+      const [w, h, c] = await Promise.all([
+        api.get("/wallet"),
+        api.get("/members/me/history"),
+        api.get("/members/me/concierge"),
+      ]);
       setWallet(w.data);
       setHistory(h.data);
+      setCorrespondence(c.data);
     }
     load();
   }, []);
@@ -177,6 +196,59 @@ export default function Profile() {
           )}
         </div>
       </div>
+
+      {correspondence.length > 0 && (
+        <div className="mt-14 animate-fade-up">
+          <div className="overline mb-2">Your correspondence</div>
+          <p className="text-[#8E8E8E] font-light">Notes sent to the rooms.</p>
+          <div className="mt-6 space-y-4">
+            {correspondence.map((c) => (
+              <div
+                key={c.id}
+                className="p-5 border border-[#2A2A2A] bg-[#161616]"
+                data-testid={`correspondence-${c.id}`}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div>
+                    <div className="overline">{CONCIERGE_TYPE_LABEL[c.request_type] || "Note"}</div>
+                    <div className="font-serif-display text-xl mt-1">{c.venue_name}</div>
+                  </div>
+                  <div
+                    className={cn(
+                      "text-xs tracking-widest uppercase",
+                      c.status === "pending" && "text-[#8E8E8E]",
+                      c.status === "acknowledged" && "text-[#C2A36B]",
+                      c.status === "declined" && "text-[#C08B70]",
+                      c.status === "fulfilled" && "text-[#7A9B7A]",
+                    )}
+                  >
+                    {CONCIERGE_STATUS_LABEL[c.status]}
+                  </div>
+                </div>
+                <p className="mt-3 font-serif italic text-[#F4F4EE]/85 leading-relaxed">
+                  {`"${c.message}"`}
+                </p>
+                {c.response && (
+                  <div className="mt-4 pt-4 border-t border-white/[0.05]">
+                    <div className="overline-accent mb-1">The room replied</div>
+                    <p className="text-sm text-[#F4F4EE]/85 font-light leading-relaxed">
+                      {c.response}
+                    </p>
+                  </div>
+                )}
+                <div className="overline mt-4">
+                  {new Date(c.created_at).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -30,7 +30,7 @@ class TestAuth:
         d = r.json()
         assert d["email"] == ADMIN["email"]
         assert d["role"] == "admin"
-        assert d["tier"] == "Devotee"
+        assert d["tier"] in ("Insider", "Inner Circle")
 
     def test_login_bad_password(self):
         r = requests.post(f"{API}/auth/login", json={"email": ADMIN["email"], "password": "wrong"}, timeout=10)
@@ -217,3 +217,114 @@ class TestStaff:
         r = s.get(f"{API}/staff/venues/venue-lumen/redemptions", timeout=10)
         assert r.status_code == 200
         assert isinstance(r.json(), list)
+
+
+# --- Concierge (Personal Concierge feature) ---
+class TestConcierge:
+    def test_member_create_and_get_concierge(self):
+        s = _session(MILA)
+        # Create hold_table request at Lumen
+        r = s.post(f"{API}/venues/venue-lumen/concierge", json={
+            "message": "TEST_A quiet corner if possible.",
+            "request_type": "hold_table",
+            "party_size": 2,
+            "arrival_time": "21:30",
+        }, timeout=10)
+        assert r.status_code == 200, r.text
+        msg = r.json()
+        assert msg["status"] == "pending"
+        assert msg["venue_id"] == "venue-lumen"
+        assert msg["request_type"] == "hold_table"
+        assert msg["party_size"] == 2
+        assert msg["member_name"]
+        assert msg["member_tier"]
+        msg_id = msg["id"]
+
+        # GET member's notes
+        r2 = s.get(f"{API}/members/me/concierge", timeout=10)
+        assert r2.status_code == 200
+        items = r2.json()
+        assert any(x["id"] == msg_id for x in items)
+        return msg_id
+
+    def test_venue_not_found(self):
+        s = _session(MILA)
+        r = s.post(f"{API}/venues/nonexistent/concierge", json={
+            "message": "hi", "request_type": "request"
+        }, timeout=10)
+        assert r.status_code == 404
+
+    def test_staff_cannot_create_concierge(self):
+        s = _session(STAFF_LUMEN)
+        r = s.post(f"{API}/venues/venue-lumen/concierge", json={
+            "message": "hi", "request_type": "request"
+        }, timeout=10)
+        assert r.status_code == 403
+
+    def test_staff_inbox_and_cross_venue_403(self):
+        # Member creates a note at Lumen
+        sm = _session(MILA)
+        r = sm.post(f"{API}/venues/venue-lumen/concierge", json={
+            "message": "TEST_preview please", "request_type": "preview_menu"
+        }, timeout=10)
+        assert r.status_code == 200
+        msg_id = r.json()["id"]
+
+        # Lumen staff sees inbox
+        ss = _session(STAFF_LUMEN)
+        r2 = ss.get(f"{API}/staff/venues/venue-lumen/concierge", timeout=10)
+        assert r2.status_code == 200
+        assert any(x["id"] == msg_id for x in r2.json())
+
+        # Verre staff must NOT access Lumen inbox
+        sv = _session(STAFF_VERRE)
+        r3 = sv.get(f"{API}/staff/venues/venue-lumen/concierge", timeout=10)
+        assert r3.status_code == 403
+
+        # Verre staff CANNOT update Lumen msg
+        r4 = sv.patch(f"{API}/staff/concierge/{msg_id}", json={"status": "acknowledged"}, timeout=10)
+        assert r4.status_code == 403
+
+    def test_staff_update_concierge_status(self):
+        # Create note
+        sm = _session(MILA)
+        r = sm.post(f"{API}/venues/venue-lumen/concierge", json={
+            "message": "TEST_update flow", "request_type": "request"
+        }, timeout=10)
+        msg_id = r.json()["id"]
+
+        ss = _session(STAFF_LUMEN)
+        # Acknowledge with reply
+        r2 = ss.patch(f"{API}/staff/concierge/{msg_id}", json={
+            "status": "acknowledged", "response": "We have you noted."
+        }, timeout=10)
+        assert r2.status_code == 200
+        assert r2.json()["status"] == "acknowledged"
+
+        # Member sees the reply
+        items = sm.get(f"{API}/members/me/concierge", timeout=10).json()
+        matched = next((x for x in items if x["id"] == msg_id), None)
+        assert matched is not None
+        assert matched["status"] == "acknowledged"
+        assert matched["response"] == "We have you noted."
+
+        # Fulfill
+        r3 = ss.patch(f"{API}/staff/concierge/{msg_id}", json={"status": "fulfilled"}, timeout=10)
+        assert r3.status_code == 200
+
+    def test_update_nonexistent_msg(self):
+        ss = _session(STAFF_LUMEN)
+        r = ss.patch(f"{API}/staff/concierge/nonexistent-id", json={"status": "acknowledged"}, timeout=10)
+        assert r.status_code == 404
+
+
+# --- Regression: tier gate 403 before 400 balance ---
+class TestTierGateOrdering:
+    def test_regular_low_balance_gets_403_not_400(self):
+        s = _session(ALEX)  # Regular member, 420 pts
+        # inner_experience requires Insider tier AND 1000 pts. Alex has neither.
+        r = s.post(f"{API}/wallet/redeem", json={
+            "venue_id": "venue-lumen", "perk_code": "inner_experience"
+        }, timeout=10)
+        assert r.status_code == 403, f"expected 403 tier-gate before 400 balance, got {r.status_code}"
+

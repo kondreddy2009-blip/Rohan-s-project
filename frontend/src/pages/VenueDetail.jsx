@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Clock, MapPin } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
+import { ConciergeModal } from "@/components/ConciergeModal";
 import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -14,6 +15,7 @@ export default function VenueDetail() {
   const navigate = useNavigate();
   const [venue, setVenue] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [conciergeOpen, setConciergeOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -186,15 +188,32 @@ export default function VenueDetail() {
             <div className="overline mb-2">A moment awaits</div>
             <div className="font-serif-display text-3xl">Begin your Ritual at {venue.name}.</div>
           </div>
-          <Link
-            to={`/checkin/${venue.id}`}
-            data-testid="begin-ritual-button"
-            className="btn-primary text-center"
-          >
-            Begin Ritual
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setConciergeOpen(true)}
+              data-testid="speak-with-room-button"
+              className="btn-ghost inline-flex items-center gap-2"
+            >
+              <MessageSquare strokeWidth={1.2} className="h-4 w-4" />
+              Speak with the room
+            </button>
+            <Link
+              to={`/checkin/${venue.id}`}
+              data-testid="begin-ritual-button"
+              className="btn-primary text-center"
+            >
+              Begin Ritual
+            </Link>
+          </div>
         </div>
       </div>
+
+      {conciergeOpen && (
+        <ConciergeModal
+          venue={venue}
+          onClose={() => setConciergeOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Compass, Wallet, User, LayoutDashboard, LogOut } from "lucide-react";
+import { Compass, Wallet, User, LayoutDashboard, LogOut, ScanLine } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -69,8 +69,9 @@ export function Layout({ children }) {
           className="fixed bottom-0 inset-x-0 z-40 border-t border-white/[0.04] backdrop-blur-xl bg-[#0F0F0F]/85"
           data-testid="bottom-nav"
         >
-          <div className="mx-auto max-w-6xl grid grid-cols-3 sm:grid-cols-3">
+          <div className="mx-auto max-w-6xl grid grid-cols-4">
             <NavItem to="/discover" icon={Compass} label="Discover" testId="nav-discover" />
+            <NavItem to="/scan" icon={ScanLine} label="Scan" testId="nav-scan" />
             <NavItem to="/wallet" icon={Wallet} label="Wallet" testId="nav-wallet" />
             <NavItem to="/profile" icon={User} label="Profile" testId="nav-profile" />
           </div>

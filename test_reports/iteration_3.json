@@ -1,0 +1,33 @@
+{
+  "summary": "Iteration 3 — Regression after pivot from Nocturne/Ritual to Table restaurants. Backend: 28/28 pytest passing (updated for new seed venues venue-verre, venue-osteria, venue-ikigai, venue-salle-privee, venue-la-petite, venue-chambre; legacy venue IDs like venue-lumen now return 404 as expected). Frontend E2E on desktop (1440x900): Landing shows 'Table' brand + 'Your table follows you.' hero (visually confirmed via screenshot; substring check false-positive because copy is split by <br/>) + rotating restaurant quote in right panel ('A bistro that stays until the last conversation.') ✔. Login → /discover redirect ✔. Discover shows exactly 6 restaurant cards with correct IDs, no legacy Nocturne venue names in DOM. Chef's Pick FeaturedRoom rendered with Ikigai (one of Verre/Osteria/Ikigai as expected). Vibe filter tabs all present and filtering correctly: all=6, chefs-pick=3, date-night=2, buzzing=2, solo=1, group=1, new=1. Surprise-me navigates to a random /venues/venue-* page ✔. VenueDetail hero renders cuisine/chef/price/tagline/vibe pills; Speak-with-the-room button opens ConciergeModal, submit posts note, and note appears in Profile 'Your correspondence' section ✔. Profile empty-state copy is 'Your history will grow with each table you take.' — no 'each Ritual you begin' anywhere ✔. Wallet page shows serif balance (1,200), 'INNER CIRCLE' tier badge, lifetime 3,400, held-in-reserve redemption list. Redeem flow (3-step: Room → Perk → Confirm) works — picked Verre → priority perk → Redeem → generated R- code ✔. /scan fallback venue picker functions (select venue → Check in → routed to wallet).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Scan page (/scan)", "issues": ["Persistent React dev-mode hydration warning '<span> cannot be a child of <option>' — carried over from iter 2. Non user-visible; noisy in console."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional: rename CSS/keyframe internal comments referencing 'nocturne' in /app/frontend/src/index.css line 21 and /app/frontend/src/components/Sparkles.jsx (`nocturne-sparkle` keyframe) for brand consistency. Not user-visible so low priority.",
+    "Optional: replace native <select> in Scan.jsx with shadcn Select or drop the span wrapper inside <option> to silence dev-mode hydration warning."
+  ],
+  "critical_code_review_comments": [
+    "server.py seed_database() now correctly purges non-seed venues on startup (db.venues.delete_many with $nin) — legacy Nocturne venue IDs return 404 as expected.",
+    "SEED_USERS still uses email `staff.lumen@ritual.app` mapped to `venue-ikigai` post-pivot. The email name is now inconsistent with its venue but is preserved for backward compat with existing tests/docs. /app/memory/test_credentials.md incorrectly states staff.lumen maps to Verre — it actually maps to Ikigai per seed. Recommend updating credentials doc.",
+    "Discover FeaturedRoom currently picks featured venues where featured=True (Verre/Osteria/Ikigai). Since seed data uses insertion order but venues API return order may vary by Mongo, featured selection may be non-deterministic across restarts — acceptable for demo.",
+    "VenueCard/redeem tiles use the same restaurant Unsplash imagery — visually appropriate for the restaurant pivot."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (28/28)", "frontend": "100% of tested regression flows"},
+  "test_credentials": "Read from /app/memory/test_credentials.md — all 5 accounts valid. NOTE: doc says staff.lumen maps to Verre but seed actually maps it to venue-ikigai; staff.verre correctly maps to venue-verre.",
+  "seed_data_creation": "TEST_-prefixed concierge messages and one TEST_Event on venue-verre created via pytest. Priority (250 pt) and inner_experience (1000 pt) redemptions performed on Mila's account during E2E — Mila balance ended at 1200 pts (from seeded 2200).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Post-pivot venue IDs: venue-verre, venue-osteria, venue-ikigai, venue-salle-privee, venue-la-petite, venue-chambre. staff.lumen@ritual.app now maps to venue-ikigai (per SEED_USERS). Legacy venue IDs (venue-lumen, venue-aureus, etc.) are purged on backend startup and return 404. All E2E flows regressed green. Landing hero text is split across a <br/> — use text_content('h1') or visual check rather than a simple 'Your table follows you.' substring match against body innerText.",
+  "rca of the issue": "N/A — no critical failures found in this regression pass."
+}

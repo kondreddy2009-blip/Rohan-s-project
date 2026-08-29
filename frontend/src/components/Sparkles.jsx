@@ -28,13 +28,13 @@ export function Sparkles({ count = 22 }) {
             width: `${d.size}px`,
             height: `${d.size}px`,
             transform: `translate(${d.x}px, ${d.y}px)`,
-            animation: `nocturne-sparkle ${d.duration}ms ease-out ${d.delay}ms both`,
+            animation: `table-sparkle ${d.duration}ms ease-out ${d.delay}ms both`,
             opacity: 0,
           }}
         />
       ))}
       <style>{`
-        @keyframes nocturne-sparkle {
+        @keyframes table-sparkle {
           0%   { opacity: 0; transform: translate(0, 0) scale(0.3); }
           25%  { opacity: 1; }
           80%  { opacity: 0.9; }

@@ -515,8 +515,8 @@ export default function StaffDashboard() {
               </h2>
               <p className="text-[#8996B0] font-light mt-4 leading-relaxed">
                 Display this at the entrance or on the reservation stand. When a
-                member scans it in the Nocturne app, they are checked into {selectedVenue.name} and awarded 100
-                Nocturne Points.
+                member scans it in the Table app, they are checked into {selectedVenue.name} and awarded 100
+                Table Points.
               </p>
               <div className="mt-6 overline">Check-in address</div>
               <div className="font-mono text-xs sm:text-sm text-[#C2A36B] break-all mt-1">

@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /* -------------------------------------------------------------------------
-   Ritual — palette + type system
+   Table — palette + type system
    ------------------------------------------------------------------------- */
 :root {
   --ritual-bg: #0f0f0f;
@@ -18,7 +18,7 @@
   --ritual-accent: #c2a36b;
   --ritual-accent-hover: #d1b37d;
 
-  /* shadcn dark tokens re-tuned to nocturne (midnight blue) */
+  /* shadcn dark tokens re-tuned to Table (midnight blue) */
   --background: 217 57% 9%;
   --foreground: 220 33% 93%;
   --card: 219 47% 14%;

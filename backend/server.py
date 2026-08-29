@@ -31,11 +31,11 @@ JWT_SECRET = os.environ["JWT_SECRET"]
 ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
-app = FastAPI(title="Nocturne API")
+app = FastAPI(title="Table API")
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("nocturne")
+logger = logging.getLogger("table")
 
 
 # ---------------------------------------------------------------------------
@@ -495,7 +495,7 @@ async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
 
     balance = user.get("ritual_points_balance", 0)
     if balance < perk["cost"]:
-        raise HTTPException(status_code=400, detail="Not enough Nocturne Points")
+        raise HTTPException(status_code=400, detail="Not enough Table Points")
 
     now = _now_iso()
     new_balance = balance - perk["cost"]
@@ -780,15 +780,19 @@ SEED_VENUES = [
     {
         "id": "venue-verre",
         "name": "Verre",
-        "type": "Bistro",
+        "type": "Restaurant",
+        "cuisine": "French Bistro",
+        "price_level": 3,
         "neighborhood": "West Village",
         "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 65,
         "hours": "18:00 – 01:00",
         "tagline": "A bistro that stays until the last conversation.",
-        "description": "A candlelit bistro serving natural wine and seasonal small plates well into the night. Reservations rarely required, patience always rewarded.",
-        "image_url": "https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHw0fHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "description": "A candlelit bistro serving natural wine and seasonal small plates. Warm banquettes, patient service, an evening that keeps its own hours.",
+        "image_url": "https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": "Camille Roux",
+        "vibes": ["Date Night", "Buzzing"],
         "seed_offerings": [
             {"name": "Beef Tartare", "order_count": 156},
             {"name": "Endive & Roquefort", "order_count": 98},
@@ -798,56 +802,69 @@ SEED_VENUES = [
         "featured": True,
     },
     {
-        "id": "venue-lumen",
-        "name": "Lumen",
-        "type": "Lounge",
-        "neighborhood": "Downtown",
+        "id": "venue-osteria",
+        "name": "Osteria Verde",
+        "type": "Restaurant",
+        "cuisine": "Italian",
+        "price_level": 3,
+        "neighborhood": "Marais",
         "daypart": "night",
-        "status": "Quiet",
-        "capacity_percent": 40,
-        "hours": "17:00 – 02:00",
-        "tagline": "A rooftop, above the noise.",
-        "description": "A rooftop cocktail lounge overlooking the skyline. Amber lighting, brass fittings, a bar list that reads like a poem.",
-        "image_url": "https://images.unsplash.com/photo-1575444758702-4a6b9222336e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxsb3clMjBsaWdodCUyMGNvY2t0YWlsJTIwYmFyfGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "status": "At Capacity",
+        "capacity_percent": 92,
+        "hours": "18:00 – 23:30",
+        "tagline": "Long tables. Longer conversations.",
+        "description": "A generous Italian trattoria with a single wood-fired oven, house-made pasta, and a wine list that walks you from Piedmont to Sicily.",
+        "image_url": "https://images.unsplash.com/photo-1551218808-94e220e084d2?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": "Enzo Marchetti",
+        "vibes": ["Chef's Pick", "Group-Friendly"],
         "seed_offerings": [
-            {"name": "Smoked Old Fashioned", "order_count": 203},
-            {"name": "Yuzu Gimlet", "order_count": 178},
-            {"name": "Vesper", "order_count": 121},
-            {"name": "Negroni Bianco", "order_count": 96},
+            {"name": "Cacio e Pepe", "order_count": 218},
+            {"name": "Bistecca alla Fiorentina", "order_count": 176},
+            {"name": "Burrata & Peach", "order_count": 132},
+            {"name": "Tiramisu", "order_count": 104},
         ],
         "featured": True,
     },
     {
-        "id": "venue-noctis",
-        "name": "Noctis",
-        "type": "Bar",
-        "neighborhood": "Chinatown",
+        "id": "venue-ikigai",
+        "name": "Ikigai",
+        "type": "Restaurant",
+        "cuisine": "Japanese Omakase",
+        "price_level": 4,
+        "neighborhood": "Downtown",
         "daypart": "night",
-        "status": "At Capacity",
-        "capacity_percent": 95,
-        "hours": "21:00 – 04:00",
-        "tagline": "The last room before morning.",
-        "description": "A late-night listening bar hidden behind an unmarked door. Vinyl only, low ceilings, quiet crowds.",
-        "image_url": "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHxsb3clMjBsaWdodCUyMGNvY2t0YWlsJTIwYmFyfGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "status": "Quiet",
+        "capacity_percent": 35,
+        "hours": "18:00 – 23:00",
+        "tagline": "Twelve seats. One evening.",
+        "description": "An intimate omakase counter with two seatings a night. The chef speaks little and pours patiently — you leave when the last course is finished.",
+        "image_url": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": "Kenji Watanabe",
+        "vibes": ["Chef's Pick"],
         "seed_offerings": [
-            {"name": "Highball Reserve", "order_count": 189},
-            {"name": "Mezcal Sazerac", "order_count": 143},
-            {"name": "Champagne Coupe", "order_count": 87},
+            {"name": "Otoro Nigiri", "order_count": 189},
+            {"name": "Uni & Ikura", "order_count": 143},
+            {"name": "Wagyu Course", "order_count": 96},
+            {"name": "Yuzu Sorbet", "order_count": 61},
         ],
         "featured": True,
     },
     {
         "id": "venue-salle-privee",
         "name": "Salle Privée",
-        "type": "Supper Club",
+        "type": "Restaurant",
+        "cuisine": "Chef's Counter",
+        "price_level": 4,
         "neighborhood": "Financial District",
         "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 70,
-        "hours": "20:00 – 03:00",
-        "tagline": "A supper club that keeps its own hours.",
-        "description": "A members-first supper club with a tasting menu, a house pianist, and a single seating each night.",
-        "image_url": "https://images.unsplash.com/photo-1643101570532-88c8ecc07c1f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwyfHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85",
+        "hours": "19:00 – 23:30",
+        "tagline": "A single seating each night.",
+        "description": "A private counter of ten seats served a nightly tasting menu by the chef. Silverware only, house pianist optional, seasons observed.",
+        "image_url": "https://images.unsplash.com/photo-1643101570532-88c8ecc07c1f?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": "Marion Aubert",
+        "vibes": ["Insider Access", "Chef's Pick"],
         "seed_offerings": [
             {"name": "Chef's Tasting", "order_count": 92},
             {"name": "Caviar Service", "order_count": 61},
@@ -857,55 +874,56 @@ SEED_VENUES = [
         "featured": False,
     },
     {
-        "id": "venue-aureole",
-        "name": "Auréole",
-        "type": "Wine Bar",
+        "id": "venue-la-petite",
+        "name": "La Petite",
+        "type": "Restaurant",
+        "cuisine": "Small Plates",
+        "price_level": 2,
         "neighborhood": "Belleville",
         "daypart": "night",
         "status": "Quiet",
-        "capacity_percent": 35,
-        "hours": "18:00 – 01:00",
-        "tagline": "Natural wine, poured with patience.",
-        "description": "A tiny natural wine bar with two counters, no menu, and a rotating list read aloud by the sommelier.",
-        "image_url": "https://images.unsplash.com/photo-1470337458703-46ad1756a187?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "capacity_percent": 45,
+        "hours": "17:30 – 23:00",
+        "tagline": "Small plates, unhurried nights.",
+        "description": "A neighborhood bistro that serves a rotating menu of small plates until the last table is happy. Solo seats at the pass, natural wine by the glass.",
+        "image_url": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": "Sofia Duval",
+        "vibes": ["Solo-Friendly", "Neighborhood Favorite"],
         "seed_offerings": [
-            {"name": "Loire Chenin", "order_count": 88},
-            {"name": "Jura Poulsard", "order_count": 74},
-            {"name": "Anchovy Toast", "order_count": 66},
-            {"name": "Comté & Honey", "order_count": 52},
+            {"name": "Comté Gougères", "order_count": 118},
+            {"name": "Duck Rillettes", "order_count": 94},
+            {"name": "Roast Chicken for Two", "order_count": 132},
+            {"name": "Poached Pear", "order_count": 47},
         ],
         "featured": False,
     },
     {
         "id": "venue-chambre",
-        "name": "Chambre No. 7",
-        "type": "Speakeasy",
+        "name": "Chambre",
+        "type": "Restaurant",
+        "cuisine": "Modern American",
+        "price_level": 4,
         "neighborhood": "Mayfair",
         "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 60,
-        "hours": "22:00 – 03:00",
-        "tagline": "A room behind a room.",
-        "description": "A speakeasy tucked inside a hotel corridor. Green velvet, a single piano, and a doorman who remembers your name.",
-        "image_url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "hours": "18:00 – 00:00",
+        "tagline": "New American, quietly ambitious.",
+        "description": "A first-year dining room turning heads for its quiet plating and slow-cooked room. Green banquettes, a single piano, a bar that pours off-menu.",
+        "image_url": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": "Everett Blake",
+        "vibes": ["Date Night", "Just Opened"],
         "seed_offerings": [
-            {"name": "Reserve Manhattan", "order_count": 167},
-            {"name": "Corpse Reviver No. 2", "order_count": 112},
-            {"name": "Champagne 75", "order_count": 94},
+            {"name": "Aged Ribeye", "order_count": 137},
+            {"name": "Halibut with Kelp Butter", "order_count": 112},
+            {"name": "Sunchoke Velouté", "order_count": 84},
+            {"name": "Buttermilk Ice", "order_count": 63},
         ],
         "featured": False,
     },
 ]
 
 SEED_EVENTS = [
-    {
-        "venue_id": "venue-lumen",
-        "title": "An Evening with Isolde Marsh",
-        "description": "A private set from the London-based pianist. Reservations by request.",
-        "date": "2026-03-14",
-        "time": "21:00",
-        "tier_required": "Inner Circle",
-    },
     {
         "venue_id": "venue-verre",
         "title": "Natural Wine Table",
@@ -915,35 +933,43 @@ SEED_EVENTS = [
         "tier_required": None,
     },
     {
+        "venue_id": "venue-osteria",
+        "title": "Pasta Sunday",
+        "description": "Six house-made shapes, one long table, all evening.",
+        "date": "2026-03-01",
+        "time": "19:00",
+        "tier_required": None,
+    },
+    {
+        "venue_id": "venue-ikigai",
+        "title": "A Winter Course",
+        "description": "A twelve-course omakase built around Hokkaido winter fish.",
+        "date": "2026-03-14",
+        "time": "19:30",
+        "tier_required": "Inner Circle",
+    },
+    {
         "venue_id": "venue-salle-privee",
         "title": "The March Tasting",
         "description": "A five-course seasonal menu, silverware only.",
         "date": "2026-03-08",
-        "time": "20:30",
+        "time": "20:00",
         "tier_required": "Insider",
     },
     {
-        "venue_id": "venue-noctis",
-        "title": "Late Hours: Vinyl Only",
-        "description": "A guest selector spins soul and jazz until four.",
-        "date": "2026-02-22",
-        "time": "23:00",
+        "venue_id": "venue-la-petite",
+        "title": "Solo Counter Night",
+        "description": "Ten seats reserved for solo diners at the chef’s pass.",
+        "date": "2026-02-24",
+        "time": "19:00",
         "tier_required": None,
     },
     {
-        "venue_id": "venue-aureole",
-        "title": "The Sommelier's Table",
-        "description": "A four-glass flight, poured and narrated at the counter.",
-        "date": "2026-03-05",
-        "time": "20:00",
-        "tier_required": "Regular",
-    },
-    {
         "venue_id": "venue-chambre",
-        "title": "Piano After Midnight",
-        "description": "A house pianist and three uninterrupted hours of jazz.",
+        "title": "Piano After Dinner",
+        "description": "A late-service pianist and off-menu pours until close.",
         "date": "2026-03-10",
-        "time": "23:30",
+        "time": "22:00",
         "tier_required": "Inner Circle",
     },
 ]
@@ -981,9 +1007,9 @@ SEED_USERS = [
     {
         "email": "staff.lumen@ritual.app",
         "password": "ritual2026",
-        "name": "Lumen Front Desk",
+        "name": "Ikigai Host",
         "role": "staff",
-        "staff_venue_id": "venue-lumen",
+        "staff_venue_id": "venue-ikigai",
     },
     {
         "email": "staff.verre@ritual.app",
@@ -996,7 +1022,9 @@ SEED_USERS = [
 
 
 async def seed_database():
-    # Venues
+    # Venues — clear legacy entries that are no longer in SEED_VENUES (e.g. Nocturne pre-pivot)
+    seed_ids = [v["id"] for v in SEED_VENUES]
+    await db.venues.delete_many({"id": {"$nin": seed_ids}})
     for v in SEED_VENUES:
         existing = await db.venues.find_one({"id": v["id"]})
         doc = {**v, "signature_offerings": list(v["seed_offerings"])}
@@ -1043,12 +1071,12 @@ async def seed_database():
             base = datetime.now(timezone.utc) - timedelta(days=20)
             seed_ledger = [
                 {"venue": "venue-verre", "delta": 100, "type": "earn", "desc": "Check-in at Verre", "days_ago": 20},
-                {"venue": "venue-aureole", "delta": 100, "type": "earn", "desc": "Check-in at Auréole", "days_ago": 15},
-                {"venue": "venue-lumen", "delta": 100, "type": "earn", "desc": "Check-in at Lumen", "days_ago": 12},
-                {"venue": "venue-chambre", "delta": 100, "type": "earn", "desc": "Check-in at Chambre No. 7", "days_ago": 10},
+                {"venue": "venue-la-petite", "delta": 100, "type": "earn", "desc": "Check-in at La Petite", "days_ago": 15},
+                {"venue": "venue-ikigai", "delta": 100, "type": "earn", "desc": "Check-in at Ikigai", "days_ago": 12},
+                {"venue": "venue-osteria", "delta": 100, "type": "earn", "desc": "Check-in at Osteria Verde", "days_ago": 10},
                 {"venue": "venue-salle-privee", "delta": -250, "type": "redeem", "desc": "Priority Seating at Salle Privée", "days_ago": 7},
                 {"venue": "venue-verre", "delta": 100, "type": "earn", "desc": "Check-in at Verre", "days_ago": 5},
-                {"venue": "venue-lumen", "delta": 100, "type": "earn", "desc": "Check-in at Lumen", "days_ago": 3},
+                {"venue": "venue-chambre", "delta": 100, "type": "earn", "desc": "Check-in at Chambre", "days_ago": 3},
             ]
             venue_names = {v["id"]: v["name"] for v in SEED_VENUES}
             for entry in seed_ledger:
@@ -1076,7 +1104,7 @@ async def seed_database():
 @app.on_event("startup")
 async def on_startup():
     await seed_database()
-    logger.info("Nocturne API ready. Seed complete.")
+    logger.info("Table API ready. Seed complete.")
 
 
 @app.on_event("shutdown")
@@ -1086,4 +1114,4 @@ async def on_shutdown():
 
 @api.get("/")
 async def root():
-    return {"service": "nocturne", "status": "ok"}
+    return {"service": "table", "status": "ok"}

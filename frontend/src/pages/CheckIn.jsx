@@ -94,10 +94,10 @@ export default function CheckIn() {
             </div>
             <div className="overline-accent mt-6">Welcomed</div>
             <h2 className="font-serif-display text-4xl mt-3">
-              Your Nocturne continues at {venue.name}.
+              Your Table continues at {venue.name}.
             </h2>
             <div className="mt-10">
-              <div className="overline mb-2">Nocturne Points earned</div>
+              <div className="overline mb-2">Table Points earned</div>
               <div data-testid="points-earned">
                 <AnimatedNumber
                   value={result.points_earned}

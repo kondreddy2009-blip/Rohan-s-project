@@ -1,9 +1,35 @@
 import { Link } from "react-router-dom";
 import { StatusIndicator } from "@/components/StatusIndicator";
 
+const VIBE_COLORS = {
+  "Chef's Pick": "bg-[#C2A36B]/12 text-[#C2A36B] border-[#C2A36B]/40",
+  "Insider Access": "bg-[#C2A36B]/12 text-[#C2A36B] border-[#C2A36B]/40",
+  "Date Night": "bg-[#E27D60]/15 text-[#E29B87] border-[#E27D60]/40",
+  Buzzing: "bg-[#E27D60]/15 text-[#E29B87] border-[#E27D60]/40",
+  "Just Opened": "bg-[#E27D8B]/15 text-[#E2A0B6] border-[#E27D8B]/40",
+  "Solo-Friendly": "bg-[#89A88C]/15 text-[#A6C4A9] border-[#89A88C]/40",
+  "Neighborhood Favorite": "bg-[#89A88C]/15 text-[#A6C4A9] border-[#89A88C]/40",
+  "Group-Friendly": "bg-[#E2B47D]/15 text-[#E2C79B] border-[#E2B47D]/40",
+};
+
+export function VibePill({ vibe, className = "" }) {
+  const color = VIBE_COLORS[vibe] || "bg-white/5 text-white/70 border-white/15";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2.5 py-1 border text-[9.5px] font-medium tracking-[0.16em] uppercase whitespace-nowrap ${color} ${className}`}
+      data-testid={`vibe-${vibe.replace(/[^a-z]+/gi, "-").toLowerCase()}`}
+    >
+      {vibe}
+    </span>
+  );
+}
+
 export function VenueCard({ venue, index = 0 }) {
   const topOffering = venue.signature_offerings?.[0]?.name;
-  const secondOffering = venue.signature_offerings?.[1]?.name;
+  const priceStr = "$".repeat(venue.price_level || 3);
+  const vibes = venue.vibes || [];
+  const primaryVibe = vibes[0];
+
   return (
     <Link
       to={`/venues/${venue.id}`}
@@ -15,29 +41,61 @@ export function VenueCard({ venue, index = 0 }) {
         <img
           src={venue.image_url}
           alt={venue.name}
-          className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.03]"
+          className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A1424] via-[#0A1424]/20 to-transparent" />
+
+        {/* Top-left status */}
         <div className="absolute left-5 top-5">
           <StatusIndicator status={venue.status} />
         </div>
-        <div className="absolute right-5 top-5 overline text-[#E8ECF5]/70">
-          {venue.type}
-        </div>
+
+        {/* Top-right vibe pill */}
+        {primaryVibe && (
+          <div className="absolute right-5 top-5">
+            <VibePill vibe={primaryVibe} />
+          </div>
+        )}
+
+        {/* Bottom-left neighborhood + name */}
         <div className="absolute inset-x-5 bottom-5">
-          <div className="overline mb-2">{venue.neighborhood}</div>
-          <h3 className="font-serif-display text-3xl leading-tight text-[#E8ECF5]">
-            {venue.name}
-          </h3>
+          <div className="overline mb-2 flex items-center gap-2">
+            <span>{venue.neighborhood}</span>
+            {venue.cuisine && (
+              <>
+                <span className="text-[#5F6A83]">·</span>
+                <span>{venue.cuisine}</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="font-serif-display text-3xl leading-tight text-[#E8ECF5]">
+              {venue.name}
+            </h3>
+            <span className="text-[#C2A36B] font-serif text-sm tracking-widest">
+              {priceStr}
+            </span>
+          </div>
         </div>
       </div>
-      {(topOffering || secondOffering) && (
-        <div className="px-5 py-4 hairline-t">
-          <div className="overline mb-1.5">What regulars order</div>
-          <div className="text-sm text-[#E8ECF5]/85 font-light">
-            {[topOffering, secondOffering].filter(Boolean).join(" · ")}
+
+      {topOffering && (
+        <div className="px-5 py-4 hairline-t flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="overline mb-1">What regulars order</div>
+            <div className="text-sm text-[#E8ECF5]/85 font-light truncate">
+              {topOffering}
+            </div>
           </div>
+          {venue.chef && (
+            <div className="text-right shrink-0">
+              <div className="overline mb-1">Chef</div>
+              <div className="text-sm text-[#E8ECF5]/85 font-serif italic whitespace-nowrap">
+                {venue.chef.split(" ")[0]}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Link>

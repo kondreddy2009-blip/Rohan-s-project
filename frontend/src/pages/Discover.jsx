@@ -1,22 +1,75 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Shuffle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Shuffle, ChefHat, Flame } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { VenueCard } from "@/components/VenueCard";
+import { VenueCard, VibePill } from "@/components/VenueCard";
+import { StatusIndicator } from "@/components/StatusIndicator";
 import { TierBadge } from "@/components/TierBadge";
 import { cn } from "@/lib/utils";
 
-const FILTERS = [
+const VIBE_FILTERS = [
   { key: "all", label: "All", match: () => true },
-  { key: "bar", label: "Bars", match: (v) => /bar|speakeasy/i.test(v.type) },
-  { key: "lounge", label: "Lounges", match: (v) => /lounge/i.test(v.type) },
-  {
-    key: "table",
-    label: "Tables",
-    match: (v) => /bistro|club|dining/i.test(v.type),
-  },
+  { key: "chefs-pick", label: "Chef's Picks", match: (v) => v.vibes?.includes("Chef's Pick") },
+  { key: "date-night", label: "Date Night", match: (v) => v.vibes?.includes("Date Night") },
+  { key: "buzzing", label: "Buzzing", match: (v) => v.vibes?.includes("Buzzing") || v.status === "At Capacity" },
+  { key: "solo", label: "Solo", match: (v) => v.vibes?.includes("Solo-Friendly") },
+  { key: "group", label: "Groups", match: (v) => v.vibes?.includes("Group-Friendly") },
+  { key: "new", label: "Just Opened", match: (v) => v.vibes?.includes("Just Opened") },
 ];
+
+function FeaturedRoom({ venue }) {
+  if (!venue) return null;
+  const priceStr = "$".repeat(venue.price_level || 3);
+  return (
+    <Link
+      to={`/venues/${venue.id}`}
+      data-testid={`featured-${venue.id}`}
+      className="block relative overflow-hidden group card-invite mt-8"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-5">
+        <div className="md:col-span-3 relative aspect-[4/3] md:aspect-auto md:min-h-[360px]">
+          <img
+            src={venue.image_url}
+            alt={venue.name}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#121D33]/60 md:to-[#121D33]" />
+          <div className="absolute top-5 left-5 inline-flex items-center gap-2 overline-accent">
+            <Flame strokeWidth={1.4} className="h-3.5 w-3.5" />
+            Chef&apos;s pick tonight
+          </div>
+        </div>
+        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#121D33]">
+          <div className="overline">
+            {venue.neighborhood} · {venue.cuisine}
+          </div>
+          <h2 className="font-serif-display text-4xl sm:text-5xl leading-[0.98]">
+            {venue.name}
+          </h2>
+          <p className="font-serif italic text-lg text-[#E8ECF5]/80">
+            &ldquo;{venue.tagline}&rdquo;
+          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {(venue.vibes || []).map((v) => (
+              <VibePill key={v} vibe={v} />
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-4 overline">
+            <StatusIndicator status={venue.status} />
+            <span className="text-[#C2A36B] tracking-widest">{priceStr}</span>
+            {venue.chef && (
+              <span className="inline-flex items-center gap-1 text-[#E8ECF5]/60">
+                <ChefHat strokeWidth={1.2} className="h-3 w-3" />
+                {venue.chef}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default function Discover() {
   const { user } = useAuth();
@@ -43,10 +96,14 @@ export default function Discover() {
     };
   }, []);
 
-  const activeFilter = FILTERS.find((f) => f.key === filter) || FILTERS[0];
+  const active = VIBE_FILTERS.find((f) => f.key === filter) || VIBE_FILTERS[0];
+  const featured = useMemo(
+    () => venues.find((v) => v.vibes?.includes("Chef's Pick") && v.featured) || venues.find((v) => v.featured),
+    [venues],
+  );
   const filtered = useMemo(
-    () => venues.filter(activeFilter.match),
-    [venues, activeFilter],
+    () => venues.filter(active.match),
+    [venues, active],
   );
 
   const hour = new Date().getHours();
@@ -54,14 +111,16 @@ export default function Discover() {
     hour < 4
       ? "After midnight"
       : hour < 11
-        ? "The night ahead"
-        : hour < 17
-          ? "Aperitivo soon"
-          : hour < 20
-            ? "Cocktail hour"
-            : hour < 22
-              ? "The night is on"
-              : "Late hours";
+        ? "This morning"
+        : hour < 15
+          ? "Lunch service"
+          : hour < 17
+            ? "Aperitivo soon"
+            : hour < 20
+              ? "Dinner is on"
+              : hour < 22
+                ? "The room is on"
+                : "Late service";
 
   const surpriseMe = () => {
     if (filtered.length === 0 || rolling) return;
@@ -84,15 +143,17 @@ export default function Discover() {
           <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl leading-[1.02]">
             <span className="italic text-[#C2A36B]">{user?.name?.split(" ")[0] || "Guest"}</span>,
             <br />
-            your Nocturne continues.
+            your Table continues.
           </h1>
           <TierBadge tier={user?.tier} testId="header-tier-badge" />
         </div>
       </div>
 
-      <div className="mt-10 flex items-center justify-between gap-4 border-b border-[#253453] overflow-x-auto">
+      {!loading && featured && <FeaturedRoom venue={featured} />}
+
+      <div className="mt-12 flex items-center justify-between gap-4 border-b border-[#253453] overflow-x-auto">
         <div className="flex items-center gap-1" role="tablist" data-testid="discover-filters">
-          {FILTERS.map((f) => (
+          {VIBE_FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
@@ -100,7 +161,7 @@ export default function Discover() {
               role="tab"
               aria-selected={filter === f.key}
               className={cn(
-                "px-5 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
+                "px-4 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
                 filter === f.key
                   ? "text-[#C2A36B] border-[#C2A36B]"
                   : "text-[#8996B0] border-transparent hover:text-[#E8ECF5]",

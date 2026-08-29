@@ -121,7 +121,7 @@ export default function Scan() {
         Scan the room&apos;s QR.
       </h1>
       <p className="text-[#8996B0] font-light mt-2 max-w-md">
-        Point your camera at the QR at the host stand. Your Nocturne begins the moment it&apos;s read.
+        Point your camera at the QR at the host stand. Your Table begins the moment it&apos;s read.
       </p>
 
       {step === "scan" && (
@@ -193,10 +193,10 @@ export default function Scan() {
           </div>
           <div className="overline-accent mt-6">Welcomed</div>
           <h2 className="font-serif-display text-4xl mt-3">
-            Your Nocturne continues at {result.venue.name}.
+            Your Table continues at {result.venue.name}.
           </h2>
           <div className="mt-10">
-            <div className="overline mb-2">Nocturne Points earned</div>
+            <div className="overline mb-2">Table Points earned</div>
             <AnimatedNumber
               value={result.points_earned}
               prefix="+"

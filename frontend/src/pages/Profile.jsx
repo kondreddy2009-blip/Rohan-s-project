@@ -219,7 +219,7 @@ export default function Profile() {
         <div className="mt-6">
           {history.length === 0 ? (
             <div className="text-[#8996B0] font-light py-8">
-              Your history will grow with each Ritual you begin.
+              Your history will grow with each table you take.
             </div>
           ) : (
             history.map((h, i) => <TimelineEntry key={h.id} item={h} index={i} />)

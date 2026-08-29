@@ -3,11 +3,11 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 
 const QUOTES = [
-  { text: "The last room before morning.", venue: "Noctis, Chinatown" },
   { text: "A bistro that stays until the last conversation.", venue: "Verre, West Village" },
-  { text: "Above the noise.", venue: "Lumen, Downtown" },
-  { text: "A room behind a room.", venue: "Chambre No. 7, Mayfair" },
-  { text: "Natural wine, poured with patience.", venue: "Auréole, Belleville" },
+  { text: "Twelve seats. One evening.", venue: "Ikigai, Downtown" },
+  { text: "Long tables. Longer conversations.", venue: "Osteria Verde, Marais" },
+  { text: "Small plates, unhurried nights.", venue: "La Petite, Belleville" },
+  { text: "A single seating each night.", venue: "Salle Privée, Financial District" },
 ];
 
 export default function Landing() {
@@ -37,7 +37,7 @@ export default function Landing() {
     <div className="min-h-screen bg-[#0A1424] text-[#E8ECF5] grid grid-cols-1 lg:grid-cols-12">
       <div className="lg:col-span-7 relative flex flex-col px-6 sm:px-12 lg:px-20 py-10 lg:py-16">
         <header className="flex items-center justify-between">
-          <div className="overline-accent">Nocturne</div>
+          <div className="overline-accent">Table</div>
           <Link
             to="/login"
             data-testid="landing-signin-link"
@@ -51,16 +51,17 @@ export default function Landing() {
           <div className="animate-fade-up">
             <div className="overline mb-8 inline-flex items-center gap-2">
               <span className="h-1.5 w-1.5 bg-[#C2A36B] status-dot-pulse" />
-              A nightlife collective · Est. 2026
+              A restaurant collective · Est. 2026
             </div>
             <h1 className="font-serif-display text-5xl sm:text-6xl lg:text-8xl leading-[0.95] tracking-tight">
-              Your evening
+              Your table
               <br />
               <span className="italic text-[#C2A36B]">follows</span> you.
             </h1>
             <p className="mt-10 max-w-lg text-[#E8ECF5]/70 text-base sm:text-lg font-light leading-relaxed">
-              A single membership across the rooms that keep the late
-              hours — the first cocktail, the long conversation, the last pour.
+              A single membership across the city&apos;s best rooms — the
+              neighborhood bistro, the omakase counter, the counter of ten.
+              One night at any of them; points at every one after.
             </p>
           </div>
 
@@ -76,6 +77,21 @@ export default function Landing() {
               Guest · Regular · Insider · Inner Circle
             </div>
           </div>
+
+          <div className="mt-14 grid grid-cols-3 gap-4 max-w-md animate-fade-up delay-300">
+            <div>
+              <div className="font-serif-display text-3xl text-[#C2A36B]">6</div>
+              <div className="overline mt-1">Rooms</div>
+            </div>
+            <div>
+              <div className="font-serif-display text-3xl text-[#C2A36B]">4</div>
+              <div className="overline mt-1">Tiers</div>
+            </div>
+            <div>
+              <div className="font-serif-display text-3xl text-[#C2A36B]">∞</div>
+              <div className="overline mt-1">Perks</div>
+            </div>
+          </div>
         </div>
 
         <footer className="hairline-t pt-6 mt-10 flex flex-wrap items-center justify-between gap-4">
@@ -85,7 +101,7 @@ export default function Landing() {
 
       <div className="lg:col-span-5 relative min-h-[42vh] lg:min-h-screen">
         <img
-          src="https://images.unsplash.com/photo-1575444758702-4a6b9222336e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxsb3clMjBsaWdodCUyMGNvY2t0YWlsJTIwYmFyfGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85"
+          src="https://images.unsplash.com/photo-1551218808-94e220e084d2?crop=entropy&cs=srgb&fm=jpg&q=85"
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
         />

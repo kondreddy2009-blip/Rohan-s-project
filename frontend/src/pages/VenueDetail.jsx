@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare, ChefHat } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
+import { VibePill } from "@/components/VenueCard";
 import { ConciergeModal } from "@/components/ConciergeModal";
 import { cn } from "@/lib/utils";
 
@@ -70,10 +71,15 @@ export default function VenueDetail() {
 
         <div className="absolute inset-x-0 bottom-0 px-5 sm:px-10 pb-10">
           <div className="mx-auto max-w-4xl animate-fade-up">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-4 flex-wrap">
               <StatusIndicator status={venue.status} testId="venue-status" />
-              <span className="overline">{venue.type}</span>
+              {venue.cuisine && <span className="overline">{venue.cuisine}</span>}
               <span className="overline hidden sm:inline">{venue.neighborhood}</span>
+              {venue.price_level && (
+                <span className="overline text-[#C2A36B] tracking-widest">
+                  {"$".repeat(venue.price_level)}
+                </span>
+              )}
             </div>
             <h1
               className="font-serif-display text-5xl sm:text-6xl lg:text-8xl leading-[0.95] tracking-tight"
@@ -84,6 +90,13 @@ export default function VenueDetail() {
             <p className="mt-4 max-w-xl text-[#E8ECF5]/80 italic font-serif text-lg sm:text-xl">
               {venue.tagline}
             </p>
+            {venue.vibes && venue.vibes.length > 0 && (
+              <div className="mt-5 flex flex-wrap items-center gap-2" data-testid="venue-vibes">
+                {venue.vibes.map((v) => (
+                  <VibePill key={v} vibe={v} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -143,6 +156,26 @@ export default function VenueDetail() {
           </div>
         </div>
 
+        {/* Chef spotlight */}
+        {venue.chef && (
+          <div className="hairline-t pt-10 animate-fade-up">
+            <div className="overline mb-6">In the kitchen</div>
+            <div className="flex items-start gap-6">
+              <div className="h-16 w-16 flex-shrink-0 rounded-full bg-[#121D33] border border-[#253453] flex items-center justify-center">
+                <ChefHat strokeWidth={1} className="h-7 w-7 text-[#C2A36B]" />
+              </div>
+              <div>
+                <div className="overline-accent mb-1">Chef</div>
+                <div className="font-serif-display text-3xl">{venue.chef}</div>
+                <p className="mt-2 text-sm text-[#8996B0] font-light max-w-lg leading-relaxed">
+                  Leads the {venue.cuisine || "kitchen"} at {venue.name}. Menu evolves
+                  with the season; recognition comes from returning guests.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Events */}
         {venue.events && venue.events.length > 0 && (
           <div className="hairline-t pt-10 animate-fade-up">
@@ -186,7 +219,7 @@ export default function VenueDetail() {
         <div className="hairline-t pt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 animate-fade-up">
           <div>
             <div className="overline mb-2">A moment awaits</div>
-            <div className="font-serif-display text-3xl">Begin your Nocturne at {venue.name}.</div>
+            <div className="font-serif-display text-3xl">Begin your Table at {venue.name}.</div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -202,7 +235,7 @@ export default function VenueDetail() {
               data-testid="begin-ritual-button"
               className="btn-primary text-center"
             >
-              Begin Nocturne
+              Begin Table
             </Link>
           </div>
         </div>

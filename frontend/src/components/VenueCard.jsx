@@ -44,7 +44,7 @@ export function VenueCard({ venue, index = 0 }) {
           className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1424] via-[#0A1424]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1A0912] via-[#1A0912]/20 to-transparent" />
 
         {/* Top-left status */}
         <div className="absolute left-5 top-5">
@@ -64,13 +64,13 @@ export function VenueCard({ venue, index = 0 }) {
             <span>{venue.neighborhood}</span>
             {venue.cuisine && (
               <>
-                <span className="text-[#5F6A83]">·</span>
+                <span className="text-[#7A5C55]">·</span>
                 <span>{venue.cuisine}</span>
               </>
             )}
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-serif-display text-3xl leading-tight text-[#E8ECF5]">
+            <h3 className="font-serif-display text-3xl leading-tight text-[#F4E8DA]">
               {venue.name}
             </h3>
             <span className="text-[#C2A36B] font-serif text-sm tracking-widest">
@@ -84,14 +84,14 @@ export function VenueCard({ venue, index = 0 }) {
         <div className="px-5 py-4 hairline-t flex items-center justify-between gap-4">
           <div className="min-w-0">
             <div className="overline mb-1">What regulars order</div>
-            <div className="text-sm text-[#E8ECF5]/85 font-light truncate">
+            <div className="text-sm text-[#F4E8DA]/85 font-light truncate">
               {topOffering}
             </div>
           </div>
           {venue.chef && (
             <div className="text-right shrink-0">
               <div className="overline mb-1">Chef</div>
-              <div className="text-sm text-[#E8ECF5]/85 font-serif italic whitespace-nowrap">
+              <div className="text-sm text-[#F4E8DA]/85 font-serif italic whitespace-nowrap">
                 {venue.chef.split(" ")[0]}
               </div>
             </div>

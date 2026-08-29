@@ -246,6 +246,19 @@ class ConciergeUpdateIn(BaseModel):
     response: Optional[str] = None
 
 
+class BookingIn(BaseModel):
+    venue_id: str
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    time: str = Field(pattern=r"^\d{2}:\d{2}$")
+    party_size: int = Field(ge=1, le=20)
+    note: Optional[str] = Field(default=None, max_length=280)
+
+
+class BookingUpdateIn(BaseModel):
+    status: Literal["confirmed", "declined", "seated"]
+    staff_reply: Optional[str] = None
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -755,6 +768,167 @@ async def update_concierge_message(
     if payload.response is not None:
         updates["response"] = payload.response.strip() or None
     await db.concierge_messages.update_one({"id": msg_id}, {"$set": updates})
+    return {"ok": True, **updates}
+
+
+# ---------------------------------------------------------------------------
+# Bookings — live reservations with confirmed codes
+# ---------------------------------------------------------------------------
+SLOT_CAPACITY_PER_TIME = 6  # seats-worth of parties per 30-min slot
+
+
+def _generate_slots(hours: str) -> list:
+    """Parse '18:00 – 23:00' or '18:00 – 01:00' into 30-min slots.
+    Last slot is 30 min before close so a party has time to sit.
+    """
+    if not hours:
+        return []
+    try:
+        normalized = hours.replace("—", "-").replace("–", "-")
+        parts = [p.strip() for p in normalized.split("-")]
+        if len(parts) != 2:
+            return []
+        sh, sm = map(int, parts[0].split(":"))
+        eh, em = map(int, parts[1].split(":"))
+        if eh < sh:  # crosses midnight, e.g. 18:00–01:00
+            eh += 24
+        cur = sh * 60 + sm
+        end_min = eh * 60 + em
+        slots = []
+        while cur + 30 <= end_min:
+            h = (cur // 60) % 24
+            m = cur % 60
+            slots.append(f"{h:02d}:{m:02d}")
+            cur += 30
+        return slots
+    except Exception:
+        return []
+
+
+def _generate_booking_code() -> str:
+    import secrets
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # skip lookalikes
+    return "T-" + "".join(secrets.choice(alphabet) for _ in range(6))
+
+
+@api.get("/venues/{venue_id}/availability")
+async def venue_availability(venue_id: str, date: str, user: dict = Depends(get_current_user)):
+    if not date or len(date) != 10:
+        raise HTTPException(status_code=400, detail="date must be YYYY-MM-DD")
+    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    slots = _generate_slots(venue.get("hours", ""))
+    booked_docs = await db.bookings.find(
+        {
+            "venue_id": venue_id,
+            "date": date,
+            "status": {"$in": ["pending", "confirmed"]},
+        },
+        {"_id": 0, "time": 1},
+    ).to_list(500)
+    booked_times = [b["time"] for b in booked_docs]
+    result = []
+    for s in slots:
+        count = booked_times.count(s)
+        result.append({
+            "time": s,
+            "remaining": max(0, SLOT_CAPACITY_PER_TIME - count),
+            "available": count < SLOT_CAPACITY_PER_TIME,
+        })
+    return {"date": date, "venue_id": venue_id, "hours": venue.get("hours"), "slots": result}
+
+
+@api.post("/bookings")
+async def create_booking(payload: BookingIn, user: dict = Depends(get_current_user)):
+    if user.get("role") not in ("member", "admin"):
+        raise HTTPException(status_code=403, detail="Members only")
+    venue = await db.venues.find_one({"id": payload.venue_id}, {"_id": 0})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    slots = _generate_slots(venue.get("hours", ""))
+    if slots and payload.time not in slots:
+        raise HTTPException(status_code=400, detail="That time isn't offered by this room")
+    taken = await db.bookings.count_documents({
+        "venue_id": payload.venue_id,
+        "date": payload.date,
+        "time": payload.time,
+        "status": {"$in": ["pending", "confirmed"]},
+    })
+    if taken >= SLOT_CAPACITY_PER_TIME:
+        raise HTTPException(status_code=409, detail="That time is full — try another slot.")
+
+    booking = {
+        "id": str(uuid.uuid4()),
+        "code": _generate_booking_code(),
+        "member_id": user["id"],
+        "member_name": user["name"],
+        "member_tier": user.get("tier", "Guest"),
+        "venue_id": payload.venue_id,
+        "venue_name": venue["name"],
+        "venue_neighborhood": venue.get("neighborhood"),
+        "venue_image": venue.get("image_url"),
+        "date": payload.date,
+        "time": payload.time,
+        "party_size": payload.party_size,
+        "note": (payload.note or "").strip() or None,
+        "status": "pending",
+        "staff_reply": None,
+        "created_at": _now_iso(),
+        "responded_at": None,
+    }
+    await db.bookings.insert_one(booking)
+    booking.pop("_id", None)
+    return booking
+
+
+@api.get("/members/me/bookings")
+async def my_bookings(user: dict = Depends(get_current_user)):
+    items = await db.bookings.find(
+        {"member_id": user["id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return items
+
+
+@api.post("/bookings/{booking_id}/cancel")
+async def cancel_booking(booking_id: str, user: dict = Depends(get_current_user)):
+    b = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not b:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if b["member_id"] != user["id"] and user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not your booking")
+    if b["status"] in ("declined", "cancelled", "seated"):
+        raise HTTPException(status_code=400, detail="This reservation is already resolved")
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {"status": "cancelled", "responded_at": _now_iso()}},
+    )
+    return {"ok": True, "status": "cancelled"}
+
+
+@api.get("/staff/venues/{venue_id}/bookings")
+async def venue_bookings(venue_id: str, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    items = await db.bookings.find(
+        {"venue_id": venue_id}, {"_id": 0}
+    ).sort([("date", 1), ("time", 1)]).to_list(200)
+    return items
+
+
+@api.patch("/staff/bookings/{booking_id}")
+async def update_booking(
+    booking_id: str,
+    payload: BookingUpdateIn,
+    user: dict = Depends(require_staff_or_admin),
+):
+    b = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not b:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    _assert_staff_can_manage(user, b["venue_id"])
+    updates = {"status": payload.status, "responded_at": _now_iso()}
+    if payload.staff_reply is not None:
+        updates["staff_reply"] = payload.staff_reply.strip() or None
+    await db.bookings.update_one({"id": booking_id}, {"$set": updates})
     return {"ok": True, **updates}
 
 

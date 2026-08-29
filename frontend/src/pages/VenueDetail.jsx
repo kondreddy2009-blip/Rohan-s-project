@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare, ChefHat } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare, ChefHat, CalendarCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { VibePill } from "@/components/VenueCard";
 import { ConciergeModal } from "@/components/ConciergeModal";
+import { BookingModal } from "@/components/BookingModal";
 import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -17,6 +18,7 @@ export default function VenueDetail() {
   const [venue, setVenue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [conciergeOpen, setConciergeOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,8 +59,8 @@ export default function VenueDetail() {
       {/* Hero */}
       <section className="relative h-[68vh] min-h-[420px] max-h-[720px] overflow-hidden">
         <img src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1424]/50 via-[#0A1424]/20 to-[#0A1424]" />
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0A1424] via-[#0A1424]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0912]/50 via-[#1A0912]/20 to-[#1A0912]" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#1A0912] via-[#1A0912]/50 to-transparent" />
 
         <button
           onClick={() => navigate(-1)}
@@ -87,7 +89,7 @@ export default function VenueDetail() {
             >
               {venue.name}
             </h1>
-            <p className="mt-4 max-w-xl text-[#E8ECF5]/80 italic font-serif text-lg sm:text-xl">
+            <p className="mt-4 max-w-xl text-[#F4E8DA]/80 italic font-serif text-lg sm:text-xl">
               {venue.tagline}
             </p>
             {venue.vibes && venue.vibes.length > 0 && (
@@ -106,22 +108,22 @@ export default function VenueDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="md:col-span-2 animate-fade-up">
             <div className="overline mb-3">The room</div>
-            <p className="text-[#E8ECF5]/85 text-base leading-relaxed font-light">
+            <p className="text-[#F4E8DA]/85 text-base leading-relaxed font-light">
               {venue.description}
             </p>
           </div>
           <div className="space-y-5 animate-fade-up delay-100">
             <div>
               <div className="overline mb-2">Hours</div>
-              <div className="flex items-center gap-2 text-[#E8ECF5]/85 font-light">
-                <Clock strokeWidth={1.2} className="h-4 w-4 text-[#8996B0]" />
+              <div className="flex items-center gap-2 text-[#F4E8DA]/85 font-light">
+                <Clock strokeWidth={1.2} className="h-4 w-4 text-[#B39586]" />
                 {venue.hours}
               </div>
             </div>
             <div>
               <div className="overline mb-2">Neighborhood</div>
-              <div className="flex items-center gap-2 text-[#E8ECF5]/85 font-light">
-                <MapPin strokeWidth={1.2} className="h-4 w-4 text-[#8996B0]" />
+              <div className="flex items-center gap-2 text-[#F4E8DA]/85 font-light">
+                <MapPin strokeWidth={1.2} className="h-4 w-4 text-[#B39586]" />
                 {venue.neighborhood}
               </div>
             </div>
@@ -161,13 +163,13 @@ export default function VenueDetail() {
           <div className="hairline-t pt-10 animate-fade-up">
             <div className="overline mb-6">In the kitchen</div>
             <div className="flex items-start gap-6">
-              <div className="h-16 w-16 flex-shrink-0 rounded-full bg-[#121D33] border border-[#253453] flex items-center justify-center">
+              <div className="h-16 w-16 flex-shrink-0 rounded-full bg-[#2E1220] border border-[#4E1E32] flex items-center justify-center">
                 <ChefHat strokeWidth={1} className="h-7 w-7 text-[#C2A36B]" />
               </div>
               <div>
                 <div className="overline-accent mb-1">Chef</div>
                 <div className="font-serif-display text-3xl">{venue.chef}</div>
-                <p className="mt-2 text-sm text-[#8996B0] font-light max-w-lg leading-relaxed">
+                <p className="mt-2 text-sm text-[#B39586] font-light max-w-lg leading-relaxed">
                   Leads the {venue.cuisine || "kitchen"} at {venue.name}. Menu evolves
                   with the season; recognition comes from returning guests.
                 </p>
@@ -188,19 +190,19 @@ export default function VenueDetail() {
                   <div
                     key={e.id}
                     className={cn(
-                      "p-6 border border-white/[0.05] bg-[#121D33]",
+                      "p-6 border border-white/[0.05] bg-[#2E1220]",
                       gated && "opacity-90",
                     )}
                     data-testid={`event-${e.id}`}
                   >
                     <div className="flex items-center gap-2 mb-3">
-                      <Calendar strokeWidth={1.2} className="h-3.5 w-3.5 text-[#8996B0]" />
+                      <Calendar strokeWidth={1.2} className="h-3.5 w-3.5 text-[#B39586]" />
                       <span className="overline">
                         {e.date} · {e.time}
                       </span>
                     </div>
                     <h3 className="font-serif-display text-2xl mb-2">{e.title}</h3>
-                    <p className="text-sm text-[#8996B0] font-light leading-relaxed">
+                    <p className="text-sm text-[#B39586] font-light leading-relaxed">
                       {e.description}
                     </p>
                     {e.tier_required && (
@@ -230,12 +232,20 @@ export default function VenueDetail() {
               <MessageSquare strokeWidth={1.2} className="h-4 w-4" />
               Speak with the room
             </button>
+            <button
+              onClick={() => setBookingOpen(true)}
+              data-testid="reserve-table-button"
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              <CalendarCheck strokeWidth={1.2} className="h-4 w-4" />
+              Reserve a table
+            </button>
             <Link
               to={`/checkin/${venue.id}`}
               data-testid="begin-ritual-button"
-              className="btn-primary text-center"
+              className="overline text-[#B39586] hover:text-[#C2A36B] transition-colors duration-300 inline-flex items-center"
             >
-              Begin Table
+              Or check in on arrival
             </Link>
           </div>
         </div>
@@ -245,6 +255,12 @@ export default function VenueDetail() {
         <ConciergeModal
           venue={venue}
           onClose={() => setConciergeOpen(false)}
+        />
+      )}
+      {bookingOpen && (
+        <BookingModal
+          venue={venue}
+          onClose={() => setBookingOpen(false)}
         />
       )}
     </div>

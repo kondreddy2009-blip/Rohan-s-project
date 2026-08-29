@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 5 — RETEST of iteration-4 BookingRow crash + theme-color swap + smoke regression. VERIFIED FIXED. StaffDashboard.jsx now defines BookingRow (lines 24-139) with BOOKING_STATUS_COLOR palette (pending #B39586, confirmed #C2A36B, declined #C08B70, seated #7A9B7A, cancelled #7A5C55). Playwright E2E as staff.verre@ritual.app: /staff loads clean, clicking tab-bookings NO LONGER crashes, 13 booking rows render (0 pageerrors, no error overlay), pending badge shows '11' on the Bookings tab. Each row shows date/time/party, member name+tier, T-code, note in italic, and Confirm / Send regrets action buttons. Confirm PATCH /api/staff/bookings/{id} succeeded and 'Mark seated' button appeared after confirmation (verified confirmed status → seat button visible), Mark seated click succeeded, Send regrets click succeeded on a different pending row. Theme-color meta in /app/frontend/public/index.html verified = #1A0912 (burgundy) — swap complete. Member booking regression as mila@ritual.app: /venues/venue-verre reserve modal opens with 4+ date pills (Tonight/Tomorrow/Mon/Tue), 14 30-min slots 18:00–00:30, party stepper default 2 with +/-, note textarea, Reserve the table + Cancel actions. Burgundy background rendered. /profile shows 'Your reservations' section. Zero page errors across both flows. Backend not re-run per main-agent note (38/38 stable). Ready to ship.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BookingRow component now correctly defined inline; matches CorrespondenceRow pattern; PATCH endpoint /staff/bookings/{id} with status + optional staff_reply — good.",
+    "Pending badge count derives from bookings.filter(status==='pending') on client — matches list scope (venue-scoped from backend).",
+    "StaffDashboard.jsx is 681 lines — still under 700-line guideline. Consider splitting BookingRow / CorrespondenceRow / StatusControl into separate files for maintainability, but not blocking.",
+    "server.py at 1292 lines from prev iteration — still worth splitting into router modules (bookings, concierge, staff). Non-blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not re-run; 38/38 stable from iteration 4)", "frontend": "100% — staff bookings tab, actions, member booking flow, profile all pass"},
+  "test_credentials": "Used from /app/memory/test_credentials.md — staff.verre@ritual.app / ritual2026, mila@ritual.app / ritual2026 — all valid.",
+  "seed_data_creation": "None new. Consumed pending bookings from iteration-4 seed (confirmed 1, seated 1, declined 1) — 10 pending remain approx.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bookings feature is production-ready. Staff Dashboard fully functional with all tabs (overview, bookings, correspondence, redemptions, events, qr). Burgundy palette migration complete (body bg #1A0912, meta theme-color #1A0912, no leftover midnight blues). If further changes touch bookings, focus on: (1) capacity edge cases at 6/slot, (2) cross-venue 403 enforcement, (3) member cancel flow. Backend has 38 pytest tests covering these — re-run pytest /app/backend/tests/ after any /api/*booking* endpoint change."
+}

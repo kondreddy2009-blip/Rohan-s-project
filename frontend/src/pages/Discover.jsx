@@ -34,20 +34,20 @@ function FeaturedRoom({ venue }) {
             alt={venue.name}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#121D33]/60 md:to-[#121D33]" />
+          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#2E1220]/60 md:to-[#2E1220]" />
           <div className="absolute top-5 left-5 inline-flex items-center gap-2 overline-accent">
             <Flame strokeWidth={1.4} className="h-3.5 w-3.5" />
             Chef&apos;s pick tonight
           </div>
         </div>
-        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#121D33]">
+        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#2E1220]">
           <div className="overline">
             {venue.neighborhood} · {venue.cuisine}
           </div>
           <h2 className="font-serif-display text-4xl sm:text-5xl leading-[0.98]">
             {venue.name}
           </h2>
-          <p className="font-serif italic text-lg text-[#E8ECF5]/80">
+          <p className="font-serif italic text-lg text-[#F4E8DA]/80">
             &ldquo;{venue.tagline}&rdquo;
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -59,7 +59,7 @@ function FeaturedRoom({ venue }) {
             <StatusIndicator status={venue.status} />
             <span className="text-[#C2A36B] tracking-widest">{priceStr}</span>
             {venue.chef && (
-              <span className="inline-flex items-center gap-1 text-[#E8ECF5]/60">
+              <span className="inline-flex items-center gap-1 text-[#F4E8DA]/60">
                 <ChefHat strokeWidth={1.2} className="h-3 w-3" />
                 {venue.chef}
               </span>
@@ -151,7 +151,7 @@ export default function Discover() {
 
       {!loading && featured && <FeaturedRoom venue={featured} />}
 
-      <div className="mt-12 flex items-center justify-between gap-4 border-b border-[#253453] overflow-x-auto">
+      <div className="mt-12 flex items-center justify-between gap-4 border-b border-[#4E1E32] overflow-x-auto">
         <div className="flex items-center gap-1" role="tablist" data-testid="discover-filters">
           {VIBE_FILTERS.map((f) => (
             <button
@@ -164,7 +164,7 @@ export default function Discover() {
                 "px-4 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
                 filter === f.key
                   ? "text-[#C2A36B] border-[#C2A36B]"
-                  : "text-[#8996B0] border-transparent hover:text-[#E8ECF5]",
+                  : "text-[#B39586] border-transparent hover:text-[#F4E8DA]",
               )}
             >
               {f.label}
@@ -175,7 +175,7 @@ export default function Discover() {
           onClick={surpriseMe}
           disabled={rolling || filtered.length === 0}
           data-testid="surprise-me-button"
-          className="overline inline-flex items-center gap-2 text-[#C2A36B] hover:text-[#E8ECF5] transition-colors duration-300 pr-2 whitespace-nowrap"
+          className="overline inline-flex items-center gap-2 text-[#C2A36B] hover:text-[#F4E8DA] transition-colors duration-300 pr-2 whitespace-nowrap"
           aria-label="Pick a random room"
         >
           <Shuffle

@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 4 — Tested new Bookings API + burgundy theme swap. Backend: 38/38 pytest passing (added 10 new booking tests: availability shape, auth-gate, 404, T-code creation, invalid time rejection, 6-per-slot capacity with 7th=409 and slot exhaustion reflected in availability, member cancel own/cannot cancel other, staff list/patch scoped to own venue, cross-venue 403). Frontend E2E on desktop (1440x900) as mila@ritual.app: /venues/venue-verre shows both 'Reserve a table' (primary) and 'Speak with the room' (ghost). BookingModal opens with 7-day date carousel, 14 30-min slots for Verre (18:00–01:00), party stepper +/- works (default 2 → 3), note input accepts text, submit returns confirmed T- code (e.g. T-G6NQ7J), Done closes modal. Profile /profile shows 'Your reservations' with code and cancel button. Burgundy palette applied: body bg rgb(26,9,18)=#1A0912, --ritual-bg=#1A0912 root token confirmed. NO leftover midnight blues (#121D33/#253453/#E8ECF5/#8996B0/#5F6A83) in any component. CRITICAL: Staff Dashboard 'Bookings' tab crashes with ReferenceError 'BookingRow is not defined' — component is referenced at StaffDashboard.jsx:460 but never defined nor imported. Whole staff dashboard renders red-screen error overlay when the Bookings tab is clicked (verified via pageerror event + screenshot).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "StaffDashboard.jsx (Bookings tab)", "issue": "ReferenceError: BookingRow is not defined — component is used <BookingRow .../> at line 460 but no such component is declared or imported. Clicking the 'Bookings' tab on /staff triggers an Uncaught Runtime Error red-screen and crashes the whole StaffDashboard component (confirmed with pageerror event + screenshot). Blocks Confirm / Send regrets / Mark seated staff actions entirely.", "selector": "[data-testid=\"tab-bookings\"]", "priority": "CRITICAL"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "public/index.html", "issues": ["Leftover midnight-blue hex `#0A1424` in <meta name=\"theme-color\"> — not visible in the layout but affects mobile browser chrome color. Should be swapped to burgundy #1A0912 to fully complete the palette migration."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Define and export the BookingRow component in /app/frontend/src/pages/StaffDashboard.jsx (or import it from a new file). It should render date/time/party, member name+tier, T- code, note, and Confirm / Send regrets / Mark seated actions that PATCH /api/staff/bookings/{id}. Currently the whole Bookings tab crashes.",
+    "Minor: swap `#0A1424` → `#1A0912` in /app/frontend/public/index.html meta theme-color to complete burgundy palette."
+  ],
+  "critical_code_review_comments": [
+    "StaffDashboard.jsx uses <BookingRow> without defining or importing it — eslint react/jsx-no-undef flags this. Ship-blocker for the staff bookings feature.",
+    "Backend booking capacity check queries db.bookings.count_documents with status in [pending, confirmed]. Cancelled/declined/seated free up the slot count on subsequent bookings — good.",
+    "_generate_booking_code alphabet skips lookalikes (I/L/O/0/1) as required. Verified in test test_create_booking_returns_T_code.",
+    "GET /api/members/me/bookings sorts newest-first via `sort(created_at, -1)` — verified.",
+    "Availability endpoint requires auth (get_current_user) which is fine; matches implementation of concierge endpoints.",
+    "Backend correctly enforces staff scoping via _assert_staff_can_manage on both GET list and PATCH — cross-venue 403 verified.",
+    "server.py is now 1292 lines — approaching the 700-line guideline threshold. Consider splitting bookings/concierge/staff routes into separate router modules."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (38/38)", "frontend": "Member booking flow 100%; Staff bookings 0% (crash on tab open)"},
+  "test_credentials": "Used from /app/memory/test_credentials.md — all valid.",
+  "seed_data_creation": "Booking tests created ~10 TEST_ bookings on venue-verre across future dates (day+14, +21, +22, +30 [6 to fill slot], +40, +41, +50, +51). Playwright E2E created 1 additional booking (code T-G6NQ7J). Two TEST_-prefixed staff replies attached ('TEST_See you at 9.').",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend Bookings API is solid (38/38 tests passing). Only frontend bug is missing BookingRow component in StaffDashboard.jsx — everything else on that page works. Member booking flow, cancel, and profile reservations list are all working end-to-end. When retesting after BookingRow fix, log in as staff.verre@ritual.app, click tab-bookings, verify booking rows render with T- code + member name + tier + Confirm/Send regrets/Mark seated buttons that call PATCH /api/staff/bookings/{id}. Also verify pending badge count on the tab. Note: Verre's hours '18:00 – 01:00' yields 14 30-min slots (18:00 … 00:30). Party stepper default is 2; increment/decrement bounded 1–20.",
+  "rca of the issue": "StaffDashboard.jsx line 460 renders <BookingRow key={b.id} booking={b} onAct={...} /> but no BookingRow function/component is declared in the file nor imported from any module. ESLint (react/jsx-no-undef) catches this statically. At runtime React throws ReferenceError which the error boundary (react-scripts dev overlay) surfaces as a full-screen red-screen error, effectively bricking the entire Staff Dashboard once the Bookings tab is clicked. Fix: implement BookingRow in-file (mirroring the existing CorrespondenceRow pattern) with actions: Confirm → PATCH {status:'confirmed'}, Send regrets → PATCH {status:'declined', staff_reply}, Mark seated → PATCH {status:'seated'}. After Confirm, per spec, show green (#7A9B7A) 'seated' visual state."
+}

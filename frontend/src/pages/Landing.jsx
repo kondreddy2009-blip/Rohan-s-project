@@ -34,7 +34,7 @@ export default function Landing() {
   const quote = QUOTES[quoteIdx];
 
   return (
-    <div className="min-h-screen bg-[#0A1424] text-[#E8ECF5] grid grid-cols-1 lg:grid-cols-12">
+    <div className="min-h-screen bg-[#1A0912] text-[#F4E8DA] grid grid-cols-1 lg:grid-cols-12">
       <div className="lg:col-span-7 relative flex flex-col px-6 sm:px-12 lg:px-20 py-10 lg:py-16">
         <header className="flex items-center justify-between">
           <div className="overline-accent">Table</div>
@@ -58,7 +58,7 @@ export default function Landing() {
               <br />
               <span className="italic text-[#C2A36B]">follows</span> you.
             </h1>
-            <p className="mt-10 max-w-lg text-[#E8ECF5]/70 text-base sm:text-lg font-light leading-relaxed">
+            <p className="mt-10 max-w-lg text-[#F4E8DA]/70 text-base sm:text-lg font-light leading-relaxed">
               A single membership across the city&apos;s best rooms — the
               neighborhood bistro, the omakase counter, the counter of ten.
               One night at any of them; points at every one after.
@@ -105,13 +105,13 @@ export default function Landing() {
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#0A1424]/30 to-[#0A1424]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1424]/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#1A0912]/30 to-[#1A0912]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1A0912]/80 via-transparent to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-8 lg:p-12">
-          <div className="overline mb-3 text-[#E8ECF5]/80">Currently</div>
+          <div className="overline mb-3 text-[#F4E8DA]/80">Currently</div>
           <div
             key={quoteIdx}
-            className={`font-serif-display text-2xl lg:text-3xl italic text-[#E8ECF5] transition-opacity duration-500 ${fadeIn ? "opacity-100" : "opacity-0"}`}
+            className={`font-serif-display text-2xl lg:text-3xl italic text-[#F4E8DA] transition-opacity duration-500 ${fadeIn ? "opacity-100" : "opacity-0"}`}
             data-testid="landing-quote"
           >
             {`"${quote.text}"`}

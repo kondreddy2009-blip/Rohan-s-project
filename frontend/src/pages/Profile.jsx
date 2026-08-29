@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { TierBadge } from "@/components/TierBadge";
@@ -20,6 +21,22 @@ const CONCIERGE_STATUS_LABEL = {
   fulfilled: "Fulfilled",
 };
 
+const BOOKING_STATUS_LABEL = {
+  pending: "Awaiting the room",
+  confirmed: "Confirmed",
+  declined: "Regrets",
+  seated: "Seated",
+  cancelled: "Cancelled",
+};
+
+const BOOKING_STATUS_COLOR = {
+  pending: "text-[#B39586]",
+  confirmed: "text-[#C2A36B]",
+  declined: "text-[#C08B70]",
+  seated: "text-[#7A9B7A]",
+  cancelled: "text-[#7A5C55]",
+};
+
 function TierJourney({ current, next, pointsToNext, progressPercent }) {
   return (
     <div>
@@ -33,13 +50,13 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
               <div
                 className={cn(
                   "h-px w-full",
-                  active ? "bg-[#C2A36B]" : "bg-[#253453]",
+                  active ? "bg-[#C2A36B]" : "bg-[#4E1E32]",
                 )}
               />
               <div
                 className={cn(
                   "overline mt-2 whitespace-nowrap",
-                  active ? "text-[#C2A36B]" : "text-[#5F6A83]",
+                  active ? "text-[#C2A36B]" : "text-[#7A5C55]",
                 )}
               >
                 {t}
@@ -51,13 +68,13 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
       {next && (
         <div className="mt-8">
           <div className="overline mb-2">Toward {next}</div>
-          <div className="relative h-px bg-[#253453]">
+          <div className="relative h-px bg-[#4E1E32]">
             <div
               className="absolute inset-y-0 left-0 bg-[#C2A36B]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <div className="mt-3 font-serif text-lg text-[#E8ECF5]/80 italic">
+          <div className="mt-3 font-serif text-lg text-[#F4E8DA]/80 italic">
             {pointsToNext} more points until {next}.
           </div>
         </div>
@@ -94,11 +111,11 @@ function TimelineEntry({ item, index }) {
           })}
         </div>
         <div className="font-serif-display text-2xl mt-1">{item.venue_name}</div>
-        <div className="text-sm text-[#8996B0] mt-1 font-light">
+        <div className="text-sm text-[#B39586] mt-1 font-light">
           {item.venue_type} · {item.venue_neighborhood}
         </div>
         {item.item_ordered && (
-          <div className="mt-3 font-serif italic text-[#E8ECF5]/85">
+          <div className="mt-3 font-serif italic text-[#F4E8DA]/85">
             {`"${item.item_ordered}"`}{" "}
             {item.would_return === true && (
               <span className="overline-accent ml-2">Would return</span>
@@ -115,20 +132,34 @@ export default function Profile() {
   const [wallet, setWallet] = useState(null);
   const [history, setHistory] = useState([]);
   const [correspondence, setCorrespondence] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
     async function load() {
-      const [w, h, c] = await Promise.all([
+      const [w, h, c, b] = await Promise.all([
         api.get("/wallet"),
         api.get("/members/me/history"),
         api.get("/members/me/concierge"),
+        api.get("/members/me/bookings"),
       ]);
       setWallet(w.data);
       setHistory(h.data);
       setCorrespondence(c.data);
+      setBookings(b.data);
     }
     load();
   }, []);
+
+  const cancelBooking = async (id) => {
+    try {
+      await api.post(`/bookings/${id}/cancel`);
+      toast.success("Reservation cancelled.");
+      const { data } = await api.get("/members/me/bookings");
+      setBookings(data);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Could not cancel just now.");
+    }
+  };
 
   if (!wallet || !user) {
     return <div className="mx-auto max-w-3xl px-5 py-16 overline text-center">Loading…</div>;
@@ -176,13 +207,13 @@ export default function Profile() {
         const streak = dates.size;
         if (streak === 0) return null;
         return (
-          <div className="mt-10 border border-[#C2A36B]/30 bg-[#121D33] p-5 sm:p-6 flex items-center justify-between gap-6 animate-fade-up delay-200">
+          <div className="mt-10 border border-[#C2A36B]/30 bg-[#2E1220] p-5 sm:p-6 flex items-center justify-between gap-6 animate-fade-up delay-200">
             <div>
               <div className="overline-accent mb-1">A streak</div>
               <div className="font-serif-display text-2xl">
                 {streak} {streak === 1 ? "night" : "nights"} this week.
               </div>
-              <div className="text-sm text-[#8996B0] font-light mt-1">
+              <div className="text-sm text-[#B39586] font-light mt-1">
                 {streak >= 4
                   ? "The room knows you well."
                   : streak >= 2
@@ -215,10 +246,10 @@ export default function Profile() {
 
       <div className="mt-14 animate-fade-up">
         <div className="overline mb-2">A curated timeline</div>
-        <p className="text-[#8996B0] font-light">Rooms you have kept company with.</p>
+        <p className="text-[#B39586] font-light">Rooms you have kept company with.</p>
         <div className="mt-6">
           {history.length === 0 ? (
-            <div className="text-[#8996B0] font-light py-8">
+            <div className="text-[#B39586] font-light py-8">
               Your history will grow with each table you take.
             </div>
           ) : (
@@ -227,15 +258,87 @@ export default function Profile() {
         </div>
       </div>
 
+      {bookings.length > 0 && (
+        <div className="mt-14 animate-fade-up" data-testid="reservations-section">
+          <div className="overline mb-2">Your reservations</div>
+          <p className="text-[#B39586] font-light">Tables held in your name.</p>
+          <div className="mt-6 space-y-4">
+            {bookings.map((b) => {
+              const cancellable = ["pending", "confirmed"].includes(b.status);
+              return (
+                <div
+                  key={b.id}
+                  className="p-5 border border-[#4E1E32] bg-[#2E1220]"
+                  data-testid={`reservation-${b.id}`}
+                >
+                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                    <div>
+                      <div className="overline">Reservation</div>
+                      <div className="font-serif-display text-xl mt-1">{b.venue_name}</div>
+                      <div className="overline mt-1">
+                        {new Date(b.date + "T00:00:00").toLocaleDateString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {" · "}
+                        {b.time}
+                        {" · Party of "}
+                        {b.party_size}
+                      </div>
+                    </div>
+                    <div className={cn("text-xs tracking-widest uppercase", BOOKING_STATUS_COLOR[b.status])}>
+                      {BOOKING_STATUS_LABEL[b.status]}
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-baseline gap-4 flex-wrap">
+                    <div className="overline">Code</div>
+                    <div
+                      className="font-mono tracking-[0.28em] text-[#C2A36B]"
+                      data-testid={`reservation-code-${b.id}`}
+                    >
+                      {b.code}
+                    </div>
+                  </div>
+                  {b.note && (
+                    <p className="mt-3 font-serif italic text-[#F4E8DA]/80 text-sm">
+                      {`"${b.note}"`}
+                    </p>
+                  )}
+                  {b.staff_reply && (
+                    <div className="mt-4 pt-4 border-t border-white/[0.05]">
+                      <div className="overline-accent mb-1">The room replied</div>
+                      <p className="text-sm text-[#F4E8DA]/85 font-light">{b.staff_reply}</p>
+                    </div>
+                  )}
+                  {cancellable && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => cancelBooking(b.id)}
+                        data-testid={`reservation-cancel-${b.id}`}
+                        className="overline text-[#B39586] hover:text-[#C08B70] transition-colors duration-300"
+                      >
+                        Release the table
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {correspondence.length > 0 && (
         <div className="mt-14 animate-fade-up">
           <div className="overline mb-2">Your correspondence</div>
-          <p className="text-[#8996B0] font-light">Notes sent to the rooms.</p>
+          <p className="text-[#B39586] font-light">Notes sent to the rooms.</p>
           <div className="mt-6 space-y-4">
             {correspondence.map((c) => (
               <div
                 key={c.id}
-                className="p-5 border border-[#253453] bg-[#121D33]"
+                className="p-5 border border-[#4E1E32] bg-[#2E1220]"
                 data-testid={`correspondence-${c.id}`}
               >
                 <div className="flex items-baseline justify-between gap-3">
@@ -246,7 +349,7 @@ export default function Profile() {
                   <div
                     className={cn(
                       "text-xs tracking-widest uppercase",
-                      c.status === "pending" && "text-[#8996B0]",
+                      c.status === "pending" && "text-[#B39586]",
                       c.status === "acknowledged" && "text-[#C2A36B]",
                       c.status === "declined" && "text-[#C08B70]",
                       c.status === "fulfilled" && "text-[#7A9B7A]",
@@ -255,13 +358,13 @@ export default function Profile() {
                     {CONCIERGE_STATUS_LABEL[c.status]}
                   </div>
                 </div>
-                <p className="mt-3 font-serif italic text-[#E8ECF5]/85 leading-relaxed">
+                <p className="mt-3 font-serif italic text-[#F4E8DA]/85 leading-relaxed">
                   {`"${c.message}"`}
                 </p>
                 {c.response && (
                   <div className="mt-4 pt-4 border-t border-white/[0.05]">
                     <div className="overline-accent mb-1">The room replied</div>
-                    <p className="text-sm text-[#E8ECF5]/85 font-light leading-relaxed">
+                    <p className="text-sm text-[#F4E8DA]/85 font-light leading-relaxed">
                       {c.response}
                     </p>
                   </div>

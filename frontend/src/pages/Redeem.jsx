@@ -81,9 +81,9 @@ export default function Redeem() {
       {/* Steps indicator */}
       <div className="mt-6 flex items-center gap-3 overline">
         <span className={step === "venue" ? "text-[#C2A36B]" : ""}>01 · Room</span>
-        <span className="text-[#5F6A83]">/</span>
+        <span className="text-[#7A5C55]">/</span>
         <span className={step === "perk" ? "text-[#C2A36B]" : ""}>02 · Perk</span>
-        <span className="text-[#5F6A83]">/</span>
+        <span className="text-[#7A5C55]">/</span>
         <span className={step === "confirm" || step === "done" ? "text-[#C2A36B]" : ""}>03 · Confirm</span>
       </div>
 
@@ -106,7 +106,7 @@ export default function Redeem() {
                   alt={v.name}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0A1424] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A0912] via-transparent to-transparent" />
                 <div className="absolute left-4 top-4">
                   <StatusIndicator status={v.status} />
                 </div>
@@ -148,18 +148,18 @@ export default function Redeem() {
                   className={cn(
                     "w-full text-left p-5 sm:p-6 border transition-colors duration-300 flex items-center justify-between gap-6",
                     disabled
-                      ? "border-[#253453] opacity-40 cursor-not-allowed"
-                      : "border-[#253453] hover:border-[#C2A36B]",
+                      ? "border-[#4E1E32] opacity-40 cursor-not-allowed"
+                      : "border-[#4E1E32] hover:border-[#C2A36B]",
                   )}
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <div className="font-serif-display text-2xl">{p.name}</div>
                       {!p.tier_ok && (
-                        <Lock strokeWidth={1.2} className="h-3.5 w-3.5 text-[#8996B0]" />
+                        <Lock strokeWidth={1.2} className="h-3.5 w-3.5 text-[#B39586]" />
                       )}
                     </div>
-                    <div className="text-sm text-[#8996B0] mt-1 font-light">
+                    <div className="text-sm text-[#B39586] mt-1 font-light">
                       {p.description}
                     </div>
                     <div className="overline mt-2">
@@ -184,10 +184,10 @@ export default function Redeem() {
       {/* Step 3 — Confirm */}
       {step === "confirm" && selectedPerk && selectedVenue && (
         <div className="mt-10 animate-fade-up">
-          <div className="p-6 sm:p-10 border border-[#C2A36B]/30 bg-[#121D33]">
+          <div className="p-6 sm:p-10 border border-[#C2A36B]/30 bg-[#2E1220]">
             <div className="overline">Confirming</div>
             <h2 className="font-serif-display text-4xl mt-2">{selectedPerk.name}</h2>
-            <div className="font-serif italic text-lg text-[#8996B0] mt-1">
+            <div className="font-serif italic text-lg text-[#B39586] mt-1">
               at {selectedVenue.name}
             </div>
 
@@ -206,7 +206,7 @@ export default function Redeem() {
               </div>
             </div>
 
-            <p className="mt-8 text-sm text-[#8996B0] font-light leading-relaxed max-w-lg">
+            <p className="mt-8 text-sm text-[#B39586] font-light leading-relaxed max-w-lg">
               {selectedPerk.description}. Present the code on arrival — the room will be expecting you.
             </p>
 
@@ -243,7 +243,7 @@ export default function Redeem() {
             <h2 className="font-serif-display text-4xl mt-3 relative">
               {redemption.perk_name} at {redemption.venue_name}.
             </h2>
-            <p className="text-[#8996B0] font-light mt-4">
+            <p className="text-[#B39586] font-light mt-4">
               Present this code on arrival. The room already knows you&apos;re coming.
             </p>
 

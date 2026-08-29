@@ -69,11 +69,11 @@ export default function CheckIn() {
       <div className="mt-12 flex-1 flex flex-col justify-center">
         {step === "scan" && (
           <div className="animate-fade-up text-center">
-            <div className="mx-auto w-40 h-40 border border-[#253453] flex items-center justify-center relative overflow-hidden">
+            <div className="mx-auto w-40 h-40 border border-[#4E1E32] flex items-center justify-center relative overflow-hidden">
               <QrCode strokeWidth={0.8} className="h-24 w-24 text-[#C2A36B]" />
               <div className="absolute inset-x-0 h-px bg-[#C2A36B]/60 animate-fade-up" />
             </div>
-            <p className="mt-8 font-serif text-xl text-[#E8ECF5]/80 italic max-w-md mx-auto">
+            <p className="mt-8 font-serif text-xl text-[#F4E8DA]/80 italic max-w-md mx-auto">
               A quiet gesture. Confirm your arrival to begin.
             </p>
             <button
@@ -106,7 +106,7 @@ export default function CheckIn() {
                 />
               </div>
               <div className="overline mt-4">
-                Balance · <span className="text-[#E8ECF5]"><AnimatedNumber value={result.balance} /></span>
+                Balance · <span className="text-[#F4E8DA]"><AnimatedNumber value={result.balance} /></span>
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function CheckIn() {
             <h2 className="font-serif-display text-3xl mt-2 leading-tight">
               What did you have this evening?
             </h2>
-            <p className="text-[#8996B0] font-light mt-3">
+            <p className="text-[#B39586] font-light mt-3">
               This will help other members find the things worth returning for.
             </p>
 
@@ -130,7 +130,7 @@ export default function CheckIn() {
                 onChange={(e) => setItem(e.target.value)}
                 placeholder="A dish, a pour, a pastry…"
                 data-testid="feedback-item-input"
-                className="w-full bg-transparent border-b border-[#253453] py-3 text-[#E8ECF5] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300 placeholder:text-[#5F6A83]"
+                className="w-full bg-transparent border-b border-[#4E1E32] py-3 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300 placeholder:text-[#7A5C55]"
               />
             </div>
 
@@ -168,7 +168,7 @@ export default function CheckIn() {
               <button
                 onClick={() => setStep("done")}
                 data-testid="feedback-skip"
-                className="overline text-[#8996B0] hover:text-[#E8ECF5] transition-colors duration-300"
+                className="overline text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-300"
               >
                 Skip
               </button>

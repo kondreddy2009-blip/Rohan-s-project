@@ -44,14 +44,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1424] text-[#E8ECF5] grid grid-cols-1 lg:grid-cols-2">
+    <div className="min-h-screen bg-[#1A0912] text-[#F4E8DA] grid grid-cols-1 lg:grid-cols-2">
       <div className="hidden lg:block relative">
         <img
           src="https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHw0fHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85"
           alt=""
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0A1424]/50 to-[#0A1424]/85" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1A0912]/50 to-[#1A0912]/85" />
         <div className="absolute inset-0 flex items-end p-12">
           <div>
             <div className="overline mb-6">Members</div>
@@ -78,7 +78,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 data-testid="login-email-input"
-                className="w-full bg-transparent border-b border-[#253453] py-2 text-[#E8ECF5] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
+                className="w-full bg-transparent border-b border-[#4E1E32] py-2 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
                 autoComplete="email"
               />
             </div>
@@ -91,7 +91,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 data-testid="login-password-input"
-                className="w-full bg-transparent border-b border-[#253453] py-2 text-[#E8ECF5] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
+                className="w-full bg-transparent border-b border-[#4E1E32] py-2 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
                 autoComplete="current-password"
               />
             </div>
@@ -128,9 +128,9 @@ export default function Login() {
                   }}
                   disabled={busy}
                   data-testid={`demo-login-${a.email}`}
-                  className="w-full text-left px-4 py-3 border border-[#253453] hover:border-[#C2A36B]/50 transition-colors duration-300 group"
+                  className="w-full text-left px-4 py-3 border border-[#4E1E32] hover:border-[#C2A36B]/50 transition-colors duration-300 group"
                 >
-                  <div className="text-sm text-[#E8ECF5] font-light">{a.label}</div>
+                  <div className="text-sm text-[#F4E8DA] font-light">{a.label}</div>
                   <div className="overline mt-0.5 group-hover:text-[#C2A36B] transition-colors duration-300">
                     {a.email}
                   </div>

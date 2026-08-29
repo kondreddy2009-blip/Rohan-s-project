@@ -120,7 +120,7 @@ export default function Scan() {
       <h1 className="font-serif-display text-4xl sm:text-5xl mt-2 leading-tight">
         Scan the room&apos;s QR.
       </h1>
-      <p className="text-[#8996B0] font-light mt-2 max-w-md">
+      <p className="text-[#B39586] font-light mt-2 max-w-md">
         Point your camera at the QR at the host stand. Your Table begins the moment it&apos;s read.
       </p>
 
@@ -130,7 +130,7 @@ export default function Scan() {
             <QRScanner onScan={handleScan} onError={handleScanError} />
           ) : (
             <div className="max-w-sm mx-auto">
-              <div className="w-full aspect-square border border-[#253453] flex flex-col items-center justify-center relative">
+              <div className="w-full aspect-square border border-[#4E1E32] flex flex-col items-center justify-center relative">
                 <Camera strokeWidth={0.8} className="h-16 w-16 text-[#C2A36B]" />
                 <div className="overline mt-4 text-center px-6">
                   {cameraSupported ? "Camera ready" : "Camera not available in this environment"}
@@ -156,7 +156,7 @@ export default function Scan() {
 
           <div className="mt-10 hairline-t pt-8">
             <div className="overline mb-3">Or check in manually</div>
-            <p className="text-sm text-[#8996B0] font-light mb-4">
+            <p className="text-sm text-[#B39586] font-light mb-4">
               A quiet fallback — pick the room you&apos;re in.
             </p>
             <form onSubmit={submitManual} className="flex flex-col sm:flex-row gap-3">
@@ -164,7 +164,7 @@ export default function Scan() {
                 value={manualId}
                 onChange={(e) => setManualId(e.target.value)}
                 data-testid="scan-manual-select"
-                className="flex-1 bg-[#121D33] border border-[#253453] py-3 px-3 focus:border-[#C2A36B] outline-none font-light text-[#E8ECF5]"
+                className="flex-1 bg-[#2E1220] border border-[#4E1E32] py-3 px-3 focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA]"
               >
                 <option value="">Select a room…</option>
                 {venues.map((v) => (
@@ -203,7 +203,7 @@ export default function Scan() {
               className="font-serif-display text-7xl text-[#C2A36B] tabular-nums block"
             />
             <div className="overline mt-4">
-              Balance · <span className="text-[#E8ECF5]"><AnimatedNumber value={result.balance} /></span>
+              Balance · <span className="text-[#F4E8DA]"><AnimatedNumber value={result.balance} /></span>
             </div>
           </div>
           <div className="mt-12 flex flex-col sm:flex-row gap-3 justify-center">

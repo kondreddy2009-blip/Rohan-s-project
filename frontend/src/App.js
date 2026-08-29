@@ -120,9 +120,9 @@ function App() {
             position="top-center"
             toastOptions={{
               style: {
-                background: "#121D33",
-                border: "1px solid #253453",
-                color: "#E8ECF5",
+                background: "#2E1220",
+                border: "1px solid #4E1E32",
+                color: "#F4E8DA",
                 fontFamily: "Manrope, sans-serif",
                 fontSize: "0.85rem",
                 letterSpacing: "0.02em",

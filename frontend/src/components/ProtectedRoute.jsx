@@ -7,8 +7,8 @@ export function ProtectedRoute({ children, staff = false }) {
 
   if (user === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A1424]" data-testid="auth-loading">
-        <div className="overline text-[#8996B0]">Loading</div>
+      <div className="flex min-h-screen items-center justify-center bg-[#1A0912]" data-testid="auth-loading">
+        <div className="overline text-[#B39586]">Loading</div>
       </div>
     );
   }

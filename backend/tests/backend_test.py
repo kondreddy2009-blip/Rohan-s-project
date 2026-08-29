@@ -324,3 +324,168 @@ class TestTierGateOrdering:
             "venue_id": "venue-verre", "perk_code": "inner_experience"
         }, timeout=10)
         assert r.status_code == 403
+
+
+
+# --- Bookings (new iter 4) ---
+import datetime as _dt
+import re as _re
+
+
+def _future_date(days=14):
+    return (_dt.date.today() + _dt.timedelta(days=days)).isoformat()
+
+
+class TestBookings:
+    def test_availability_shape_and_slots(self):
+        s = _session(MILA)
+        date = _future_date(14)
+        r = s.get(f"{API}/venues/venue-verre/availability", params={"date": date}, timeout=10)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["venue_id"] == "venue-verre"
+        assert data["date"] == date
+        slots = data["slots"]
+        assert isinstance(slots, list) and len(slots) > 0
+        # Verre hours "18:00 – 01:00" -> last slot 30 min before close => 00:30
+        # Count depends on parse; must include half-hour cadence
+        times = [s_["time"] for s_ in slots]
+        assert times[0] == "18:00"
+        assert all(_re.match(r"^\d{2}:\d{2}$", t) for t in times)
+        for s_ in slots:
+            assert "remaining" in s_ and "available" in s_
+            assert isinstance(s_["remaining"], int)
+            assert isinstance(s_["available"], bool)
+
+    def test_availability_requires_auth(self):
+        r = requests.get(f"{API}/venues/venue-verre/availability", params={"date": _future_date()}, timeout=10)
+        assert r.status_code == 401
+
+    def test_availability_bad_venue(self):
+        s = _session(MILA)
+        r = s.get(f"{API}/venues/nope/availability", params={"date": _future_date()}, timeout=10)
+        assert r.status_code == 404
+
+    def test_create_booking_returns_T_code(self):
+        s = _session(MILA)
+        date = _future_date(21)
+        payload = {"venue_id": "venue-verre", "date": date, "time": "19:30",
+                   "party_size": 2, "note": "TEST_window seat"}
+        r = s.post(f"{API}/bookings", json=payload, timeout=10)
+        assert r.status_code == 200, r.text
+        b = r.json()
+        assert _re.match(r"^T-[A-Z2-9]{6}$", b["code"]), f"bad code {b['code']}"
+        # No lookalikes (I, L, O, 0, 1)
+        assert not any(c in b["code"][2:] for c in "ILO01")
+        assert b["status"] == "pending"
+        assert b["venue_name"] == "Verre"
+        assert b["venue_image"]
+        assert b["member_name"]
+        assert b["party_size"] == 2
+        assert b["note"] == "TEST_window seat"
+
+        # Appears in my bookings, newest first
+        r2 = s.get(f"{API}/members/me/bookings", timeout=10)
+        assert r2.status_code == 200
+        arr = r2.json()
+        assert arr[0]["id"] == b["id"]
+
+    def test_invalid_time_rejected(self):
+        s = _session(MILA)
+        r = s.post(f"{API}/bookings", json={
+            "venue_id": "venue-verre", "date": _future_date(22),
+            "time": "10:00", "party_size": 2,
+        }, timeout=10)
+        assert r.status_code == 400
+
+    def test_slot_capacity_6_then_409(self):
+        # Fill a slot with 6 pending bookings across mila (6 dupes) — API allows same user multiple
+        s = _session(MILA)
+        date = _future_date(30)
+        time = "20:00"
+        codes = []
+        for i in range(6):
+            r = s.post(f"{API}/bookings", json={
+                "venue_id": "venue-verre", "date": date, "time": time, "party_size": 2,
+            }, timeout=10)
+            assert r.status_code == 200, f"slot fill {i} failed: {r.text}"
+            codes.append(r.json()["code"])
+        # 7th must 409
+        r7 = s.post(f"{API}/bookings", json={
+            "venue_id": "venue-verre", "date": date, "time": time, "party_size": 2,
+        }, timeout=10)
+        assert r7.status_code == 409
+        assert "full" in r7.json()["detail"].lower()
+
+        # availability shows available=false, remaining=0 for that time
+        av = s.get(f"{API}/venues/venue-verre/availability", params={"date": date}, timeout=10).json()
+        slot = next(x for x in av["slots"] if x["time"] == time)
+        assert slot["available"] is False
+        assert slot["remaining"] == 0
+
+    def test_cancel_own_booking(self):
+        s = _session(MILA)
+        r = s.post(f"{API}/bookings", json={
+            "venue_id": "venue-verre", "date": _future_date(40),
+            "time": "18:30", "party_size": 2,
+        }, timeout=10)
+        bid = r.json()["id"]
+        r2 = s.post(f"{API}/bookings/{bid}/cancel", timeout=10)
+        assert r2.status_code == 200
+        # cannot cancel again
+        r3 = s.post(f"{API}/bookings/{bid}/cancel", timeout=10)
+        assert r3.status_code == 400
+
+    def test_cannot_cancel_other_members_booking(self):
+        sm = _session(MILA)
+        r = sm.post(f"{API}/bookings", json={
+            "venue_id": "venue-verre", "date": _future_date(41),
+            "time": "19:00", "party_size": 2,
+        }, timeout=10)
+        bid = r.json()["id"]
+
+        sa = _session(ALEX)
+        r2 = sa.post(f"{API}/bookings/{bid}/cancel", timeout=10)
+        assert r2.status_code == 403
+
+    def test_staff_list_and_patch_booking(self):
+        # member creates
+        sm = _session(MILA)
+        r = sm.post(f"{API}/bookings", json={
+            "venue_id": "venue-verre", "date": _future_date(50),
+            "time": "21:00", "party_size": 3, "note": "TEST_confirm me",
+        }, timeout=10)
+        bid = r.json()["id"]
+
+        # verre staff sees it
+        ss = _session(STAFF_VERRE)
+        rlist = ss.get(f"{API}/staff/venues/venue-verre/bookings", timeout=10)
+        assert rlist.status_code == 200
+        assert any(x["id"] == bid for x in rlist.json())
+
+        # ikigai staff blocked from verre
+        si = _session(STAFF_IKIGAI)
+        rx = si.get(f"{API}/staff/venues/venue-verre/bookings", timeout=10)
+        assert rx.status_code == 403
+
+        # confirm
+        rp = ss.patch(f"{API}/staff/bookings/{bid}", json={
+            "status": "confirmed", "staff_reply": "TEST_See you at 9."
+        }, timeout=10)
+        assert rp.status_code == 200
+        # member sees updated status/reply
+        mine = sm.get(f"{API}/members/me/bookings", timeout=10).json()
+        matched = next(x for x in mine if x["id"] == bid)
+        assert matched["status"] == "confirmed"
+        assert matched["staff_reply"] == "TEST_See you at 9."
+
+    def test_staff_cannot_patch_other_venue_booking(self):
+        sm = _session(MILA)
+        r = sm.post(f"{API}/bookings", json={
+            "venue_id": "venue-verre", "date": _future_date(51),
+            "time": "22:00", "party_size": 2,
+        }, timeout=10)
+        bid = r.json()["id"]
+        si = _session(STAFF_IKIGAI)
+        rp = si.patch(f"{API}/staff/bookings/{bid}", json={"status": "declined"}, timeout=10)
+        assert rp.status_code == 403

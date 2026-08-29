@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Shuffle } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { VenueCard } from "@/components/VenueCard";
@@ -18,9 +20,11 @@ const FILTERS = [
 
 export default function Discover() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [venues, setVenues] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [rolling, setRolling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,16 +51,35 @@ export default function Discover() {
 
   const hour = new Date().getHours();
   const timeGreeting =
-    hour >= 22 || hour < 4
-      ? "Late tonight"
-      : hour >= 17
-        ? "This evening"
-        : "The night ahead";
+    hour < 4
+      ? "After midnight"
+      : hour < 11
+        ? "The night ahead"
+        : hour < 17
+          ? "Aperitivo soon"
+          : hour < 20
+            ? "Cocktail hour"
+            : hour < 22
+              ? "The night is on"
+              : "Late hours";
+
+  const surpriseMe = () => {
+    if (filtered.length === 0 || rolling) return;
+    setRolling(true);
+    const pick = filtered[Math.floor(Math.random() * filtered.length)];
+    setTimeout(() => {
+      setRolling(false);
+      navigate(`/venues/${pick.id}`);
+    }, 600);
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 pb-16" data-testid="discover-page">
       <div className="animate-fade-up">
-        <div className="overline">{timeGreeting} · Six rooms</div>
+        <div className="overline inline-flex items-center gap-2">
+          <span className="h-1.5 w-1.5 bg-[#C2A36B] status-dot-pulse" />
+          {timeGreeting} · Six rooms
+        </div>
         <div className="mt-3 flex items-end justify-between flex-wrap gap-4">
           <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl leading-[1.02]">
             <span className="italic text-[#C2A36B]">{user?.name?.split(" ")[0] || "Guest"}</span>,
@@ -67,28 +90,39 @@ export default function Discover() {
         </div>
       </div>
 
-      <div
-        className="mt-10 flex items-center gap-1 border-b border-[#253453] overflow-x-auto"
-        role="tablist"
-        data-testid="discover-filters"
-      >
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            data-testid={`filter-${f.key}`}
-            role="tab"
-            aria-selected={filter === f.key}
-            className={cn(
-              "px-5 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
-              filter === f.key
-                ? "text-[#C2A36B] border-[#C2A36B]"
-                : "text-[#8996B0] border-transparent hover:text-[#E8ECF5]",
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className="mt-10 flex items-center justify-between gap-4 border-b border-[#253453] overflow-x-auto">
+        <div className="flex items-center gap-1" role="tablist" data-testid="discover-filters">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              data-testid={`filter-${f.key}`}
+              role="tab"
+              aria-selected={filter === f.key}
+              className={cn(
+                "px-5 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
+                filter === f.key
+                  ? "text-[#C2A36B] border-[#C2A36B]"
+                  : "text-[#8996B0] border-transparent hover:text-[#E8ECF5]",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={surpriseMe}
+          disabled={rolling || filtered.length === 0}
+          data-testid="surprise-me-button"
+          className="overline inline-flex items-center gap-2 text-[#C2A36B] hover:text-[#E8ECF5] transition-colors duration-300 pr-2 whitespace-nowrap"
+          aria-label="Pick a random room"
+        >
+          <Shuffle
+            strokeWidth={1.2}
+            className={`h-4 w-4 transition-transform duration-500 ${rolling ? "rotate-180" : ""}`}
+          />
+          Surprise me
+        </button>
       </div>
 
       {loading ? (

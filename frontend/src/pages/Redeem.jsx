@@ -5,6 +5,7 @@ import { Check, Lock } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
+import { Sparkles } from "@/components/Sparkles";
 import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -233,12 +234,13 @@ export default function Redeem() {
       {/* Step 4 — Done */}
       {step === "done" && redemption && (
         <div className="mt-10 animate-fade">
-          <div className="mx-auto max-w-lg text-center">
-            <div className="mx-auto w-14 h-14 border border-[#C2A36B] flex items-center justify-center">
+          <div className="mx-auto max-w-lg text-center relative">
+            <Sparkles count={26} />
+            <div className="relative mx-auto w-14 h-14 border border-[#C2A36B] flex items-center justify-center">
               <Check strokeWidth={1} className="h-7 w-7 text-[#C2A36B]" />
             </div>
-            <div className="overline-accent mt-6">A table awaits</div>
-            <h2 className="font-serif-display text-4xl mt-3">
+            <div className="overline-accent mt-6 relative">A table awaits</div>
+            <h2 className="font-serif-display text-4xl mt-3 relative">
               {redemption.perk_name} at {redemption.venue_name}.
             </h2>
             <p className="text-[#8996B0] font-light mt-4">

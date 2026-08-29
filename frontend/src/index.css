@@ -213,6 +213,7 @@ textarea:focus-visible,
 }
 .card-invite:hover {
   border-color: rgba(194, 163, 107, 0.35);
+  transform: translateY(-3px);
 }
 
 .btn-primary {

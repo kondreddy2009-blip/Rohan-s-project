@@ -165,6 +165,36 @@ export default function Profile() {
         </div>
       </div>
 
+      {(() => {
+        const now = Date.now();
+        const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+        const dates = new Set(
+          history
+            .filter((h) => new Date(h.timestamp).getTime() >= sevenDaysAgo)
+            .map((h) => new Date(h.timestamp).toDateString()),
+        );
+        const streak = dates.size;
+        if (streak === 0) return null;
+        return (
+          <div className="mt-10 border border-[#C2A36B]/30 bg-[#121D33] p-5 sm:p-6 flex items-center justify-between gap-6 animate-fade-up delay-200">
+            <div>
+              <div className="overline-accent mb-1">A streak</div>
+              <div className="font-serif-display text-2xl">
+                {streak} {streak === 1 ? "night" : "nights"} this week.
+              </div>
+              <div className="text-sm text-[#8996B0] font-light mt-1">
+                {streak >= 4
+                  ? "The room knows you well."
+                  : streak >= 2
+                    ? "The night has a rhythm now."
+                    : "A quiet beginning."}
+              </div>
+            </div>
+            <div className="font-serif-display text-6xl text-[#C2A36B] tabular-nums">{streak}</div>
+          </div>
+        );
+      })()}
+
       <div className="mt-14 animate-fade-up delay-200">
         <TierJourney
           current={wallet.tier}

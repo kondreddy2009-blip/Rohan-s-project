@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Sparkles as SparkleIcon } from "lucide-react";
 import { api } from "@/lib/api";
 import { TierBadge } from "@/components/TierBadge";
+import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useAuth } from "@/lib/auth-context";
 
 function LedgerRow({ item }) {
@@ -86,18 +87,20 @@ export default function Wallet() {
       </div>
 
       {/* Balance card */}
-      <div className="mt-10 animate-fade-up delay-100">
+      <div className="mt-10 animate-fade-up delay-100" data-testid="wallet-balance-section">
         <div className="overline mb-4">Nocturne Points</div>
-        <div
-          className="font-serif-display text-8xl sm:text-9xl leading-none text-[#E8ECF5] tabular-nums"
-          data-testid="wallet-balance"
-        >
-          {wallet.balance.toLocaleString()}
+        <div data-testid="wallet-balance">
+          <AnimatedNumber
+            value={wallet.balance}
+            className="font-serif-display text-8xl sm:text-9xl leading-none text-[#E8ECF5] tabular-nums block"
+          />
         </div>
         <div className="mt-6 grid grid-cols-3 gap-6 max-w-md">
           <div>
             <div className="overline mb-1">Lifetime</div>
-            <div className="font-serif text-xl">{wallet.lifetime_points.toLocaleString()}</div>
+            <div className="font-serif text-xl">
+              <AnimatedNumber value={wallet.lifetime_points} />
+            </div>
           </div>
           <div>
             <div className="overline mb-1">Visits</div>
@@ -108,6 +111,26 @@ export default function Wallet() {
             <div className="font-serif text-xl">{wallet.tier}</div>
           </div>
         </div>
+
+        {(() => {
+          const nextPerk = [
+            { cost: 250, name: "Priority Seating" },
+            { cost: 500, name: "Complimentary Signature" },
+            { cost: 750, name: "Early Access Booking" },
+            { cost: 1000, name: "Inner Circle Experience" },
+          ].find((p) => wallet.balance < p.cost);
+          if (!nextPerk) return null;
+          const gap = nextPerk.cost - wallet.balance;
+          return (
+            <div className="mt-6 inline-flex items-center gap-2 text-sm text-[#8996B0] font-light">
+              <SparkleIcon strokeWidth={1.2} className="h-3.5 w-3.5 text-[#C2A36B]" />
+              <span>
+                {gap} more to unlock{" "}
+                <span className="text-[#C2A36B]">{nextPerk.name}</span>
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="mt-10 animate-fade-up delay-200">

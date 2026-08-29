@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { QrCode, Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { AnimatedNumber } from "@/components/AnimatedNumber";
 
 export default function CheckIn() {
   const { id } = useParams();
@@ -97,14 +98,15 @@ export default function CheckIn() {
             </h2>
             <div className="mt-10">
               <div className="overline mb-2">Nocturne Points earned</div>
-              <div
-                className="font-serif-display text-7xl text-[#C2A36B]"
-                data-testid="points-earned"
-              >
-                +{result.points_earned}
+              <div data-testid="points-earned">
+                <AnimatedNumber
+                  value={result.points_earned}
+                  prefix="+"
+                  className="font-serif-display text-7xl text-[#C2A36B] tabular-nums block"
+                />
               </div>
               <div className="overline mt-4">
-                Balance · <span className="text-[#E8ECF5]">{result.balance}</span>
+                Balance · <span className="text-[#E8ECF5]"><AnimatedNumber value={result.balance} /></span>
               </div>
             </div>
           </div>

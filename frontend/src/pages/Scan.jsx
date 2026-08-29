@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Check, Camera } from "lucide-react";
 import { api } from "@/lib/api";
 import { QRScanner } from "@/components/QRScanner";
+import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useAuth } from "@/lib/auth-context";
 
 function parseVenueId(text) {
@@ -196,9 +197,13 @@ export default function Scan() {
           </h2>
           <div className="mt-10">
             <div className="overline mb-2">Nocturne Points earned</div>
-            <div className="font-serif-display text-7xl text-[#C2A36B]">+{result.points_earned}</div>
+            <AnimatedNumber
+              value={result.points_earned}
+              prefix="+"
+              className="font-serif-display text-7xl text-[#C2A36B] tabular-nums block"
+            />
             <div className="overline mt-4">
-              Balance · <span className="text-[#E8ECF5]">{result.balance}</span>
+              Balance · <span className="text-[#E8ECF5]"><AnimatedNumber value={result.balance} /></span>
             </div>
           </div>
           <div className="mt-12 flex flex-col sm:flex-row gap-3 justify-center">

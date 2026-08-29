@@ -68,7 +68,7 @@ export default function Discover() {
       </div>
 
       <div
-        className="mt-10 flex items-center gap-1 border-b border-[#2A2A2A] overflow-x-auto"
+        className="mt-10 flex items-center gap-1 border-b border-[#253453] overflow-x-auto"
         role="tablist"
         data-testid="discover-filters"
       >
@@ -83,7 +83,7 @@ export default function Discover() {
               "px-5 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
               filter === f.key
                 ? "text-[#C2A36B] border-[#C2A36B]"
-                : "text-[#8E8E8E] border-transparent hover:text-[#F4F4EE]",
+                : "text-[#8996B0] border-transparent hover:text-[#E8ECF5]",
             )}
           >
             {f.label}

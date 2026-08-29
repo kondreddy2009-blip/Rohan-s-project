@@ -56,8 +56,8 @@ export default function VenueDetail() {
       {/* Hero */}
       <section className="relative h-[68vh] min-h-[420px] max-h-[720px] overflow-hidden">
         <img src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F0F0F]/50 via-[#0F0F0F]/20 to-[#0F0F0F]" />
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0F0F0F] via-[#0F0F0F]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1424]/50 via-[#0A1424]/20 to-[#0A1424]" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0A1424] via-[#0A1424]/50 to-transparent" />
 
         <button
           onClick={() => navigate(-1)}
@@ -81,7 +81,7 @@ export default function VenueDetail() {
             >
               {venue.name}
             </h1>
-            <p className="mt-4 max-w-xl text-[#F4F4EE]/80 italic font-serif text-lg sm:text-xl">
+            <p className="mt-4 max-w-xl text-[#E8ECF5]/80 italic font-serif text-lg sm:text-xl">
               {venue.tagline}
             </p>
           </div>
@@ -93,22 +93,22 @@ export default function VenueDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="md:col-span-2 animate-fade-up">
             <div className="overline mb-3">The room</div>
-            <p className="text-[#F4F4EE]/85 text-base leading-relaxed font-light">
+            <p className="text-[#E8ECF5]/85 text-base leading-relaxed font-light">
               {venue.description}
             </p>
           </div>
           <div className="space-y-5 animate-fade-up delay-100">
             <div>
               <div className="overline mb-2">Hours</div>
-              <div className="flex items-center gap-2 text-[#F4F4EE]/85 font-light">
-                <Clock strokeWidth={1.2} className="h-4 w-4 text-[#8E8E8E]" />
+              <div className="flex items-center gap-2 text-[#E8ECF5]/85 font-light">
+                <Clock strokeWidth={1.2} className="h-4 w-4 text-[#8996B0]" />
                 {venue.hours}
               </div>
             </div>
             <div>
               <div className="overline mb-2">Neighborhood</div>
-              <div className="flex items-center gap-2 text-[#F4F4EE]/85 font-light">
-                <MapPin strokeWidth={1.2} className="h-4 w-4 text-[#8E8E8E]" />
+              <div className="flex items-center gap-2 text-[#E8ECF5]/85 font-light">
+                <MapPin strokeWidth={1.2} className="h-4 w-4 text-[#8996B0]" />
                 {venue.neighborhood}
               </div>
             </div>
@@ -155,19 +155,19 @@ export default function VenueDetail() {
                   <div
                     key={e.id}
                     className={cn(
-                      "p-6 border border-white/[0.05] bg-[#161616]",
+                      "p-6 border border-white/[0.05] bg-[#121D33]",
                       gated && "opacity-90",
                     )}
                     data-testid={`event-${e.id}`}
                   >
                     <div className="flex items-center gap-2 mb-3">
-                      <Calendar strokeWidth={1.2} className="h-3.5 w-3.5 text-[#8E8E8E]" />
+                      <Calendar strokeWidth={1.2} className="h-3.5 w-3.5 text-[#8996B0]" />
                       <span className="overline">
                         {e.date} · {e.time}
                       </span>
                     </div>
                     <h3 className="font-serif-display text-2xl mb-2">{e.title}</h3>
-                    <p className="text-sm text-[#8E8E8E] font-light leading-relaxed">
+                    <p className="text-sm text-[#8996B0] font-light leading-relaxed">
                       {e.description}
                     </p>
                     {e.tier_required && (

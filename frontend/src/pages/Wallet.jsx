@@ -13,11 +13,11 @@ function LedgerRow({ item }) {
       data-testid={`ledger-${item.id}`}
     >
       <div className="flex items-center gap-4 min-w-0">
-        <div className="h-8 w-8 flex-shrink-0 border border-[#2A2A2A] flex items-center justify-center">
+        <div className="h-8 w-8 flex-shrink-0 border border-[#253453] flex items-center justify-center">
           {isEarn ? (
             <ArrowUpRight strokeWidth={1.2} className="h-3.5 w-3.5 text-[#C2A36B]" />
           ) : (
-            <ArrowDownLeft strokeWidth={1.2} className="h-3.5 w-3.5 text-[#F4F4EE]" />
+            <ArrowDownLeft strokeWidth={1.2} className="h-3.5 w-3.5 text-[#E8ECF5]" />
           )}
         </div>
         <div className="min-w-0">
@@ -33,7 +33,7 @@ function LedgerRow({ item }) {
       </div>
       <div
         className={`font-serif-display text-2xl tabular-nums ${
-          isEarn ? "text-[#C2A36B]" : "text-[#F4F4EE]"
+          isEarn ? "text-[#C2A36B]" : "text-[#E8ECF5]"
         }`}
       >
         {isEarn ? "+" : ""}
@@ -89,7 +89,7 @@ export default function Wallet() {
       <div className="mt-10 animate-fade-up delay-100">
         <div className="overline mb-4">Nocturne Points</div>
         <div
-          className="font-serif-display text-8xl sm:text-9xl leading-none text-[#F4F4EE] tabular-nums"
+          className="font-serif-display text-8xl sm:text-9xl leading-none text-[#E8ECF5] tabular-nums"
           data-testid="wallet-balance"
         >
           {wallet.balance.toLocaleString()}
@@ -128,7 +128,7 @@ export default function Wallet() {
             {redemptions.filter((r) => !r.redeemed).slice(0, 3).map((r) => (
               <div
                 key={r.id}
-                className="p-5 border border-[#C2A36B]/30 bg-[#161616]"
+                className="p-5 border border-[#C2A36B]/30 bg-[#121D33]"
                 data-testid={`redemption-${r.id}`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -137,7 +137,7 @@ export default function Wallet() {
                       {r.venue_name}
                     </div>
                     <div className="font-serif-display text-2xl">{r.perk_name}</div>
-                    <div className="text-sm text-[#8E8E8E] mt-1 font-light">
+                    <div className="text-sm text-[#8996B0] mt-1 font-light">
                       {r.perk_description}
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export default function Wallet() {
         <div className="overline mb-4">Ledger</div>
         <div>
           {wallet.ledger.length === 0 ? (
-            <div className="text-[#8E8E8E] font-light py-8">
+            <div className="text-[#8996B0] font-light py-8">
               Your ledger will fill as you visit the rooms.
             </div>
           ) : (

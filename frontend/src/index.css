@@ -9,7 +9,7 @@
    ------------------------------------------------------------------------- */
 :root {
   --ritual-bg: #0f0f0f;
-  --ritual-surface: #161616;
+  --ritual-surface: #121D33;
   --ritual-surface-2: #1e1e1e;
   --ritual-border: #2a2a2a;
   --ritual-text: #f4f4ee;
@@ -18,25 +18,25 @@
   --ritual-accent: #c2a36b;
   --ritual-accent-hover: #d1b37d;
 
-  /* shadcn dark tokens re-tuned to ritual */
-  --background: 0 0% 6%;
-  --foreground: 55 20% 94%;
-  --card: 0 0% 9%;
-  --card-foreground: 55 20% 94%;
-  --popover: 0 0% 9%;
-  --popover-foreground: 55 20% 94%;
+  /* shadcn dark tokens re-tuned to nocturne (midnight blue) */
+  --background: 217 57% 9%;
+  --foreground: 220 33% 93%;
+  --card: 219 47% 14%;
+  --card-foreground: 220 33% 93%;
+  --popover: 219 47% 14%;
+  --popover-foreground: 220 33% 93%;
   --primary: 38 42% 59%;
-  --primary-foreground: 0 0% 6%;
-  --secondary: 0 0% 12%;
-  --secondary-foreground: 55 20% 94%;
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 56%;
+  --primary-foreground: 217 57% 9%;
+  --secondary: 219 40% 18%;
+  --secondary-foreground: 220 33% 93%;
+  --muted: 219 40% 18%;
+  --muted-foreground: 220 21% 62%;
   --accent: 38 42% 59%;
-  --accent-foreground: 0 0% 6%;
+  --accent-foreground: 217 57% 9%;
   --destructive: 0 62% 42%;
-  --destructive-foreground: 55 20% 94%;
-  --border: 0 0% 16%;
-  --input: 0 0% 12%;
+  --destructive-foreground: 220 33% 93%;
+  --border: 220 39% 24%;
+  --input: 219 40% 18%;
   --ring: 38 42% 59%;
   --radius: 0.125rem;
 }

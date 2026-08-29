@@ -102,7 +102,7 @@ export function QRScanner({ onScan, onError }) {
     <div className="relative w-full max-w-sm mx-auto">
       <div
         ref={wrapperRef}
-        className="w-full aspect-square bg-black overflow-hidden border border-[#2A2A2A]"
+        className="w-full aspect-square bg-black overflow-hidden border border-[#253453]"
         data-testid="qr-scanner-viewport"
       />
       <div className="pointer-events-none absolute inset-6">
@@ -115,7 +115,7 @@ export function QRScanner({ onScan, onError }) {
         {status === "starting" && "Preparing camera…"}
         {status === "running" && "Center the room's QR"}
         {status === "error" && (
-          <span className="text-[#8E8E8E]">Camera unavailable · use the fallback below</span>
+          <span className="text-[#8996B0]">Camera unavailable · use the fallback below</span>
         )}
       </div>
     </div>

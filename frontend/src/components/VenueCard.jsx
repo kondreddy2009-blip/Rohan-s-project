@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { StatusIndicator } from "@/components/StatusIndicator";
+import { useReveal } from "@/hooks/use-reveal";
+import { cn } from "@/lib/utils";
 
 const VIBE_COLORS = {
   "Chef's Pick": "bg-[#C2A36B]/12 text-[#C2A36B] border-[#C2A36B]/40",
@@ -26,15 +28,17 @@ export function VibePill({ vibe, className = "" }) {
 
 export function VenueCard({ venue, index = 0 }) {
   const topOffering = venue.signature_offerings?.[0]?.name;
-  const priceStr = "$".repeat(venue.price_level || 3);
+  const priceStr = "₹".repeat(venue.price_level || 3);
   const vibes = venue.vibes || [];
   const primaryVibe = vibes[0];
+  const [ref, visible] = useReveal();
 
   return (
     <Link
+      ref={ref}
       to={`/venues/${venue.id}`}
-      className="group block card-invite animate-fade-up"
-      style={{ animationDelay: `${Math.min(index * 80, 400)}ms` }}
+      className={cn("group block card-invite reveal", visible && "is-visible")}
+      style={{ transitionDelay: visible ? `${Math.min(index * 80, 400)}ms` : "0ms" }}
       data-testid={`venue-card-${venue.id}`}
     >
       <div className="relative aspect-[4/5] overflow-hidden">
@@ -48,7 +52,12 @@ export function VenueCard({ venue, index = 0 }) {
 
         {/* Top-left status */}
         <div className="absolute left-5 top-5">
-          <StatusIndicator status={venue.status} />
+          <StatusIndicator
+            status={venue.status}
+            queueLength={venue.queue_length}
+            waitMinutes={venue.wait_minutes}
+            availability={venue.availability}
+          />
         </div>
 
         {/* Top-right vibe pill */}

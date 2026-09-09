@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, Camera } from "lucide-react";
+import { Check, Camera, Upload } from "lucide-react";
 import { api } from "@/lib/api";
-import { QRScanner } from "@/components/QRScanner";
+import { QRScanner, decodeQrFromFile } from "@/components/QRScanner";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useAuth } from "@/lib/auth-context";
 
@@ -34,6 +34,8 @@ export default function Scan() {
   const [result, setResult] = useState(null);
   const [manualId, setManualId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     api.get("/venues").then((r) => setVenues(r.data));
@@ -70,10 +72,14 @@ export default function Scan() {
     };
   }, []);
 
-  const venueMap = useMemo(
-    () => Object.fromEntries(venues.map((v) => [v.id, v])),
-    [venues],
-  );
+  const venueMap = useMemo(() => {
+    const map = {};
+    for (const v of venues) {
+      map[v.id] = v;
+      if (v.qr_slug) map[v.qr_slug] = v;
+    }
+    return map;
+  }, [venues]);
 
   const doCheckin = useCallback(
     async (venueId) => {
@@ -84,7 +90,7 @@ export default function Scan() {
       }
       setBusy(true);
       try {
-        const { data } = await api.post(`/venues/${venueId}/checkin`, {});
+        const { data } = await api.post(`/venues/${venue.id}/checkin`, {});
         setResult({ ...data, venue });
         await refresh();
         setStep("success");
@@ -112,6 +118,21 @@ export default function Scan() {
   const submitManual = (e) => {
     e.preventDefault();
     if (manualId) doCheckin(manualId);
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const text = await decodeQrFromFile(file);
+      handleScan(text);
+    } catch {
+      toast.error("Couldn't find a QR code in that photo.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -151,6 +172,24 @@ export default function Scan() {
                   Open camera
                 </button>
               )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                data-testid="scan-upload-input"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                data-testid="scan-upload-button"
+                className="btn-ghost w-full mt-3 inline-flex items-center justify-center gap-2"
+              >
+                <Upload strokeWidth={1.2} className="h-4 w-4" />
+                {uploading ? "Reading photo…" : "Upload a photo of the QR"}
+              </button>
             </div>
           )}
 

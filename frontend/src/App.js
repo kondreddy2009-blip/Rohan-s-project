@@ -94,7 +94,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/staff"
+        path="/staff/:tab?"
         element={
           <ProtectedRoute staff>
             <Layout>

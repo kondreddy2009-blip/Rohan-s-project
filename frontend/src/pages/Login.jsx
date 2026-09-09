@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 
@@ -10,19 +11,55 @@ const DEMO_ACCOUNTS = [
   { email: "staff.lumen@ritual.app", label: "Staff · Lumen", password: "ritual2026" },
 ];
 
+function PasswordInput({ value, onChange, testId, autoComplete, minLength }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={visible ? "text" : "password"}
+        required
+        minLength={minLength}
+        value={value}
+        onChange={onChange}
+        data-testid={testId}
+        className="w-full bg-transparent border-b border-[#4E1E32] py-2 pr-9 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
+        autoComplete={autoComplete}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        data-testid={`${testId}-toggle`}
+        className="absolute right-0 top-1/2 -translate-y-1/2 text-[#C2A36B]/70 hover:text-[#C2A36B] transition-colors duration-300"
+      >
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  );
+}
+
 export default function Login() {
-  const { user, login } = useAuth();
+  const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mode, setMode] = useState("signin"); // "signin" | "create"
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("bhandariyashvee@gmail.com");
   const [password, setPassword] = useState("ritual2026");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   if (user && user !== false) {
-    const dest = user.role === "staff" ? "/staff" : "/discover";
+    const dest = user.role === "staff" || user.role === "admin" ? "/staff" : "/discover";
     return <Navigate to={dest} replace />;
   }
+
+  const switchMode = (next) => {
+    setMode(next);
+    setError("");
+    setConfirmPassword("");
+  };
 
   const doLogin = async (em, pw) => {
     setBusy(true);
@@ -31,8 +68,28 @@ export default function Login() {
     setBusy(false);
     if (res.ok) {
       toast.success(`A table awaits, ${res.user.name.split(" ")[0]}.`);
-      const dest = res.user.role === "staff" ? "/staff" : location.state?.from?.pathname || "/discover";
+      const dest =
+        res.user.role === "staff" || res.user.role === "admin"
+          ? "/staff"
+          : location.state?.from?.pathname || "/discover";
       navigate(dest, { replace: true });
+    } else {
+      setError(res.error);
+    }
+  };
+
+  const doRegister = async () => {
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const res = await register(email, password, name);
+    setBusy(false);
+    if (res.ok) {
+      toast.success(`Welcome, ${res.user.name.split(" ")[0]}.`);
+      navigate(location.state?.from?.pathname || "/discover", { replace: true });
     } else {
       setError(res.error);
     }
@@ -40,7 +97,11 @@ export default function Login() {
 
   const submit = async (e) => {
     e.preventDefault();
-    await doLogin(email, password);
+    if (mode === "signin") {
+      await doLogin(email, password);
+    } else {
+      await doRegister();
+    }
   };
 
   return (
@@ -67,9 +128,55 @@ export default function Login() {
           <Link to="/" data-testid="login-brand-link" className="overline-accent">
             Table
           </Link>
-          <h1 className="font-serif-display text-4xl mt-4 mb-10">Sign in</h1>
+          <h1 className="font-serif-display text-4xl mt-4 mb-2">
+            {mode === "signin" ? "Sign in" : "Create account"}
+          </h1>
+          <p className="text-sm text-[#F4E8DA]/60 font-light mb-8">
+            {mode === "signin" ? (
+              <>
+                New here?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("create")}
+                  data-testid="switch-to-create"
+                  className="text-[#C2A36B] hover:underline"
+                >
+                  Create an account
+                </button>
+              </>
+            ) : (
+              <>
+                Already a member?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("signin")}
+                  data-testid="switch-to-signin"
+                  className="text-[#C2A36B] hover:underline"
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+          </p>
 
           <form onSubmit={submit} className="space-y-6" data-testid="login-form">
+            {mode === "create" && (
+              <div>
+                <label className="overline block mb-3">Name</label>
+                <input
+                  type="text"
+                  required
+                  minLength={1}
+                  maxLength={80}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  data-testid="register-name-input"
+                  className="w-full bg-transparent border-b border-[#4E1E32] py-2 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
+                  autoComplete="name"
+                />
+              </div>
+            )}
+
             <div>
               <label className="overline block mb-3">Email</label>
               <input
@@ -82,19 +189,30 @@ export default function Login() {
                 autoComplete="email"
               />
             </div>
+
             <div>
               <label className="overline block mb-3">Password</label>
-              <input
-                type="password"
-                required
-                minLength={6}
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                data-testid="login-password-input"
-                className="w-full bg-transparent border-b border-[#4E1E32] py-2 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
-                autoComplete="current-password"
+                testId="login-password-input"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                minLength={6}
               />
             </div>
+
+            {mode === "create" && (
+              <div>
+                <label className="overline block mb-3">Confirm password</label>
+                <PasswordInput
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  testId="register-confirm-password-input"
+                  autoComplete="new-password"
+                  minLength={6}
+                />
+              </div>
+            )}
 
             {error && (
               <div
@@ -111,33 +229,35 @@ export default function Login() {
               data-testid="login-submit-button"
               className="btn-primary w-full mt-2"
             >
-              {busy ? "One moment" : "Enter"}
+              {busy ? "One moment" : mode === "signin" ? "Enter" : "Create account"}
             </button>
           </form>
 
-          <div className="mt-12 pt-8 hairline-t">
-            <div className="overline mb-4">Explore as a demo guest</div>
-            <div className="space-y-2">
-              {DEMO_ACCOUNTS.map((a) => (
-                <button
-                  key={a.email}
-                  onClick={() => {
-                    setEmail(a.email);
-                    setPassword(a.password);
-                    doLogin(a.email, a.password);
-                  }}
-                  disabled={busy}
-                  data-testid={`demo-login-${a.email}`}
-                  className="w-full text-left px-4 py-3 border border-[#4E1E32] hover:border-[#C2A36B]/50 transition-colors duration-300 group"
-                >
-                  <div className="text-sm text-[#F4E8DA] font-light">{a.label}</div>
-                  <div className="overline mt-0.5 group-hover:text-[#C2A36B] transition-colors duration-300">
-                    {a.email}
-                  </div>
-                </button>
-              ))}
+          {mode === "signin" && (
+            <div className="mt-12 pt-8 hairline-t">
+              <div className="overline mb-4">Explore as a demo guest</div>
+              <div className="space-y-2">
+                {DEMO_ACCOUNTS.map((a) => (
+                  <button
+                    key={a.email}
+                    onClick={() => {
+                      setEmail(a.email);
+                      setPassword(a.password);
+                      doLogin(a.email, a.password);
+                    }}
+                    disabled={busy}
+                    data-testid={`demo-login-${a.email}`}
+                    className="w-full text-left px-4 py-3 border border-[#4E1E32] hover:border-[#C2A36B]/50 transition-colors duration-300 group"
+                  >
+                    <div className="text-sm text-[#F4E8DA] font-light">{a.label}</div>
+                    <div className="overline mt-0.5 group-hover:text-[#C2A36B] transition-colors duration-300">
+                      {a.email}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

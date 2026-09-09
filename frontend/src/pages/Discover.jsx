@@ -20,7 +20,7 @@ const VIBE_FILTERS = [
 
 function FeaturedRoom({ venue }) {
   if (!venue) return null;
-  const priceStr = "$".repeat(venue.price_level || 3);
+  const priceStr = "₹".repeat(venue.price_level || 3);
   return (
     <Link
       to={`/venues/${venue.id}`}
@@ -56,7 +56,7 @@ function FeaturedRoom({ venue }) {
             ))}
           </div>
           <div className="mt-3 flex items-center gap-4 overline">
-            <StatusIndicator status={venue.status} />
+            <StatusIndicator status={venue.status} queueLength={venue.queue_length} />
             <span className="text-[#C2A36B] tracking-widest">{priceStr}</span>
             {venue.chef && (
               <span className="inline-flex items-center gap-1 text-[#F4E8DA]/60">

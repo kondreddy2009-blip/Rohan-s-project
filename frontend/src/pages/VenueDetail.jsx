@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare, ChefHat, CalendarCheck } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, MapPin, MessageSquare, ChefHat, CalendarCheck, Users, Gift, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { StatusIndicator } from "@/components/StatusIndicator";
+import { StatusIndicator, queueLabel } from "@/components/StatusIndicator";
 import { VibePill } from "@/components/VenueCard";
 import { ConciergeModal } from "@/components/ConciergeModal";
 import { BookingModal } from "@/components/BookingModal";
@@ -19,6 +20,8 @@ export default function VenueDetail() {
   const [loading, setLoading] = useState(true);
   const [conciergeOpen, setConciergeOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [loyalty, setLoyalty] = useState(null);
+  const [redeemingId, setRedeemingId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +38,37 @@ export default function VenueDetail() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!user || (user.role !== "member" && user.role !== "admin")) return;
+    let cancelled = false;
+    async function loadLoyalty() {
+      try {
+        const { data } = await api.get(`/venues/${id}/loyalty`);
+        if (!cancelled) setLoyalty(data);
+      } catch {
+        // no-op — loyalty card just won't render
+      }
+    }
+    loadLoyalty();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user]);
+
+  async function handleRedeem(reward) {
+    if (!loyalty || loyalty.balance < reward.cost || redeemingId) return;
+    setRedeemingId(reward.id);
+    try {
+      const { data } = await api.post(`/venues/${id}/loyalty/redeem`, { reward_id: reward.id });
+      toast.success(`${reward.name} redeemed. Show this at the table: ${data.redemption.code}`);
+      setLoyalty((prev) => (prev ? { ...prev, balance: data.balance } : prev));
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Could not redeem right now.");
+    } finally {
+      setRedeemingId(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -74,12 +108,18 @@ export default function VenueDetail() {
         <div className="absolute inset-x-0 bottom-0 px-5 sm:px-10 pb-10">
           <div className="mx-auto max-w-4xl animate-fade-up">
             <div className="flex items-center gap-4 mb-4 flex-wrap">
-              <StatusIndicator status={venue.status} testId="venue-status" />
+              <StatusIndicator
+                status={venue.status}
+                queueLength={venue.queue_length}
+                waitMinutes={venue.wait_minutes}
+                availability={venue.availability}
+                testId="venue-status"
+              />
               {venue.cuisine && <span className="overline">{venue.cuisine}</span>}
               <span className="overline hidden sm:inline">{venue.neighborhood}</span>
               {venue.price_level && (
                 <span className="overline text-[#C2A36B] tracking-widest">
-                  {"$".repeat(venue.price_level)}
+                  {"₹".repeat(venue.price_level)}
                 </span>
               )}
             </div>
@@ -131,6 +171,18 @@ export default function VenueDetail() {
               <div className="overline mb-2">Room energy</div>
               <StatusIndicator status={venue.status} />
             </div>
+            {venue.queue_length != null && (
+              <div data-testid="venue-queue">
+                <div className="overline mb-2">Waitlist</div>
+                <div className="flex items-center gap-2 text-[#F4E8DA]/85 font-light">
+                  <Users strokeWidth={1.2} className="h-4 w-4 text-[#B39586]" />
+                  {queueLabel(venue.queue_length)}
+                  {venue.wait_minutes != null && venue.wait_minutes > 0 && (
+                    <span className="text-[#B39586]">· ~{venue.wait_minutes} min</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -175,6 +227,62 @@ export default function VenueDetail() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Loyalty program — points earned & spent only at this restaurant */}
+        {loyalty && (loyalty.balance > 0 || loyalty.config.rewards.length > 0) && (
+          <div className="hairline-t pt-10 animate-fade-up" data-testid="venue-loyalty">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div className="overline">Your loyalty at {venue.name}</div>
+              <div className="flex items-baseline gap-2">
+                <span className="font-serif-display text-4xl text-[#C2A36B]" data-testid="venue-loyalty-balance">
+                  {loyalty.balance}
+                </span>
+                <span className="overline">points here</span>
+              </div>
+            </div>
+            {loyalty.config.rewards.length > 0 ? (
+              <div className="space-y-3">
+                {loyalty.config.rewards.map((r) => {
+                  const affordable = loyalty.balance >= r.cost;
+                  return (
+                    <div
+                      key={r.id}
+                      className={cn(
+                        "flex items-center justify-between gap-6 p-5 border border-[#4E1E32] bg-[#2E1220]",
+                        !affordable && "opacity-50",
+                      )}
+                      data-testid={`venue-reward-${r.id}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <Gift strokeWidth={1.2} className="h-5 w-5 text-[#C2A36B] mt-1 flex-shrink-0" />
+                        <div>
+                          <div className="font-serif-display text-xl">{r.name}</div>
+                          <p className="text-sm text-[#B39586] font-light mt-1">{r.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span className="overline-accent">{r.cost} pts</span>
+                        <button
+                          onClick={() => handleRedeem(r)}
+                          disabled={!affordable || redeemingId === r.id}
+                          data-testid={`redeem-venue-reward-${r.id}`}
+                          className="btn-ghost text-sm py-2 px-4 disabled:cursor-not-allowed"
+                        >
+                          {redeemingId === r.id ? "Redeeming…" : "Redeem"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[#7A5C55] font-light flex items-center gap-2">
+                <Sparkles strokeWidth={1.2} className="h-4 w-4" />
+                Dine in or book a table to start earning points here.
+              </p>
+            )}
           </div>
         )}
 

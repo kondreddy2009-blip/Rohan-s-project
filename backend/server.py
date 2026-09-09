@@ -220,6 +220,37 @@ class StatusIn(BaseModel):
     capacity_percent: Optional[int] = None
 
 
+class QueueIn(BaseModel):
+    queue_length: int = Field(ge=0, le=200)
+    wait_minutes: Optional[int] = Field(default=None, ge=0, le=600)
+
+
+class AvailabilityIn(BaseModel):
+    availability: Literal["accepting", "fully_booked", "closed"]
+
+
+class VenueProfileIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    cuisine: Optional[str] = Field(default=None, max_length=60)
+    price_level: int = Field(ge=1, le=4)
+    neighborhood: str = Field(min_length=1, max_length=60)
+    hours: str = Field(min_length=1, max_length=60)
+    tagline: str = Field(min_length=1, max_length=140)
+    description: str = Field(min_length=1, max_length=1000)
+    image_url: str = Field(min_length=1)
+    chef: Optional[str] = Field(default=None, max_length=80)
+    vibes: List[str] = Field(default_factory=list)
+    regulars_order: List[str] = Field(default_factory=list)
+
+
+class PublishIn(BaseModel):
+    published: bool
+
+
+class QrSlugIn(BaseModel):
+    qr_slug: str = Field(min_length=3, max_length=40, pattern=r"^[a-z0-9-]+$")
+
+
 class EventIn(BaseModel):
     title: str
     description: str
@@ -259,6 +290,27 @@ class BookingUpdateIn(BaseModel):
     staff_reply: Optional[str] = None
 
 
+class LoyaltyRewardIn(BaseModel):
+    id: Optional[str] = None
+    name: str = Field(min_length=1, max_length=80)
+    description: str = Field(min_length=1, max_length=280)
+    cost: int = Field(ge=1, le=100000)
+
+
+class LoyaltyConfigIn(BaseModel):
+    points_per_checkin: int = Field(ge=0, le=100000)
+    points_per_booking: int = Field(ge=0, le=100000)
+    rewards: List[LoyaltyRewardIn] = Field(default_factory=list)
+
+
+class LoyaltyRedeemIn(BaseModel):
+    reward_id: str
+
+
+class LoyaltyRedemptionUpdateIn(BaseModel):
+    redeemed: bool
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -281,6 +333,64 @@ def public_user(u: dict) -> dict:
         "tier": u.get("tier", "Guest"),
         "member_since": u.get("member_since"),
         "staff_venue_id": u.get("staff_venue_id"),
+    }
+
+
+async def resolve_venue(ref: str, projection: Optional[dict] = None) -> Optional[dict]:
+    """Look a venue up by its id, falling back to its editable qr_slug."""
+    venue = await db.venues.find_one({"id": ref}, projection)
+    if venue:
+        return venue
+    return await db.venues.find_one({"qr_slug": ref}, projection)
+
+
+def _venue_loyalty_key(member_id: str, venue_id: str) -> str:
+    return f"{member_id}:{venue_id}"
+
+
+async def award_venue_points(member_id: str, venue_id: str, venue_name: str, amount: int, description: str) -> dict:
+    """Credit venue-specific loyalty points. These are separate from the
+    cross-venue Table Points balance and can only be redeemed at this venue."""
+    if amount <= 0:
+        account = await db.venue_loyalty.find_one(
+            {"member_id": member_id, "venue_id": venue_id}, {"_id": 0}
+        )
+        return account or {"balance": 0, "lifetime_points": 0}
+
+    key = _venue_loyalty_key(member_id, venue_id)
+    now = _now_iso()
+    await db.venue_loyalty.update_one(
+        {"id": key},
+        {
+            "$setOnInsert": {
+                "id": key,
+                "member_id": member_id,
+                "venue_id": venue_id,
+                "venue_name": venue_name,
+            },
+            "$inc": {"balance": amount, "lifetime_points": amount},
+            "$set": {"updated_at": now},
+        },
+        upsert=True,
+    )
+    await db.venue_loyalty_ledger.insert_one({
+        "id": str(uuid.uuid4()),
+        "member_id": member_id,
+        "venue_id": venue_id,
+        "venue_name": venue_name,
+        "points_delta": amount,
+        "type": "earn",
+        "description": description,
+        "timestamp": now,
+    })
+    return await db.venue_loyalty.find_one({"id": key}, {"_id": 0})
+
+
+def public_loyalty_config(venue: dict) -> dict:
+    return {
+        "points_per_checkin": venue.get("loyalty_points_per_checkin", 0),
+        "points_per_booking": venue.get("loyalty_points_per_booking", 0),
+        "rewards": venue.get("loyalty_rewards", []),
     }
 
 
@@ -372,7 +482,7 @@ async def me(user: dict = Depends(get_current_user)):
 # ---------------------------------------------------------------------------
 @api.get("/venues")
 async def list_venues(daypart: Optional[str] = None):
-    query: dict = {}
+    query: dict = {"published": {"$ne": False}}
     if daypart and daypart.lower() in ("day", "night"):
         query["daypart"] = {"$in": [daypart.lower(), "both"]}
     venues = await db.venues.find(query, {"_id": 0, "seed_offerings": 0}).to_list(200)
@@ -383,10 +493,10 @@ async def list_venues(daypart: Optional[str] = None):
 
 @api.get("/venues/{venue_id}")
 async def get_venue(venue_id: str):
-    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0, "seed_offerings": 0})
+    venue = await resolve_venue(venue_id, {"_id": 0, "seed_offerings": 0})
     if not venue:
         raise HTTPException(status_code=404, detail="Venue not found")
-    events = await db.events.find({"venue_id": venue_id}, {"_id": 0}).to_list(50)
+    events = await db.events.find({"venue_id": venue["id"]}, {"_id": 0}).to_list(50)
     events.sort(key=lambda e: (e["date"], e["time"]))
     venue["events"] = events
     return venue
@@ -396,9 +506,10 @@ async def get_venue(venue_id: str):
 async def checkin(venue_id: str, payload: CheckInIn, user: dict = Depends(get_current_user)):
     if user.get("role") not in ("member", "admin"):
         raise HTTPException(status_code=403, detail="Only members can check in")
-    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0})
+    venue = await resolve_venue(venue_id, {"_id": 0})
     if not venue:
         raise HTTPException(status_code=404, detail="Venue not found")
+    venue_id = venue["id"]
 
     now = _now_iso()
     checkin_id = str(uuid.uuid4())
@@ -438,6 +549,11 @@ async def checkin(venue_id: str, payload: CheckInIn, user: dict = Depends(get_cu
     if payload.item_ordered and payload.would_return:
         await recompute_signature_offerings(venue_id)
 
+    venue_points_earned = venue.get("loyalty_points_per_checkin", 0)
+    venue_account = await award_venue_points(
+        user["id"], venue_id, venue["name"], venue_points_earned, f"Dined in at {venue['name']}"
+    )
+
     return {
         "checkin_id": checkin_id,
         "points_earned": delta,
@@ -445,6 +561,8 @@ async def checkin(venue_id: str, payload: CheckInIn, user: dict = Depends(get_cu
         "lifetime_points": new_lifetime,
         "tier": new_tier,
         "venue_name": venue["name"],
+        "venue_points_earned": venue_points_earned,
+        "venue_points_balance": venue_account.get("balance", 0),
     }
 
 
@@ -599,7 +717,7 @@ def _assert_staff_can_manage(user: dict, venue_id: str) -> None:
 @api.patch("/staff/venues/{venue_id}/status")
 async def update_status(venue_id: str, payload: StatusIn, user: dict = Depends(require_staff_or_admin)):
     _assert_staff_can_manage(user, venue_id)
-    updates: dict = {"status": payload.status}
+    updates: dict = {"status": payload.status, "last_status_update": _now_iso()}
     if payload.capacity_percent is not None:
         updates["capacity_percent"] = max(0, min(100, payload.capacity_percent))
     else:
@@ -610,6 +728,70 @@ async def update_status(venue_id: str, payload: StatusIn, user: dict = Depends(r
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Venue not found")
     return {"ok": True, **updates}
+
+
+@api.patch("/staff/venues/{venue_id}/queue")
+async def update_queue(venue_id: str, payload: QueueIn, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    updates: dict = {
+        "queue_length": payload.queue_length,
+        "wait_minutes": payload.wait_minutes,
+        "last_status_update": _now_iso(),
+    }
+    result = await db.venues.update_one({"id": venue_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, **updates}
+
+
+@api.patch("/staff/venues/{venue_id}/availability")
+async def update_availability(
+    venue_id: str, payload: AvailabilityIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    updates: dict = {"availability": payload.availability, "last_status_update": _now_iso()}
+    result = await db.venues.update_one({"id": venue_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, **updates}
+
+
+@api.patch("/staff/venues/{venue_id}/profile")
+async def update_profile(
+    venue_id: str, payload: VenueProfileIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    updates = payload.model_dump()
+    result = await db.venues.update_one({"id": venue_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, **updates}
+
+
+@api.patch("/staff/venues/{venue_id}/qr-slug")
+async def update_qr_slug(
+    venue_id: str, payload: QrSlugIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    slug = payload.qr_slug.strip().lower()
+    existing = await db.venues.find_one({"qr_slug": slug, "id": {"$ne": venue_id}}, {"_id": 0, "id": 1})
+    if existing:
+        raise HTTPException(status_code=400, detail="That check-in address is already in use")
+    result = await db.venues.update_one({"id": venue_id}, {"$set": {"qr_slug": slug}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, "qr_slug": slug}
+
+
+@api.patch("/staff/venues/{venue_id}/publish")
+async def update_publish(
+    venue_id: str, payload: PublishIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    result = await db.venues.update_one({"id": venue_id}, {"$set": {"published": payload.published}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, "published": payload.published}
 
 
 @api.get("/staff/venues/{venue_id}/analytics")
@@ -929,7 +1111,189 @@ async def update_booking(
     if payload.staff_reply is not None:
         updates["staff_reply"] = payload.staff_reply.strip() or None
     await db.bookings.update_one({"id": booking_id}, {"$set": updates})
+
+    if payload.status == "seated" and b["status"] != "seated":
+        venue = await db.venues.find_one({"id": b["venue_id"]}, {"_id": 0})
+        if venue:
+            await award_venue_points(
+                b["member_id"],
+                b["venue_id"],
+                venue["name"],
+                venue.get("loyalty_points_per_booking", 0),
+                f"Table booking at {venue['name']}",
+            )
+
     return {"ok": True, **updates}
+
+
+# ---------------------------------------------------------------------------
+# Venue loyalty program — points earned & spent at a single restaurant only
+# ---------------------------------------------------------------------------
+@api.get("/venues/{venue_id}/loyalty")
+async def get_venue_loyalty(venue_id: str, user: dict = Depends(get_current_user)):
+    venue = await resolve_venue(venue_id, {"_id": 0})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    venue_id = venue["id"]
+    account = await db.venue_loyalty.find_one(
+        {"member_id": user["id"], "venue_id": venue_id}, {"_id": 0}
+    )
+    ledger = await db.venue_loyalty_ledger.find(
+        {"member_id": user["id"], "venue_id": venue_id}, {"_id": 0}
+    ).sort("timestamp", -1).to_list(100)
+    return {
+        "venue_id": venue_id,
+        "venue_name": venue["name"],
+        "balance": account.get("balance", 0) if account else 0,
+        "lifetime_points": account.get("lifetime_points", 0) if account else 0,
+        "config": public_loyalty_config(venue),
+        "ledger": ledger,
+    }
+
+
+@api.post("/venues/{venue_id}/loyalty/redeem")
+async def redeem_venue_loyalty(
+    venue_id: str, payload: LoyaltyRedeemIn, user: dict = Depends(get_current_user)
+):
+    venue = await resolve_venue(venue_id, {"_id": 0})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    venue_id = venue["id"]
+    reward = next(
+        (r for r in venue.get("loyalty_rewards", []) if r["id"] == payload.reward_id), None
+    )
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+
+    account = await db.venue_loyalty.find_one(
+        {"member_id": user["id"], "venue_id": venue_id}, {"_id": 0}
+    )
+    balance = account.get("balance", 0) if account else 0
+    if balance < reward["cost"]:
+        raise HTTPException(status_code=400, detail="Not enough points at this restaurant")
+
+    now = _now_iso()
+    key = _venue_loyalty_key(user["id"], venue_id)
+    await db.venue_loyalty.update_one({"id": key}, {"$inc": {"balance": -reward["cost"]}, "$set": {"updated_at": now}})
+    await db.venue_loyalty_ledger.insert_one({
+        "id": str(uuid.uuid4()),
+        "member_id": user["id"],
+        "venue_id": venue_id,
+        "venue_name": venue["name"],
+        "points_delta": -reward["cost"],
+        "type": "redeem",
+        "description": reward["name"],
+        "timestamp": now,
+    })
+    redemption_code = "L-" + uuid.uuid4().hex[:8].upper()
+    redemption = {
+        "id": str(uuid.uuid4()),
+        "code": redemption_code,
+        "member_id": user["id"],
+        "member_name": user["name"],
+        "venue_id": venue_id,
+        "venue_name": venue["name"],
+        "reward_id": reward["id"],
+        "reward_name": reward["name"],
+        "reward_description": reward["description"],
+        "points_cost": reward["cost"],
+        "timestamp": now,
+        "redeemed": False,
+    }
+    await db.venue_redemptions.insert_one(redemption)
+    return {
+        "redemption": {k: v for k, v in redemption.items() if k != "_id"},
+        "balance": balance - reward["cost"],
+    }
+
+
+@api.get("/members/me/loyalty")
+async def my_venue_loyalty(user: dict = Depends(get_current_user)):
+    accounts = await db.venue_loyalty.find(
+        {"member_id": user["id"]}, {"_id": 0}
+    ).sort("balance", -1).to_list(200)
+    return accounts
+
+
+@api.get("/members/me/loyalty/redemptions")
+async def my_venue_redemptions(user: dict = Depends(get_current_user)):
+    items = await db.venue_redemptions.find(
+        {"member_id": user["id"]}, {"_id": 0}
+    ).sort("timestamp", -1).to_list(100)
+    return items
+
+
+@api.patch("/staff/venues/{venue_id}/loyalty")
+async def update_venue_loyalty_config(
+    venue_id: str, payload: LoyaltyConfigIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    rewards = []
+    for r in payload.rewards:
+        rewards.append({
+            "id": r.id or str(uuid.uuid4()),
+            "name": r.name.strip(),
+            "description": r.description.strip(),
+            "cost": r.cost,
+        })
+    updates = {
+        "loyalty_points_per_checkin": payload.points_per_checkin,
+        "loyalty_points_per_booking": payload.points_per_booking,
+        "loyalty_rewards": rewards,
+    }
+    result = await db.venues.update_one({"id": venue_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, **updates}
+
+
+@api.get("/staff/venues/{venue_id}/loyalty")
+async def staff_venue_loyalty(venue_id: str, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    members_count = await db.venue_loyalty.count_documents({"venue_id": venue_id})
+    issued = await db.venue_loyalty_ledger.aggregate([
+        {"$match": {"venue_id": venue_id, "type": "earn"}},
+        {"$group": {"_id": None, "total": {"$sum": "$points_delta"}}},
+    ]).to_list(1)
+    redeemed = await db.venue_loyalty_ledger.aggregate([
+        {"$match": {"venue_id": venue_id, "type": "redeem"}},
+        {"$group": {"_id": None, "total": {"$sum": "$points_delta"}}},
+    ]).to_list(1)
+    return {
+        "config": public_loyalty_config(venue),
+        "members_enrolled": members_count,
+        "points_issued": issued[0]["total"] if issued else 0,
+        "points_redeemed": -redeemed[0]["total"] if redeemed else 0,
+    }
+
+
+@api.get("/staff/venues/{venue_id}/loyalty/redemptions")
+async def staff_venue_loyalty_redemptions(venue_id: str, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    items = await db.venue_redemptions.find(
+        {"venue_id": venue_id}, {"_id": 0}
+    ).sort("timestamp", -1).to_list(100)
+    return items
+
+
+@api.patch("/staff/venues/{venue_id}/loyalty/redemptions/{redemption_id}")
+async def update_venue_loyalty_redemption(
+    venue_id: str,
+    redemption_id: str,
+    payload: LoyaltyRedemptionUpdateIn,
+    user: dict = Depends(require_staff_or_admin),
+):
+    _assert_staff_can_manage(user, venue_id)
+    result = await db.venue_redemptions.update_one(
+        {"id": redemption_id, "venue_id": venue_id},
+        {"$set": {"redeemed": payload.redeemed}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Redemption not found")
+    return {"ok": True, "redeemed": payload.redeemed}
 
 
 # ---------------------------------------------------------------------------
@@ -961,6 +1325,7 @@ SEED_VENUES = [
         "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 65,
+        "queue_length": 2,
         "hours": "18:00 – 01:00",
         "tagline": "A bistro that stays until the last conversation.",
         "description": "A candlelit bistro serving natural wine and seasonal small plates. Warm banquettes, patient service, an evening that keeps its own hours.",
@@ -985,6 +1350,7 @@ SEED_VENUES = [
         "daypart": "night",
         "status": "At Capacity",
         "capacity_percent": 92,
+        "queue_length": 7,
         "hours": "18:00 – 23:30",
         "tagline": "Long tables. Longer conversations.",
         "description": "A generous Italian trattoria with a single wood-fired oven, house-made pasta, and a wine list that walks you from Piedmont to Sicily.",
@@ -1009,6 +1375,7 @@ SEED_VENUES = [
         "daypart": "night",
         "status": "Quiet",
         "capacity_percent": 35,
+        "queue_length": 0,
         "hours": "18:00 – 23:00",
         "tagline": "Twelve seats. One evening.",
         "description": "An intimate omakase counter with two seatings a night. The chef speaks little and pours patiently — you leave when the last course is finished.",
@@ -1033,6 +1400,7 @@ SEED_VENUES = [
         "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 70,
+        "queue_length": 3,
         "hours": "19:00 – 23:30",
         "tagline": "A single seating each night.",
         "description": "A private counter of ten seats served a nightly tasting menu by the chef. Silverware only, house pianist optional, seasons observed.",
@@ -1057,6 +1425,7 @@ SEED_VENUES = [
         "daypart": "night",
         "status": "Quiet",
         "capacity_percent": 45,
+        "queue_length": 0,
         "hours": "17:30 – 23:00",
         "tagline": "Small plates, unhurried nights.",
         "description": "A neighborhood bistro that serves a rotating menu of small plates until the last table is happy. Solo seats at the pass, natural wine by the glass.",
@@ -1081,6 +1450,7 @@ SEED_VENUES = [
         "daypart": "night",
         "status": "Filling In",
         "capacity_percent": 60,
+        "queue_length": 1,
         "hours": "18:00 – 00:00",
         "tagline": "New American, quietly ambitious.",
         "description": "A first-year dining room turning heads for its quiet plating and slow-cooked room. Green banquettes, a single piano, a bar that pours off-menu.",
@@ -1201,11 +1571,35 @@ async def seed_database():
     await db.venues.delete_many({"id": {"$nin": seed_ids}})
     for v in SEED_VENUES:
         existing = await db.venues.find_one({"id": v["id"]})
-        doc = {**v, "signature_offerings": list(v["seed_offerings"])}
+        doc = {
+            **v,
+            "signature_offerings": list(v["seed_offerings"]),
+            "published": True,
+            "availability": "accepting",
+            "wait_minutes": None,
+            "last_status_update": _now_iso(),
+            "regulars_order": [o["name"] for o in v["seed_offerings"][:4]],
+        }
         if existing:
             # Preserve status if manually set — but on cold start, refresh
             await db.venues.update_one({"id": v["id"]}, {"$set": doc})
         else:
+            doc["loyalty_points_per_checkin"] = 50
+            doc["loyalty_points_per_booking"] = 30
+            doc["loyalty_rewards"] = [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Free Dessert",
+                    "description": "A sweet finish, on the house.",
+                    "cost": 150,
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "10% Off the Table",
+                    "description": "A discount on this visit's bill.",
+                    "cost": 300,
+                },
+            ]
             await db.venues.insert_one(doc)
 
     # Events
@@ -1273,6 +1667,10 @@ async def seed_database():
     await db.checkins.create_index([("member_id", 1), ("timestamp", -1)])
     await db.points_ledger.create_index([("member_id", 1), ("timestamp", -1)])
     await db.redemptions.create_index([("member_id", 1), ("timestamp", -1)])
+    await db.venue_loyalty.create_index([("member_id", 1), ("venue_id", 1)], unique=True)
+    await db.venue_loyalty_ledger.create_index([("member_id", 1), ("venue_id", 1), ("timestamp", -1)])
+    await db.venue_redemptions.create_index([("member_id", 1), ("timestamp", -1)])
+    await db.venue_redemptions.create_index([("venue_id", 1), ("timestamp", -1)])
 
 
 @app.on_event("startup")

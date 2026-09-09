@@ -196,6 +196,23 @@ textarea:focus-visible,
   animation-delay: 400ms;
 }
 
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 700ms ease-out, transform 700ms ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* -------------------------------------------------------------------------
    Utility classes
    ------------------------------------------------------------------------- */

@@ -47,7 +47,12 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['config']['rewards']\\)\")",
       "Bash(curl -s -b cookies2.txt -X POST http://localhost:8001/api/venues/venue-verre/loyalty/redeem -H \"Content-Type: application/json\" -d '{\"reward_id\":\"7b6f020e-c97e-46be-866d-0b9571de5972\"}')",
       "Bash(curl -s -b staffcookies.txt http://localhost:8001/api/staff/venues/venue-verre/loyalty/redemptions)",
-      "Bash(curl -s -b staffcookies.txt -X PATCH http://localhost:8001/api/staff/venues/venue-verre/loyalty/redemptions/96d885fb-a068-4940-bdca-180bc06ffa90 -H \"Content-Type: application/json\" -d '{\"redeemed\": true}')"
+      "Bash(curl -s -b staffcookies.txt -X PATCH http://localhost:8001/api/staff/venues/venue-verre/loyalty/redemptions/96d885fb-a068-4940-bdca-180bc06ffa90 -H \"Content-Type: application/json\" -d '{\"redeemed\": true}')",
+      "Bash(curl -s -c c1.txt -X POST http://localhost:8001/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"alex@ritual.app\",\"password\":\"ritual2026\"}')",
+      "Bash(curl -s -b c1.txt -X POST http://localhost:8001/api/bookings -H \"Content-Type: application/json\" -d '{\"venue_id\":\"venue-osteria\",\"date\":\"2026-09-20\",\"time\":\"19:00\",\"party_size\":2}')",
+      "Bash(curl -s -c staffc.txt -X POST http://localhost:8001/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"staff.verre@ritual.app\",\"password\":\"ritual2026\"}')",
+      "Bash(curl -s -b staffc.txt -X PATCH http://localhost:8001/api/staff/venues/venue-verre/booking-deposit -H \"Content-Type: application/json\" -d '{\"amount\": 200}')",
+      "Bash(curl -s -b c1.txt -X POST http://localhost:8001/api/bookings -H \"Content-Type: application/json\" -d '{\"venue_id\":\"venue-verre\",\"date\":\"2026-09-20\",\"time\":\"19:00\",\"party_size\":2}')"
     ]
   }
 }

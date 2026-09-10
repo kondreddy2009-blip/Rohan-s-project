@@ -54,7 +54,7 @@ function BookingRow({ booking, onAct }) {
 
   return (
     <div
-      className="p-5 sm:p-6 border border-[#4E1E32] bg-[#2E1220]"
+      className="p-6 sm:p-8 border border-[#4E1E32] bg-[#2E1220]"
       data-testid={`booking-row-${booking.id}`}
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -83,6 +83,12 @@ function BookingRow({ booking, onAct }) {
       <div className="mt-3 flex items-baseline gap-3 flex-wrap">
         <div className="overline">Code</div>
         <div className="font-mono tracking-[0.28em] text-[#C2A36B] text-sm">{booking.code}</div>
+        {booking.payment_status === "paid" && (
+          <span className="overline text-[#7A9B7A]">₹{booking.deposit_amount} deposit paid</span>
+        )}
+        {booking.payment_status === "refunded" && (
+          <span className="overline text-[#B39586]">₹{booking.deposit_amount} deposit refunded</span>
+        )}
       </div>
 
       {booking.note && (
@@ -148,16 +154,56 @@ function BookingRow({ booking, onAct }) {
   );
 }
 
+function BookingDepositControl({ venueId, amount, onSaved }) {
+  const [value, setValue] = useState(amount || 0);
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api.patch(`/staff/venues/${venueId}/booking-deposit`, { amount: Number(value) || 0 });
+      toast.success("Deposit requirement updated.");
+      onSaved?.();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Could not save the deposit amount.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="p-6 border border-[#4E1E32] bg-[#2E1220] flex items-end gap-4 flex-wrap" data-testid="booking-deposit-control">
+      <div className="flex-1 min-w-[10rem]">
+        <label className="overline block mb-2">Deposit required per booking (₹)</label>
+        <p className="text-xs text-[#7A5C55] mb-2">
+          Charged via Razorpay when a guest reserves a table, adjusted against their final bill. Set to 0 to require no deposit.
+        </p>
+        <input
+          type="number"
+          min={0}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          data-testid="booking-deposit-input"
+          className="w-full max-w-[10rem] bg-transparent border-b border-[#4E1E32] py-2 focus:border-[#C2A36B] outline-none font-light transition-colors duration-300"
+        />
+      </div>
+      <button type="button" onClick={save} disabled={busy} data-testid="booking-deposit-save" className="btn-ghost">
+        {busy ? "Saving" : "Save"}
+      </button>
+    </div>
+  );
+}
+
 function StatusControl({ current, onChange }) {
   return (
-    <div className="grid grid-cols-3 gap-2" data-testid="status-control">
+    <div className="grid grid-cols-3 gap-3" data-testid="status-control">
       {STATUS_OPTIONS.map((s) => (
         <button
           key={s}
           onClick={() => onChange(s)}
           data-testid={`status-btn-${s.replace(/\s+/g, "-").toLowerCase()}`}
           className={cn(
-            "px-4 py-4 border transition-colors duration-300 text-left",
+            "px-5 py-7 border transition-colors duration-300 text-left",
             current === s
               ? "border-[#C2A36B] bg-[#2E1220]"
               : "border-[#4E1E32] hover:border-[#B39586]",
@@ -166,7 +212,7 @@ function StatusControl({ current, onChange }) {
           <StatusIndicator status={s} showLabel={false} />
           <div
             className={cn(
-              "mt-2 font-serif text-lg",
+              "mt-3 font-serif text-xl",
               current === s ? "text-[#C2A36B]" : "text-[#F4E8DA]",
             )}
           >
@@ -194,28 +240,28 @@ function QueueControl({ current, onChange }) {
   };
 
   return (
-    <div className="flex items-center gap-5 p-6 border border-[#4E1E32] bg-[#2E1220]" data-testid="queue-control">
+    <div className="flex items-center gap-6 p-8 border border-[#4E1E32] bg-[#2E1220]" data-testid="queue-control">
       <button
         onClick={() => step(-1)}
         disabled={busy || value === 0}
         data-testid="queue-decrement"
         aria-label="Decrease waitlist"
-        className="h-10 w-10 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
+        className="h-12 w-12 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
       >
         <Minus strokeWidth={1.4} className="h-4 w-4" />
       </button>
-      <div className="text-center min-w-[7rem]">
-        <div className="font-serif-display text-4xl tabular-nums" data-testid="queue-value">
+      <div className="text-center min-w-[8rem]">
+        <div className="font-serif-display text-5xl tabular-nums" data-testid="queue-value">
           {value}
         </div>
-        <div className="overline mt-1">{queueLabel(value)}</div>
+        <div className="overline mt-2">{queueLabel(value)}</div>
       </div>
       <button
         onClick={() => step(1)}
         disabled={busy}
         data-testid="queue-increment"
         aria-label="Increase waitlist"
-        className="h-10 w-10 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
+        className="h-12 w-12 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
       >
         <Plus strokeWidth={1.4} className="h-4 w-4" />
       </button>
@@ -226,14 +272,14 @@ function QueueControl({ current, onChange }) {
 function AvailabilityControl({ current, onChange }) {
   const value = current || "accepting";
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2" data-testid="availability-control">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="availability-control">
       {AVAILABILITY_OPTIONS.map((o) => (
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
           data-testid={`availability-btn-${o.key}`}
           className={cn(
-            "px-4 py-4 border transition-colors duration-300 text-left font-serif text-lg",
+            "px-5 py-7 border transition-colors duration-300 text-left font-serif text-xl",
             value === o.key
               ? "border-[#C2A36B] bg-[#2E1220] text-[#C2A36B]"
               : "border-[#4E1E32] hover:border-[#B39586] text-[#F4E8DA]",
@@ -262,28 +308,28 @@ function WaitMinutesControl({ current, onChange }) {
   };
 
   return (
-    <div className="flex items-center gap-5 p-6 border border-[#4E1E32] bg-[#2E1220]" data-testid="wait-minutes-control">
+    <div className="flex items-center gap-6 p-8 border border-[#4E1E32] bg-[#2E1220]" data-testid="wait-minutes-control">
       <button
         onClick={() => step(-5)}
         disabled={busy || value === 0}
         data-testid="wait-minutes-decrement"
         aria-label="Decrease estimated wait"
-        className="h-10 w-10 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
+        className="h-12 w-12 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
       >
         <Minus strokeWidth={1.4} className="h-4 w-4" />
       </button>
-      <div className="text-center min-w-[7rem]">
-        <div className="font-serif-display text-4xl tabular-nums" data-testid="wait-minutes-value">
+      <div className="text-center min-w-[8rem]">
+        <div className="font-serif-display text-5xl tabular-nums" data-testid="wait-minutes-value">
           {value}
         </div>
-        <div className="overline mt-1">Minutes est.</div>
+        <div className="overline mt-2">Minutes est.</div>
       </div>
       <button
         onClick={() => step(5)}
         disabled={busy}
         data-testid="wait-minutes-increment"
         aria-label="Increase estimated wait"
-        className="h-10 w-10 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
+        className="h-12 w-12 flex items-center justify-center border border-[#4E1E32] hover:border-[#C2A36B]/50 disabled:opacity-30 transition-colors duration-300"
       >
         <Plus strokeWidth={1.4} className="h-4 w-4" />
       </button>
@@ -321,10 +367,10 @@ function LastUpdated({ timestamp }) {
 
 function StatCard({ label, value, hint }) {
   return (
-    <div className="p-6 border border-[#4E1E32] bg-[#2E1220]">
-      <div className="overline mb-3">{label}</div>
+    <div className="p-7 border border-[#4E1E32] bg-[#2E1220]">
+      <div className="overline mb-4">{label}</div>
       <div className="font-serif-display text-4xl tabular-nums">{value}</div>
-      {hint && <div className="overline mt-2">{hint}</div>}
+      {hint && <div className="overline mt-3">{hint}</div>}
     </div>
   );
 }
@@ -434,7 +480,7 @@ function VenueProfileForm({ venue, onSaved }) {
 
   return (
     <div className="space-y-10" data-testid="venue-profile-tab">
-      <div className="flex items-center justify-between gap-4 p-5 border border-[#4E1E32] bg-[#2E1220] flex-wrap">
+      <div className="flex items-center justify-between gap-4 p-6 border border-[#4E1E32] bg-[#2E1220] flex-wrap">
         <div>
           <div className="overline mb-1">Listing status</div>
           <div className={cn("font-serif-display text-2xl", venue.published ? "text-[#7A9B7A]" : "text-[#B39586]")}>
@@ -737,7 +783,7 @@ function CorrespondenceRow({ msg, onRespond }) {
 
   return (
     <div
-      className="p-5 sm:p-6 border border-[#4E1E32] bg-[#2E1220]"
+      className="p-6 sm:p-8 border border-[#4E1E32] bg-[#2E1220]"
       data-testid={`concierge-row-${msg.id}`}
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -948,7 +994,7 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
 
   return (
     <div className="space-y-10" data-testid="loyalty-tab">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard label="Members enrolled" value={stats.members_enrolled} />
         <StatCard label="Points issued" value={stats.points_issued.toLocaleString()} />
         <StatCard label="Points redeemed" value={stats.points_redeemed.toLocaleString()} />
@@ -1083,7 +1129,7 @@ function LoyaltyRedemptionRow({ redemption, onToggled }) {
 
   return (
     <div
-      className="flex items-center justify-between gap-4 p-5 border border-[#4E1E32]"
+      className="flex items-center justify-between gap-4 p-6 border border-[#4E1E32] bg-[#2E1220]"
       data-testid={`loyalty-redemption-${redemption.id}`}
     >
       <div className="min-w-0">
@@ -1216,7 +1262,7 @@ export default function StaffDashboard() {
   return (
     <div data-testid="staff-dashboard">
       <div
-        className="hidden sm:flex flex-col gap-1 fixed left-0 top-0 h-screen w-56 pt-24 px-3 border-r border-[#4E1E32] bg-[#1A0912] z-30 overflow-y-auto"
+        className="hidden sm:flex flex-col gap-1.5 fixed left-0 top-0 h-screen w-64 pt-28 px-4 border-r border-[#4E1E32] bg-[#1A0912] z-30 overflow-y-auto"
         role="tablist"
       >
         {[
@@ -1235,9 +1281,9 @@ export default function StaffDashboard() {
             role="tab"
             data-testid={`tab-${t.k}`}
             className={cn(
-              "px-4 py-2.5 overline transition-colors duration-300 border-l-2 -ml-px text-left whitespace-nowrap inline-flex items-center gap-2",
+              "px-5 py-3.5 overline transition-colors duration-300 border-l-2 -ml-px text-left whitespace-nowrap inline-flex items-center gap-2",
               tab === t.k
-                ? "text-[#C2A36B] border-[#C2A36B]"
+                ? "text-[#C2A36B] border-[#C2A36B] bg-[#2E1220]/60"
                 : "text-[#B39586] border-transparent hover:text-[#F4E8DA]",
             )}
           >
@@ -1251,14 +1297,14 @@ export default function StaffDashboard() {
         ))}
       </div>
 
-      <div className="mx-auto max-w-5xl px-5 sm:px-8 py-8 sm:py-14 sm:pl-[15.5rem]">
-      <div className="flex items-start justify-between gap-4 flex-wrap animate-fade-up">
+      <div className="mx-auto max-w-[90rem] px-6 sm:px-12 py-10 sm:py-16 sm:pl-[18rem]">
+      <div className="flex items-start justify-between gap-6 flex-wrap animate-fade-up">
         <div>
           <div className="overline">Staff dashboard</div>
-          <h1 className="font-serif-display text-4xl sm:text-5xl mt-2">
+          <h1 className="font-serif-display text-5xl sm:text-6xl mt-3">
             {selectedVenue.name}
           </h1>
-          <div className="mt-1 overline">
+          <div className="mt-2 overline">
             {selectedVenue.type} · {selectedVenue.neighborhood}
           </div>
         </div>
@@ -1270,7 +1316,7 @@ export default function StaffDashboard() {
               value={selectedId || ""}
               onChange={(e) => setSelectedId(e.target.value)}
               data-testid="venue-select"
-              className="bg-[#2E1220] border border-[#4E1E32] py-2 px-3 focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA]"
+              className="bg-[#2E1220] border border-[#4E1E32] py-3 px-4 text-base focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA]"
             >
               {venues.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -1317,44 +1363,49 @@ export default function StaffDashboard() {
 
       <div className="mt-10 sm:mt-14">
       {tab === "overview" && (
-        <div className="mt-10 space-y-10 animate-fade-up">
+        <div className="mt-12 space-y-14 animate-fade-up">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="overline">Live floor</div>
             <LastUpdated timestamp={selectedVenue.last_status_update} />
           </div>
 
-          <div>
-            <div className="overline mb-4">Room energy</div>
-            <StatusControl current={selectedVenue.status} onChange={updateStatus} />
-          </div>
-
-          <div>
-            <div className="overline mb-4">Availability</div>
-            <AvailabilityControl current={selectedVenue.availability} onChange={updateAvailability} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             <div>
-              <div className="overline mb-4">Waitlist</div>
+              <div className="overline mb-5">Room energy</div>
+              <StatusControl current={selectedVenue.status} onChange={updateStatus} />
+            </div>
+
+            <div>
+              <div className="overline mb-5">Availability</div>
+              <AvailabilityControl current={selectedVenue.availability} onChange={updateAvailability} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <div className="overline mb-5">Waitlist</div>
               <QueueControl current={selectedVenue.queue_length} onChange={updateQueue} />
             </div>
             <div>
-              <div className="overline mb-4">Estimated wait</div>
+              <div className="overline mb-5">Estimated wait</div>
               <WaitMinutesControl current={selectedVenue.wait_minutes} onChange={updateWaitMinutes} />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Check-ins · week" value={analytics.checkins_week} hint={`${analytics.checkins_total} total`} />
-            <StatCard label="Points issued" value={analytics.points_issued.toLocaleString()} />
-            <StatCard label="Points redeemed" value={analytics.points_redeemed.toLocaleString()} />
-            <StatCard label="Room energy" value={selectedVenue.status} hint={`${selectedVenue.capacity_percent ?? 0}% capacity`} />
+          <div>
+            <div className="overline mb-5">At a glance</div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard label="Check-ins · week" value={analytics.checkins_week} hint={`${analytics.checkins_total} total`} />
+              <StatCard label="Points issued" value={analytics.points_issued.toLocaleString()} />
+              <StatCard label="Points redeemed" value={analytics.points_redeemed.toLocaleString()} />
+              <StatCard label="Room energy" value={selectedVenue.status} hint={`${selectedVenue.capacity_percent ?? 0}% capacity`} />
+            </div>
           </div>
 
           <div>
             <div className="overline mb-6">What regulars return for</div>
             {analytics.top_offerings.length === 0 ? (
-              <div className="text-[#B39586] font-light">
+              <div className="text-[#B39586] font-light p-8 border border-[#4E1E32] bg-[#2E1220]">
                 No returns recorded yet — check-in feedback will populate this.
               </div>
             ) : (
@@ -1362,7 +1413,7 @@ export default function StaffDashboard() {
                 {analytics.top_offerings.map((o, i) => (
                   <div
                     key={o.name}
-                    className="flex items-baseline justify-between border-b border-white/[0.05] pb-3"
+                    className="flex items-baseline justify-between border border-[#4E1E32] bg-[#2E1220] px-6 py-5"
                   >
                     <div className="flex items-baseline gap-4">
                       <span className="font-serif text-[#C2A36B] tabular-nums w-8">
@@ -1380,7 +1431,7 @@ export default function StaffDashboard() {
       )}
 
       {tab === "profile" && (
-        <div className="mt-10 animate-fade-up">
+        <div className="mt-12 animate-fade-up">
           <VenueProfileForm
             key={selectedVenue.id}
             venue={selectedVenue}
@@ -1393,13 +1444,19 @@ export default function StaffDashboard() {
       )}
 
       {tab === "bookings" && (
-        <div className="mt-10 animate-fade-up" data-testid="staff-bookings-tab">
+        <div className="mt-12 space-y-8 animate-fade-up" data-testid="staff-bookings-tab">
+          <BookingDepositControl
+            key={selectedVenue.id}
+            venueId={selectedId}
+            amount={selectedVenue.booking_deposit_amount}
+            onSaved={() => loadVenues()}
+          />
           {bookings.length === 0 ? (
             <div className="text-[#B39586] font-light py-8">
               No reservations held yet. Members will book from the venue page and appear here.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {bookings.map((b) => (
                 <BookingRow key={b.id} booking={b} onAct={() => loadData(selectedId)} />
               ))}
@@ -1409,13 +1466,13 @@ export default function StaffDashboard() {
       )}
 
       {tab === "correspondence" && (
-        <div className="mt-10 animate-fade-up">
+        <div className="mt-12 animate-fade-up">
           {correspondence.length === 0 ? (
             <div className="text-[#B39586] font-light py-8">
               No notes from members yet. When they arrive, you&apos;ll find them here.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {correspondence.map((c) => (
                 <CorrespondenceRow key={c.id} msg={c} onRespond={() => loadData(selectedId)} />
               ))}
@@ -1425,15 +1482,15 @@ export default function StaffDashboard() {
       )}
 
       {tab === "redemptions" && (
-        <div className="mt-10 animate-fade-up">
+        <div className="mt-12 animate-fade-up">
           {redemptions.length === 0 ? (
             <div className="text-[#B39586] font-light py-8">No redemptions held here yet.</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {redemptions.map((r) => (
                 <div
                   key={r.id}
-                  className="flex items-center justify-between gap-4 p-5 border border-[#4E1E32]"
+                  className="flex items-center justify-between gap-4 p-6 border border-[#4E1E32] bg-[#2E1220]"
                   data-testid={`staff-redemption-${r.id}`}
                 >
                   <div className="min-w-0">
@@ -1454,7 +1511,7 @@ export default function StaffDashboard() {
       )}
 
       {tab === "loyalty" && loyalty && (
-        <div className="mt-10 space-y-12 animate-fade-up">
+        <div className="mt-12 space-y-14 animate-fade-up">
           <LoyaltyConfigForm
             key={selectedVenue.id}
             venueId={selectedId}
@@ -1467,7 +1524,7 @@ export default function StaffDashboard() {
             {loyaltyRedemptions.length === 0 ? (
               <div className="text-[#B39586] font-light py-8">No loyalty redemptions here yet.</div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {loyaltyRedemptions.map((r) => (
                   <LoyaltyRedemptionRow key={r.id} redemption={r} onToggled={() => loadData(selectedId)} />
                 ))}
@@ -1478,7 +1535,7 @@ export default function StaffDashboard() {
       )}
 
       {tab === "events" && (
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-10 animate-fade-up">
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12 animate-fade-up">
           <div>
             <div className="overline mb-6">Post an event</div>
             <EventForm venueId={selectedId} onCreated={() => loadData(selectedId)} />
@@ -1495,7 +1552,7 @@ export default function StaffDashboard() {
       )}
 
       {tab === "qr" && (
-        <div className="mt-10 animate-fade-up">
+        <div className="mt-12 animate-fade-up">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
             <div>
               <div className="overline mb-4">Present at the host stand</div>

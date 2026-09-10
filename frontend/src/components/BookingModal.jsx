@@ -2,9 +2,25 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { X, Users, CalendarDays, Clock3, CheckCircle2, Minus, Plus } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 function isoDate(d) {
   return d.toISOString().slice(0, 10);
+}
+
+let razorpayScriptPromise = null;
+function loadRazorpayScript() {
+  if (window.Razorpay) return Promise.resolve(true);
+  if (!razorpayScriptPromise) {
+    razorpayScriptPromise = new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
+  return razorpayScriptPromise;
 }
 
 function labelFor(d, today) {
@@ -15,6 +31,8 @@ function labelFor(d, today) {
 }
 
 export function BookingModal({ venue, onClose, onBooked }) {
+  const { user } = useAuth();
+  const depositAmount = venue.booking_deposit_amount || 0;
   const today = useMemo(() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
@@ -61,6 +79,48 @@ export function BookingModal({ venue, onClose, onBooked }) {
     };
   }, [venue.id, selectedDate, confirmed]);
 
+  const payAndConfirm = async (booking, razorpay) => {
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      toast.error("Could not load the payment window. Please try again.");
+      setBusy(false);
+      return;
+    }
+    const rzp = new window.Razorpay({
+      key: razorpay.key_id,
+      order_id: razorpay.order_id,
+      amount: razorpay.amount,
+      currency: razorpay.currency,
+      name: "Table",
+      description: `Reservation deposit — ${venue.name}`,
+      prefill: { name: user?.name, email: user?.email },
+      theme: { color: "#C2A36B" },
+      handler: async (response) => {
+        try {
+          const { data } = await api.post(`/bookings/${booking.id}/verify-payment`, {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          setConfirmed(data);
+          onBooked?.(data);
+        } catch (e) {
+          toast.error(e.response?.data?.detail || "Payment could not be verified.");
+        } finally {
+          setBusy(false);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setBusy(false);
+          api.post(`/bookings/${booking.id}/cancel`).catch(() => {});
+          toast("Payment cancelled — the hold on that table was released.");
+        },
+      },
+    });
+    rzp.open();
+  };
+
   const submit = async () => {
     if (!selectedTime) {
       toast.error("Pick a time to reserve.");
@@ -75,11 +135,15 @@ export function BookingModal({ venue, onClose, onBooked }) {
         party_size: partySize,
         note: note.trim() || null,
       });
-      setConfirmed(data);
-      onBooked?.(data);
+      if (data.requires_payment) {
+        await payAndConfirm(data.booking, data.razorpay);
+      } else {
+        setConfirmed(data.booking);
+        onBooked?.(data.booking);
+        setBusy(false);
+      }
     } catch (e) {
       toast.error(e.response?.data?.detail || "Could not reserve — try another slot.");
-    } finally {
       setBusy(false);
     }
   };
@@ -120,6 +184,14 @@ export function BookingModal({ venue, onClose, onBooked }) {
               >
                 {confirmed.code}
               </div>
+              {confirmed.payment_status === "paid" && (
+                <div
+                  className="mt-4 pt-4 border-t border-white/[0.05] text-sm text-[#B39586] font-light"
+                  data-testid="booking-deposit-paid"
+                >
+                  ₹{confirmed.deposit_amount} deposit paid — adjusted against your final bill.
+                </div>
+              )}
               <div className="mt-5 grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <div className="overline mb-1">Date</div>
@@ -293,6 +365,12 @@ export function BookingModal({ venue, onClose, onBooked }) {
               />
             </div>
 
+            {depositAmount > 0 && (
+              <p className="mt-6 text-sm text-[#B39586] font-light" data-testid="booking-deposit-notice">
+                A ₹{depositAmount} deposit holds this table — it&apos;s adjusted against your final bill.
+              </p>
+            )}
+
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <button
                 type="button"
@@ -301,7 +379,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 data-testid="booking-submit"
                 className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {busy ? "Holding" : "Reserve the table"}
+                {busy
+                  ? "Holding"
+                  : depositAmount > 0
+                    ? `Reserve — pay ₹${depositAmount} deposit`
+                    : "Reserve the table"}
               </button>
               <button
                 type="button"

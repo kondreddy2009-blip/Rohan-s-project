@@ -22,6 +22,7 @@ const CONCIERGE_STATUS_LABEL = {
 };
 
 const BOOKING_STATUS_LABEL = {
+  awaiting_payment: "Payment pending",
   pending: "Awaiting the room",
   confirmed: "Confirmed",
   declined: "Regrets",
@@ -30,6 +31,7 @@ const BOOKING_STATUS_LABEL = {
 };
 
 const BOOKING_STATUS_COLOR = {
+  awaiting_payment: "text-[#C08B70]",
   pending: "text-[#B39586]",
   confirmed: "text-[#C2A36B]",
   declined: "text-[#C08B70]",
@@ -264,7 +266,7 @@ export default function Profile() {
           <p className="text-[#B39586] font-light">Tables held in your name.</p>
           <div className="mt-6 space-y-4">
             {bookings.map((b) => {
-              const cancellable = ["pending", "confirmed"].includes(b.status);
+              const cancellable = ["pending", "confirmed", "awaiting_payment"].includes(b.status);
               return (
                 <div
                   key={b.id}
@@ -300,6 +302,16 @@ export default function Profile() {
                       {b.code}
                     </div>
                   </div>
+                  {b.payment_status === "paid" && (
+                    <div className="mt-2 overline text-[#B39586]">
+                      ₹{b.deposit_amount} deposit paid · adjusted against your bill
+                    </div>
+                  )}
+                  {b.payment_status === "refunded" && (
+                    <div className="mt-2 overline text-[#7A9B7A]">
+                      ₹{b.deposit_amount} deposit refunded
+                    </div>
+                  )}
                   {b.note && (
                     <p className="mt-3 font-serif italic text-[#F4E8DA]/80 text-sm">
                       {`"${b.note}"`}

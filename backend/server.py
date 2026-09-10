@@ -6,9 +6,12 @@ load_dotenv(ROOT_DIR / ".env")
 
 import os
 import uuid
+import hmac
+import hashlib
 import logging
 import bcrypt
 import jwt
+import requests
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 
@@ -30,6 +33,10 @@ JWT_ALGORITHM = "HS256"
 JWT_SECRET = os.environ["JWT_SECRET"]
 ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
+
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_API_BASE = "https://api.razorpay.com/v1"
 
 app = FastAPI(title="Table API")
 api = APIRouter(prefix="/api")
@@ -106,6 +113,43 @@ def next_tier_info(lifetime_points: int) -> dict:
         "points_to_next": max(needed, 0),
         "progress_percent": int(min(100, max(0, (progressed / span) * 100))),
     }
+
+
+# ---------------------------------------------------------------------------
+# Razorpay helpers — booking deposits
+# ---------------------------------------------------------------------------
+def razorpay_configured() -> bool:
+    return bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
+
+
+def create_razorpay_order(amount_rupees: int, receipt: str) -> dict:
+    resp = requests.post(
+        f"{RAZORPAY_API_BASE}/orders",
+        auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+        json={"amount": amount_rupees * 100, "currency": "INR", "receipt": receipt},
+        timeout=10,
+    )
+    if resp.status_code >= 300:
+        logger.error("Razorpay order creation failed: %s", resp.text)
+        raise HTTPException(status_code=502, detail="Could not start payment right now.")
+    return resp.json()
+
+
+def verify_razorpay_signature(order_id: str, payment_id: str, signature: str) -> bool:
+    payload = f"{order_id}|{payment_id}".encode("utf-8")
+    expected = hmac.new(RAZORPAY_KEY_SECRET.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
+def refund_razorpay_payment(payment_id: str) -> None:
+    resp = requests.post(
+        f"{RAZORPAY_API_BASE}/payments/{payment_id}/refund",
+        auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+        json={},
+        timeout=10,
+    )
+    if resp.status_code >= 300:
+        logger.error("Razorpay refund failed for %s: %s", payment_id, resp.text)
 
 
 # ---------------------------------------------------------------------------
@@ -288,6 +332,16 @@ class BookingIn(BaseModel):
 class BookingUpdateIn(BaseModel):
     status: Literal["confirmed", "declined", "seated"]
     staff_reply: Optional[str] = None
+
+
+class BookingDepositIn(BaseModel):
+    amount: int = Field(ge=0, le=100000)
+
+
+class VerifyPaymentIn(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
 
 
 class LoyaltyRewardIn(BaseModel):
@@ -768,6 +822,19 @@ async def update_profile(
     return {"ok": True, **updates}
 
 
+@api.patch("/staff/venues/{venue_id}/booking-deposit")
+async def update_booking_deposit(
+    venue_id: str, payload: BookingDepositIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    result = await db.venues.update_one(
+        {"id": venue_id}, {"$set": {"booking_deposit_amount": payload.amount}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, "booking_deposit_amount": payload.amount}
+
+
 @api.patch("/staff/venues/{venue_id}/qr-slug")
 async def update_qr_slug(
     venue_id: str, payload: QrSlugIn, user: dict = Depends(require_staff_or_admin)
@@ -1040,6 +1107,11 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
     if taken >= SLOT_CAPACITY_PER_TIME:
         raise HTTPException(status_code=409, detail="That time is full — try another slot.")
 
+    deposit_amount = venue.get("booking_deposit_amount", 0)
+    requires_payment = deposit_amount > 0
+    if requires_payment and not razorpay_configured():
+        raise HTTPException(status_code=503, detail="Deposits aren't set up for this venue yet.")
+
     booking = {
         "id": str(uuid.uuid4()),
         "code": _generate_booking_code(),
@@ -1054,14 +1126,57 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
         "time": payload.time,
         "party_size": payload.party_size,
         "note": (payload.note or "").strip() or None,
-        "status": "pending",
+        "status": "awaiting_payment" if requires_payment else "pending",
         "staff_reply": None,
         "created_at": _now_iso(),
         "responded_at": None,
+        "deposit_amount": deposit_amount,
+        "payment_status": "created" if requires_payment else "not_required",
+        "razorpay_order_id": None,
+        "razorpay_payment_id": None,
     }
+
+    razorpay_info = None
+    if requires_payment:
+        order = create_razorpay_order(deposit_amount, receipt=booking["id"])
+        booking["razorpay_order_id"] = order["id"]
+        razorpay_info = {
+            "order_id": order["id"],
+            "amount": order["amount"],
+            "currency": order["currency"],
+            "key_id": RAZORPAY_KEY_ID,
+        }
+
     await db.bookings.insert_one(booking)
     booking.pop("_id", None)
-    return booking
+    return {"booking": booking, "requires_payment": requires_payment, "razorpay": razorpay_info}
+
+
+@api.post("/bookings/{booking_id}/verify-payment")
+async def verify_booking_payment(
+    booking_id: str, payload: VerifyPaymentIn, user: dict = Depends(get_current_user)
+):
+    b = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not b:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if b["member_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your booking")
+    if b["payment_status"] != "created" or b["razorpay_order_id"] != payload.razorpay_order_id:
+        raise HTTPException(status_code=400, detail="This booking isn't awaiting payment")
+
+    if not verify_razorpay_signature(
+        payload.razorpay_order_id, payload.razorpay_payment_id, payload.razorpay_signature
+    ):
+        raise HTTPException(status_code=400, detail="Payment could not be verified")
+
+    updates = {
+        "status": "pending",
+        "payment_status": "paid",
+        "razorpay_payment_id": payload.razorpay_payment_id,
+    }
+    await db.bookings.update_one({"id": booking_id}, {"$set": updates})
+    b.update(updates)
+    return b
 
 
 @api.get("/members/me/bookings")
@@ -1092,7 +1207,7 @@ async def cancel_booking(booking_id: str, user: dict = Depends(get_current_user)
 async def venue_bookings(venue_id: str, user: dict = Depends(require_staff_or_admin)):
     _assert_staff_can_manage(user, venue_id)
     items = await db.bookings.find(
-        {"venue_id": venue_id}, {"_id": 0}
+        {"venue_id": venue_id, "status": {"$ne": "awaiting_payment"}}, {"_id": 0}
     ).sort([("date", 1), ("time", 1)]).to_list(200)
     return items
 
@@ -1122,6 +1237,11 @@ async def update_booking(
                 venue.get("loyalty_points_per_booking", 0),
                 f"Table booking at {venue['name']}",
             )
+
+    if payload.status == "declined" and b.get("payment_status") == "paid" and b.get("razorpay_payment_id"):
+        refund_razorpay_payment(b["razorpay_payment_id"])
+        updates["payment_status"] = "refunded"
+        await db.bookings.update_one({"id": booking_id}, {"$set": {"payment_status": "refunded"}})
 
     return {"ok": True, **updates}
 

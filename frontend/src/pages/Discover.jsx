@@ -34,20 +34,20 @@ function FeaturedRoom({ venue }) {
             alt={venue.name}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#2E1220]/60 md:to-[#2E1220]" />
+          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#1B1917]/60 md:to-[#1B1917]" />
           <div className="absolute top-5 left-5 inline-flex items-center gap-2 overline-accent">
             <Flame strokeWidth={1.4} className="h-3.5 w-3.5" />
             Chef&apos;s pick tonight
           </div>
         </div>
-        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#2E1220]">
+        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#1B1917]">
           <div className="overline">
             {venue.neighborhood} · {venue.cuisine}
           </div>
           <h2 className="font-serif-display text-4xl sm:text-5xl leading-[0.98]">
             {venue.name}
           </h2>
-          <p className="font-serif italic text-lg text-[#F4E8DA]/80">
+          <p className="font-serif text-lg text-[#F2EDE7]/80">
             &ldquo;{venue.tagline}&rdquo;
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -57,9 +57,9 @@ function FeaturedRoom({ venue }) {
           </div>
           <div className="mt-3 flex items-center gap-4 overline">
             <StatusIndicator status={venue.status} />
-            <span className="text-[#C2A36B] tracking-widest">{priceStr}</span>
+            <span className="text-[#CE6A4A] tracking-widest">{priceStr}</span>
             {venue.chef && (
-              <span className="inline-flex items-center gap-1 text-[#F4E8DA]/60">
+              <span className="inline-flex items-center gap-1 text-[#F2EDE7]/60">
                 <ChefHat strokeWidth={1.2} className="h-3 w-3" />
                 {venue.chef}
               </span>
@@ -136,12 +136,12 @@ export default function Discover() {
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 pb-16" data-testid="discover-page">
       <div className="animate-fade-up">
         <div className="overline inline-flex items-center gap-2">
-          <span className="h-1.5 w-1.5 bg-[#C2A36B] status-dot-pulse" />
+          <span className="h-1.5 w-1.5 bg-[#CE6A4A] status-dot-pulse" />
           {timeGreeting} · Six rooms
         </div>
         <div className="mt-3 flex items-end justify-between flex-wrap gap-4">
           <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl leading-[1.02]">
-            <span className="italic text-[#C2A36B]">{user?.name?.split(" ")[0] || "Guest"}</span>,
+            <span className="text-[#CE6A4A]">{user?.name?.split(" ")[0] || "Guest"}</span>,
             <br />
             your Table continues.
           </h1>
@@ -151,8 +151,8 @@ export default function Discover() {
 
       {!loading && featured && <FeaturedRoom venue={featured} />}
 
-      <div className="mt-12 flex items-center justify-between gap-4 border-b border-[#4E1E32] overflow-x-auto">
-        <div className="flex items-center gap-1" role="tablist" data-testid="discover-filters">
+      <div className="mt-12 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 overflow-x-auto" role="tablist" data-testid="discover-filters">
           {VIBE_FILTERS.map((f) => (
             <button
               key={f.key}
@@ -161,10 +161,10 @@ export default function Discover() {
               role="tab"
               aria-selected={filter === f.key}
               className={cn(
-                "px-4 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
+                "px-3.5 py-2 rounded-full text-[12.5px] font-semibold transition-colors duration-300 whitespace-nowrap",
                 filter === f.key
-                  ? "text-[#C2A36B] border-[#C2A36B]"
-                  : "text-[#B39586] border-transparent hover:text-[#F4E8DA]",
+                  ? "bg-[#F2EDE7] text-[#141312]"
+                  : "bg-[#1F1D1B] text-[#B9B1AA] hover:text-[#F2EDE7]",
               )}
             >
               {f.label}
@@ -175,7 +175,7 @@ export default function Discover() {
           onClick={surpriseMe}
           disabled={rolling || filtered.length === 0}
           data-testid="surprise-me-button"
-          className="overline inline-flex items-center gap-2 text-[#C2A36B] hover:text-[#F4E8DA] transition-colors duration-300 pr-2 whitespace-nowrap"
+          className="overline inline-flex items-center gap-2 text-[#CE6A4A] hover:text-[#F2EDE7] transition-colors duration-300 pr-2 whitespace-nowrap flex-none"
           aria-label="Pick a random room"
         >
           <Shuffle

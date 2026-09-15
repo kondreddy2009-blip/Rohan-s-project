@@ -59,13 +59,13 @@ export default function VenueDetail() {
       {/* Hero */}
       <section className="relative h-[68vh] min-h-[420px] max-h-[720px] overflow-hidden">
         <img src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0912]/50 via-[#1A0912]/20 to-[#1A0912]" />
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#1A0912] via-[#1A0912]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0A0A]/50 via-[#0B0A0A]/20 to-[#0B0A0A]" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0B0A0A] via-[#0B0A0A]/50 to-transparent" />
 
         <button
           onClick={() => navigate(-1)}
           data-testid="venue-back-button"
-          className="absolute top-5 left-5 flex items-center gap-1 overline hover:text-[#C2A36B] transition-colors duration-300"
+          className="absolute top-5 left-5 flex items-center gap-1 overline hover:text-[#CE6A4A] transition-colors duration-300"
         >
           <ChevronLeft strokeWidth={1.2} className="h-4 w-4" />
           Back
@@ -78,7 +78,7 @@ export default function VenueDetail() {
               {venue.cuisine && <span className="overline">{venue.cuisine}</span>}
               <span className="overline hidden sm:inline">{venue.neighborhood}</span>
               {venue.price_level && (
-                <span className="overline text-[#C2A36B] tracking-widest">
+                <span className="overline text-[#CE6A4A] tracking-widest">
                   {"$".repeat(venue.price_level)}
                 </span>
               )}
@@ -89,7 +89,7 @@ export default function VenueDetail() {
             >
               {venue.name}
             </h1>
-            <p className="mt-4 max-w-xl text-[#F4E8DA]/80 italic font-serif text-lg sm:text-xl">
+            <p className="mt-4 max-w-xl text-[#F2EDE7]/80 font-serif text-lg sm:text-xl">
               {venue.tagline}
             </p>
             {venue.vibes && venue.vibes.length > 0 && (
@@ -108,22 +108,22 @@ export default function VenueDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="md:col-span-2 animate-fade-up">
             <div className="overline mb-3">The room</div>
-            <p className="text-[#F4E8DA]/85 text-base leading-relaxed font-light">
+            <p className="text-[#F2EDE7]/85 text-base leading-relaxed font-light">
               {venue.description}
             </p>
           </div>
           <div className="space-y-5 animate-fade-up delay-100">
             <div>
               <div className="overline mb-2">Hours</div>
-              <div className="flex items-center gap-2 text-[#F4E8DA]/85 font-light">
-                <Clock strokeWidth={1.2} className="h-4 w-4 text-[#B39586]" />
+              <div className="flex items-center gap-2 text-[#F2EDE7]/85 font-light">
+                <Clock strokeWidth={1.2} className="h-4 w-4 text-[#8F8781]" />
                 {venue.hours}
               </div>
             </div>
             <div>
               <div className="overline mb-2">Neighborhood</div>
-              <div className="flex items-center gap-2 text-[#F4E8DA]/85 font-light">
-                <MapPin strokeWidth={1.2} className="h-4 w-4 text-[#B39586]" />
+              <div className="flex items-center gap-2 text-[#F2EDE7]/85 font-light">
+                <MapPin strokeWidth={1.2} className="h-4 w-4 text-[#8F8781]" />
                 {venue.neighborhood}
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function VenueDetail() {
                 data-testid={`offering-${i}`}
               >
                 <div className="flex items-baseline gap-5">
-                  <span className="font-serif text-[#C2A36B] text-lg tabular-nums w-8">
+                  <span className="font-serif text-[#CE6A4A] text-lg tabular-nums w-8">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="font-serif-display text-2xl">{o.name}</span>
@@ -163,13 +163,13 @@ export default function VenueDetail() {
           <div className="hairline-t pt-10 animate-fade-up">
             <div className="overline mb-6">In the kitchen</div>
             <div className="flex items-start gap-6">
-              <div className="h-16 w-16 flex-shrink-0 rounded-full bg-[#2E1220] border border-[#4E1E32] flex items-center justify-center">
-                <ChefHat strokeWidth={1} className="h-7 w-7 text-[#C2A36B]" />
+              <div className="h-16 w-16 flex-shrink-0 rounded-full bg-[#1B1917] border border-[#262321] flex items-center justify-center">
+                <ChefHat strokeWidth={1} className="h-7 w-7 text-[#CE6A4A]" />
               </div>
               <div>
                 <div className="overline-accent mb-1">Chef</div>
                 <div className="font-serif-display text-3xl">{venue.chef}</div>
-                <p className="mt-2 text-sm text-[#B39586] font-light max-w-lg leading-relaxed">
+                <p className="mt-2 text-sm text-[#8F8781] font-light max-w-lg leading-relaxed">
                   Leads the {venue.cuisine || "kitchen"} at {venue.name}. Menu evolves
                   with the season; recognition comes from returning guests.
                 </p>
@@ -190,19 +190,19 @@ export default function VenueDetail() {
                   <div
                     key={e.id}
                     className={cn(
-                      "p-6 border border-white/[0.05] bg-[#2E1220]",
+                      "p-6 rounded-2xl border border-white/[0.05] bg-[#1B1917]",
                       gated && "opacity-90",
                     )}
                     data-testid={`event-${e.id}`}
                   >
                     <div className="flex items-center gap-2 mb-3">
-                      <Calendar strokeWidth={1.2} className="h-3.5 w-3.5 text-[#B39586]" />
+                      <Calendar strokeWidth={1.2} className="h-3.5 w-3.5 text-[#8F8781]" />
                       <span className="overline">
                         {e.date} · {e.time}
                       </span>
                     </div>
                     <h3 className="font-serif-display text-2xl mb-2">{e.title}</h3>
-                    <p className="text-sm text-[#B39586] font-light leading-relaxed">
+                    <p className="text-sm text-[#8F8781] font-light leading-relaxed">
                       {e.description}
                     </p>
                     {e.tier_required && (
@@ -243,7 +243,7 @@ export default function VenueDetail() {
             <Link
               to={`/checkin/${venue.id}`}
               data-testid="begin-ritual-button"
-              className="overline text-[#B39586] hover:text-[#C2A36B] transition-colors duration-300 inline-flex items-center"
+              className="overline text-[#8F8781] hover:text-[#CE6A4A] transition-colors duration-300 inline-flex items-center"
             >
               Or check in on arrival
             </Link>

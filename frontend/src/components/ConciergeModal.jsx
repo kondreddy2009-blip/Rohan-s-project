@@ -38,19 +38,19 @@ export function ConciergeModal({ venue, onClose, onSent }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#1A0912]/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#0B0A0A]/85 backdrop-blur-sm"
       onClick={onClose}
       data-testid="concierge-modal"
     >
       <div
-        className="relative w-full sm:max-w-lg bg-[#2E1220] border border-[#4E1E32] p-8 sm:p-10 max-h-[90vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg rounded-[28px] bg-[#1B1917] border border-[#262321] p-8 sm:p-10 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           data-testid="concierge-close"
           aria-label="Close"
-          className="absolute top-4 right-4 text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-300"
+          className="absolute top-4 right-4 text-[#8F8781] hover:text-[#F2EDE7] transition-colors duration-300"
         >
           <X strokeWidth={1.2} className="h-5 w-5" />
         </button>
@@ -59,7 +59,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
         <h2 className="font-serif-display text-3xl mt-2 leading-tight">
           Speak with {venue.name}.
         </h2>
-        <p className="text-sm text-[#B39586] font-light mt-2">
+        <p className="text-sm text-[#8F8781] font-light mt-2">
           A quiet note ahead of your arrival — held for the room.
         </p>
 
@@ -73,10 +73,10 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   type="button"
                   onClick={() => setType(t.code)}
                   data-testid={`concierge-type-${t.code}`}
-                  className={`px-3 py-3 border text-xs tracking-wider uppercase transition-colors duration-300 ${
+                  className={`px-3 py-3 rounded-xl border text-xs tracking-wider uppercase transition-colors duration-300 ${
                     type === t.code
-                      ? "border-[#C2A36B] text-[#C2A36B]"
-                      : "border-[#4E1E32] text-[#B39586] hover:text-[#F4E8DA]"
+                      ? "border-[#CE6A4A] text-[#CE6A4A]"
+                      : "border-[#262321] text-[#8F8781] hover:text-[#F2EDE7]"
                   }`}
                 >
                   {t.label}
@@ -97,7 +97,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   onChange={(e) => setPartySize(e.target.value)}
                   placeholder="2"
                   data-testid="concierge-party-input"
-                  className="w-full bg-transparent border-b border-[#4E1E32] py-2 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
+                  className="w-full bg-transparent border-b border-[#262321] py-2 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300"
                 />
               </div>
               <div>
@@ -107,7 +107,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   value={arrivalTime}
                   onChange={(e) => setArrivalTime(e.target.value)}
                   data-testid="concierge-arrival-input"
-                  className="w-full bg-transparent border-b border-[#4E1E32] py-2 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300"
+                  className="w-full bg-transparent border-b border-[#262321] py-2 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300"
                 />
               </div>
             </div>
@@ -128,7 +128,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                     : "Anything the room should know."
               }
               data-testid="concierge-message-input"
-              className="w-full bg-transparent border border-[#4E1E32] p-3 text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300 resize-none placeholder:text-[#7A5C55]"
+              className="w-full bg-transparent rounded-xl border border-[#262321] p-3 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
             />
           </div>
 
@@ -144,7 +144,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
             <button
               type="button"
               onClick={onClose}
-              className="overline text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-300"
+              className="overline text-[#8F8781] hover:text-[#F2EDE7] transition-colors duration-300"
             >
               Cancel
             </button>

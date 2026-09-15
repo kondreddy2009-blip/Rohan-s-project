@@ -80,11 +80,11 @@ export default function Redeem() {
 
       {/* Steps indicator */}
       <div className="mt-6 flex items-center gap-3 overline">
-        <span className={step === "venue" ? "text-[#C2A36B]" : ""}>01 · Room</span>
-        <span className="text-[#7A5C55]">/</span>
-        <span className={step === "perk" ? "text-[#C2A36B]" : ""}>02 · Perk</span>
-        <span className="text-[#7A5C55]">/</span>
-        <span className={step === "confirm" || step === "done" ? "text-[#C2A36B]" : ""}>03 · Confirm</span>
+        <span className={step === "venue" ? "text-[#CE6A4A]" : ""}>01 · Room</span>
+        <span className="text-[#6B6560]">/</span>
+        <span className={step === "perk" ? "text-[#CE6A4A]" : ""}>02 · Perk</span>
+        <span className="text-[#6B6560]">/</span>
+        <span className={step === "confirm" || step === "done" ? "text-[#CE6A4A]" : ""}>03 · Confirm</span>
       </div>
 
       {/* Step 1 — Venue */}
@@ -106,7 +106,7 @@ export default function Redeem() {
                   alt={v.name}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A0912] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0A0A] via-transparent to-transparent" />
                 <div className="absolute left-4 top-4">
                   <StatusIndicator status={v.status} />
                 </div>
@@ -128,7 +128,7 @@ export default function Redeem() {
           <button
             onClick={() => setStep("venue")}
             data-testid="change-venue-button"
-            className="overline mt-1 hover:text-[#C2A36B] transition-colors duration-300"
+            className="overline mt-1 hover:text-[#CE6A4A] transition-colors duration-300"
           >
             Change
           </button>
@@ -146,20 +146,20 @@ export default function Redeem() {
                   }}
                   data-testid={`perk-${p.code}`}
                   className={cn(
-                    "w-full text-left p-5 sm:p-6 border transition-colors duration-300 flex items-center justify-between gap-6",
+                    "w-full text-left p-5 sm:p-6 rounded-2xl border transition-colors duration-300 flex items-center justify-between gap-6",
                     disabled
-                      ? "border-[#4E1E32] opacity-40 cursor-not-allowed"
-                      : "border-[#4E1E32] hover:border-[#C2A36B]",
+                      ? "border-[#262321] opacity-40 cursor-not-allowed"
+                      : "border-[#262321] hover:border-[#CE6A4A]",
                   )}
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <div className="font-serif-display text-2xl">{p.name}</div>
                       {!p.tier_ok && (
-                        <Lock strokeWidth={1.2} className="h-3.5 w-3.5 text-[#B39586]" />
+                        <Lock strokeWidth={1.2} className="h-3.5 w-3.5 text-[#8F8781]" />
                       )}
                     </div>
-                    <div className="text-sm text-[#B39586] mt-1 font-light">
+                    <div className="text-sm text-[#8F8781] mt-1 font-light">
                       {p.description}
                     </div>
                     <div className="overline mt-2">
@@ -171,7 +171,7 @@ export default function Redeem() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-serif-display text-3xl text-[#C2A36B]">{p.cost}</div>
+                    <div className="font-serif-display text-3xl text-[#CE6A4A]">{p.cost}</div>
                     <div className="overline mt-0.5">Points</div>
                   </div>
                 </button>
@@ -184,17 +184,17 @@ export default function Redeem() {
       {/* Step 3 — Confirm */}
       {step === "confirm" && selectedPerk && selectedVenue && (
         <div className="mt-10 animate-fade-up">
-          <div className="p-6 sm:p-10 border border-[#C2A36B]/30 bg-[#2E1220]">
+          <div className="p-6 sm:p-10 rounded-[28px] border border-[#CE6A4A]/30 bg-[#1B1917]">
             <div className="overline">Confirming</div>
             <h2 className="font-serif-display text-4xl mt-2">{selectedPerk.name}</h2>
-            <div className="font-serif italic text-lg text-[#B39586] mt-1">
+            <div className="font-serif text-lg text-[#8F8781] mt-1">
               at {selectedVenue.name}
             </div>
 
             <div className="mt-8 grid grid-cols-3 gap-6 max-w-md">
               <div>
                 <div className="overline mb-1">Cost</div>
-                <div className="font-serif-display text-3xl text-[#C2A36B]">{selectedPerk.cost}</div>
+                <div className="font-serif-display text-3xl text-[#CE6A4A]">{selectedPerk.cost}</div>
               </div>
               <div>
                 <div className="overline mb-1">Balance now</div>
@@ -206,7 +206,7 @@ export default function Redeem() {
               </div>
             </div>
 
-            <p className="mt-8 text-sm text-[#B39586] font-light leading-relaxed max-w-lg">
+            <p className="mt-8 text-sm text-[#8F8781] font-light leading-relaxed max-w-lg">
               {selectedPerk.description}. Present the code on arrival — the room will be expecting you.
             </p>
 
@@ -236,21 +236,21 @@ export default function Redeem() {
         <div className="mt-10 animate-fade">
           <div className="mx-auto max-w-lg text-center relative">
             <Sparkles count={26} />
-            <div className="relative mx-auto w-14 h-14 border border-[#C2A36B] flex items-center justify-center">
-              <Check strokeWidth={1} className="h-7 w-7 text-[#C2A36B]" />
+            <div className="relative mx-auto w-14 h-14 rounded-full border border-[#CE6A4A] flex items-center justify-center">
+              <Check strokeWidth={1} className="h-7 w-7 text-[#CE6A4A]" />
             </div>
             <div className="overline-accent mt-6 relative">A table awaits</div>
             <h2 className="font-serif-display text-4xl mt-3 relative">
               {redemption.perk_name} at {redemption.venue_name}.
             </h2>
-            <p className="text-[#B39586] font-light mt-4">
+            <p className="text-[#8F8781] font-light mt-4">
               Present this code on arrival. The room already knows you&apos;re coming.
             </p>
 
-            <div className="mt-10 border border-[#C2A36B]/40 p-8">
+            <div className="mt-10 rounded-2xl border border-[#CE6A4A]/40 p-8">
               <div className="overline mb-3">Reservation code</div>
               <div
-                className="font-mono text-4xl tracking-[0.3em] text-[#C2A36B]"
+                className="font-mono text-4xl tracking-[0.3em] text-[#CE6A4A]"
                 data-testid="redemption-code"
               >
                 {redemption.code}

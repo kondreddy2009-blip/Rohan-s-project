@@ -30,11 +30,11 @@ const BOOKING_STATUS_LABEL = {
 };
 
 const BOOKING_STATUS_COLOR = {
-  pending: "text-[#B39586]",
-  confirmed: "text-[#C2A36B]",
+  pending: "text-[#8F8781]",
+  confirmed: "text-[#CE6A4A]",
   declined: "text-[#C08B70]",
-  seated: "text-[#7A9B7A]",
-  cancelled: "text-[#7A5C55]",
+  seated: "text-[#79A17F]",
+  cancelled: "text-[#6B6560]",
 };
 
 function TierJourney({ current, next, pointsToNext, progressPercent }) {
@@ -50,13 +50,13 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
               <div
                 className={cn(
                   "h-px w-full",
-                  active ? "bg-[#C2A36B]" : "bg-[#4E1E32]",
+                  active ? "bg-[#CE6A4A]" : "bg-[#262321]",
                 )}
               />
               <div
                 className={cn(
                   "overline mt-2 whitespace-nowrap",
-                  active ? "text-[#C2A36B]" : "text-[#7A5C55]",
+                  active ? "text-[#CE6A4A]" : "text-[#6B6560]",
                 )}
               >
                 {t}
@@ -68,13 +68,13 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
       {next && (
         <div className="mt-8">
           <div className="overline mb-2">Toward {next}</div>
-          <div className="relative h-px bg-[#4E1E32]">
+          <div className="relative h-px bg-[#262321]">
             <div
-              className="absolute inset-y-0 left-0 bg-[#C2A36B]"
+              className="absolute inset-y-0 left-0 bg-[#CE6A4A]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <div className="mt-3 font-serif text-lg text-[#F4E8DA]/80 italic">
+          <div className="mt-3 font-serif text-lg text-[#F2EDE7]/80">
             {pointsToNext} more points until {next}.
           </div>
         </div>
@@ -111,11 +111,11 @@ function TimelineEntry({ item, index }) {
           })}
         </div>
         <div className="font-serif-display text-2xl mt-1">{item.venue_name}</div>
-        <div className="text-sm text-[#B39586] mt-1 font-light">
+        <div className="text-sm text-[#8F8781] mt-1 font-light">
           {item.venue_type} · {item.venue_neighborhood}
         </div>
         {item.item_ordered && (
-          <div className="mt-3 font-serif italic text-[#F4E8DA]/85">
+          <div className="mt-3 font-serif text-[#F2EDE7]/85">
             {`"${item.item_ordered}"`}{" "}
             {item.would_return === true && (
               <span className="overline-accent ml-2">Would return</span>
@@ -207,13 +207,13 @@ export default function Profile() {
         const streak = dates.size;
         if (streak === 0) return null;
         return (
-          <div className="mt-10 border border-[#C2A36B]/30 bg-[#2E1220] p-5 sm:p-6 flex items-center justify-between gap-6 animate-fade-up delay-200">
+          <div className="mt-10 rounded-2xl border border-[#CE6A4A]/30 bg-[#1B1917] p-5 sm:p-6 flex items-center justify-between gap-6 animate-fade-up delay-200">
             <div>
               <div className="overline-accent mb-1">A streak</div>
               <div className="font-serif-display text-2xl">
                 {streak} {streak === 1 ? "night" : "nights"} this week.
               </div>
-              <div className="text-sm text-[#B39586] font-light mt-1">
+              <div className="text-sm text-[#8F8781] font-light mt-1">
                 {streak >= 4
                   ? "The room knows you well."
                   : streak >= 2
@@ -221,7 +221,7 @@ export default function Profile() {
                     : "A quiet beginning."}
               </div>
             </div>
-            <div className="font-serif-display text-6xl text-[#C2A36B] tabular-nums">{streak}</div>
+            <div className="font-serif-display text-6xl text-[#CE6A4A] tabular-nums">{streak}</div>
           </div>
         );
       })()}
@@ -246,10 +246,10 @@ export default function Profile() {
 
       <div className="mt-14 animate-fade-up">
         <div className="overline mb-2">A curated timeline</div>
-        <p className="text-[#B39586] font-light">Rooms you have kept company with.</p>
+        <p className="text-[#8F8781] font-light">Rooms you have kept company with.</p>
         <div className="mt-6">
           {history.length === 0 ? (
-            <div className="text-[#B39586] font-light py-8">
+            <div className="text-[#8F8781] font-light py-8">
               Your history will grow with each table you take.
             </div>
           ) : (
@@ -261,14 +261,14 @@ export default function Profile() {
       {bookings.length > 0 && (
         <div className="mt-14 animate-fade-up" data-testid="reservations-section">
           <div className="overline mb-2">Your reservations</div>
-          <p className="text-[#B39586] font-light">Tables held in your name.</p>
+          <p className="text-[#8F8781] font-light">Tables held in your name.</p>
           <div className="mt-6 space-y-4">
             {bookings.map((b) => {
               const cancellable = ["pending", "confirmed"].includes(b.status);
               return (
                 <div
                   key={b.id}
-                  className="p-5 border border-[#4E1E32] bg-[#2E1220]"
+                  className="p-5 rounded-2xl border border-[#262321] bg-[#1B1917]"
                   data-testid={`reservation-${b.id}`}
                 >
                   <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -294,21 +294,21 @@ export default function Profile() {
                   <div className="mt-4 flex items-baseline gap-4 flex-wrap">
                     <div className="overline">Code</div>
                     <div
-                      className="font-mono tracking-[0.28em] text-[#C2A36B]"
+                      className="font-mono tracking-[0.28em] text-[#CE6A4A]"
                       data-testid={`reservation-code-${b.id}`}
                     >
                       {b.code}
                     </div>
                   </div>
                   {b.note && (
-                    <p className="mt-3 font-serif italic text-[#F4E8DA]/80 text-sm">
+                    <p className="mt-3 font-serif text-[#F2EDE7]/80 text-sm">
                       {`"${b.note}"`}
                     </p>
                   )}
                   {b.staff_reply && (
                     <div className="mt-4 pt-4 border-t border-white/[0.05]">
                       <div className="overline-accent mb-1">The room replied</div>
-                      <p className="text-sm text-[#F4E8DA]/85 font-light">{b.staff_reply}</p>
+                      <p className="text-sm text-[#F2EDE7]/85 font-light">{b.staff_reply}</p>
                     </div>
                   )}
                   {cancellable && (
@@ -317,7 +317,7 @@ export default function Profile() {
                         type="button"
                         onClick={() => cancelBooking(b.id)}
                         data-testid={`reservation-cancel-${b.id}`}
-                        className="overline text-[#B39586] hover:text-[#C08B70] transition-colors duration-300"
+                        className="overline text-[#8F8781] hover:text-[#C08B70] transition-colors duration-300"
                       >
                         Release the table
                       </button>
@@ -333,12 +333,12 @@ export default function Profile() {
       {correspondence.length > 0 && (
         <div className="mt-14 animate-fade-up">
           <div className="overline mb-2">Your correspondence</div>
-          <p className="text-[#B39586] font-light">Notes sent to the rooms.</p>
+          <p className="text-[#8F8781] font-light">Notes sent to the rooms.</p>
           <div className="mt-6 space-y-4">
             {correspondence.map((c) => (
               <div
                 key={c.id}
-                className="p-5 border border-[#4E1E32] bg-[#2E1220]"
+                className="p-5 rounded-2xl border border-[#262321] bg-[#1B1917]"
                 data-testid={`correspondence-${c.id}`}
               >
                 <div className="flex items-baseline justify-between gap-3">
@@ -349,22 +349,22 @@ export default function Profile() {
                   <div
                     className={cn(
                       "text-xs tracking-widest uppercase",
-                      c.status === "pending" && "text-[#B39586]",
-                      c.status === "acknowledged" && "text-[#C2A36B]",
+                      c.status === "pending" && "text-[#8F8781]",
+                      c.status === "acknowledged" && "text-[#CE6A4A]",
                       c.status === "declined" && "text-[#C08B70]",
-                      c.status === "fulfilled" && "text-[#7A9B7A]",
+                      c.status === "fulfilled" && "text-[#79A17F]",
                     )}
                   >
                     {CONCIERGE_STATUS_LABEL[c.status]}
                   </div>
                 </div>
-                <p className="mt-3 font-serif italic text-[#F4E8DA]/85 leading-relaxed">
+                <p className="mt-3 font-serif text-[#F2EDE7]/85 leading-relaxed">
                   {`"${c.message}"`}
                 </p>
                 {c.response && (
                   <div className="mt-4 pt-4 border-t border-white/[0.05]">
                     <div className="overline-accent mb-1">The room replied</div>
-                    <p className="text-sm text-[#F4E8DA]/85 font-light leading-relaxed">
+                    <p className="text-sm text-[#F2EDE7]/85 font-light leading-relaxed">
                       {c.response}
                     </p>
                   </div>

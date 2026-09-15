@@ -120,13 +120,13 @@ function App() {
             position="top-center"
             toastOptions={{
               style: {
-                background: "#2E1220",
-                border: "1px solid #4E1E32",
-                color: "#F4E8DA",
-                fontFamily: "Manrope, sans-serif",
+                background: "#1B1917",
+                border: "1px solid #262321",
+                color: "#F2EDE7",
+                fontFamily: "Schibsted Grotesk, sans-serif",
                 fontSize: "0.85rem",
-                letterSpacing: "0.02em",
-                borderRadius: "2px",
+                letterSpacing: "0",
+                borderRadius: "16px",
               },
             }}
           />

@@ -102,20 +102,20 @@ export function QRScanner({ onScan, onError }) {
     <div className="relative w-full max-w-sm mx-auto">
       <div
         ref={wrapperRef}
-        className="w-full aspect-square bg-black overflow-hidden border border-[#4E1E32]"
+        className="w-full aspect-square bg-black overflow-hidden rounded-[28px] border border-[#262321]"
         data-testid="qr-scanner-viewport"
       />
       <div className="pointer-events-none absolute inset-6">
-        <div className="absolute top-0 left-0 h-6 w-6 border-t border-l border-[#C2A36B]" />
-        <div className="absolute top-0 right-0 h-6 w-6 border-t border-r border-[#C2A36B]" />
-        <div className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-[#C2A36B]" />
-        <div className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-[#C2A36B]" />
+        <div className="absolute top-0 left-0 h-6 w-6 border-t border-l border-[#CE6A4A]" />
+        <div className="absolute top-0 right-0 h-6 w-6 border-t border-r border-[#CE6A4A]" />
+        <div className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-[#CE6A4A]" />
+        <div className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-[#CE6A4A]" />
       </div>
       <div className="mt-3 overline text-center">
         {status === "starting" && "Preparing camera…"}
         {status === "running" && "Center the room's QR"}
         {status === "error" && (
-          <span className="text-[#B39586]">Camera unavailable · use the fallback below</span>
+          <span className="text-[#8F8781]">Camera unavailable · use the fallback below</span>
         )}
       </div>
     </div>

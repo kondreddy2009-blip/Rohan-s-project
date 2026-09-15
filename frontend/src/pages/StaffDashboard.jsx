@@ -14,11 +14,11 @@ const CONCIERGE_TYPE_LABEL = {
 };
 
 const BOOKING_STATUS_COLOR = {
-  pending: "text-[#B39586]",
-  confirmed: "text-[#C2A36B]",
+  pending: "text-[#8F8781]",
+  confirmed: "text-[#CE6A4A]",
   declined: "text-[#C08B70]",
-  seated: "text-[#7A9B7A]",
-  cancelled: "text-[#7A5C55]",
+  seated: "text-[#79A17F]",
+  cancelled: "text-[#6B6560]",
 };
 
 function BookingRow({ booking, onAct }) {
@@ -44,7 +44,7 @@ function BookingRow({ booking, onAct }) {
 
   return (
     <div
-      className="p-5 sm:p-6 border border-[#4E1E32] bg-[#2E1220]"
+      className="p-5 sm:p-6 rounded-2xl border border-[#262321] bg-[#1B1917]"
       data-testid={`booking-row-${booking.id}`}
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -62,7 +62,7 @@ function BookingRow({ booking, onAct }) {
           </div>
           <div className="font-serif-display text-xl mt-1">
             {booking.member_name}{" "}
-            <span className="text-[#C2A36B]">· {booking.member_tier}</span>
+            <span className="text-[#CE6A4A]">· {booking.member_tier}</span>
           </div>
         </div>
         <div className={cn("text-xs tracking-widest uppercase", BOOKING_STATUS_COLOR[booking.status])}>
@@ -72,11 +72,11 @@ function BookingRow({ booking, onAct }) {
 
       <div className="mt-3 flex items-baseline gap-3 flex-wrap">
         <div className="overline">Code</div>
-        <div className="font-mono tracking-[0.28em] text-[#C2A36B] text-sm">{booking.code}</div>
+        <div className="font-mono tracking-[0.28em] text-[#CE6A4A] text-sm">{booking.code}</div>
       </div>
 
       {booking.note && (
-        <p className="mt-3 font-serif italic text-[#F4E8DA]/85 leading-relaxed">
+        <p className="mt-3 font-serif text-[#F2EDE7]/85 leading-relaxed">
           {`"${booking.note}"`}
         </p>
       )}
@@ -84,7 +84,7 @@ function BookingRow({ booking, onAct }) {
       {booking.staff_reply && !isPending && (
         <div className="mt-4 pt-4 border-t border-white/[0.05]">
           <div className="overline-accent mb-1">Your reply</div>
-          <p className="text-sm text-[#F4E8DA]/85 font-light">{booking.staff_reply}</p>
+          <p className="text-sm text-[#F2EDE7]/85 font-light">{booking.staff_reply}</p>
         </div>
       )}
 
@@ -96,7 +96,7 @@ function BookingRow({ booking, onAct }) {
             onChange={(e) => setReply(e.target.value)}
             placeholder="A quiet reply (optional)"
             data-testid={`booking-reply-${booking.id}`}
-            className="w-full bg-transparent border border-[#4E1E32] p-3 text-sm text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300 resize-none placeholder:text-[#7A5C55]"
+            className="w-full bg-transparent rounded-xl border border-[#262321] p-3 text-sm text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
           />
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -113,7 +113,7 @@ function BookingRow({ booking, onAct }) {
               onClick={() => act("declined")}
               disabled={busy}
               data-testid={`booking-decline-${booking.id}`}
-              className="overline text-[#B39586] hover:text-[#C08B70] transition-colors duration-300"
+              className="overline text-[#8F8781] hover:text-[#C08B70] transition-colors duration-300"
             >
               Send regrets
             </button>
@@ -147,17 +147,17 @@ function StatusControl({ current, onChange }) {
           onClick={() => onChange(s)}
           data-testid={`status-btn-${s.replace(/\s+/g, "-").toLowerCase()}`}
           className={cn(
-            "px-4 py-4 border transition-colors duration-300 text-left",
+            "px-4 py-4 rounded-2xl border transition-colors duration-300 text-left",
             current === s
-              ? "border-[#C2A36B] bg-[#2E1220]"
-              : "border-[#4E1E32] hover:border-[#B39586]",
+              ? "border-[#CE6A4A] bg-[#1B1917]"
+              : "border-[#262321] hover:border-[#8F8781]",
           )}
         >
           <StatusIndicator status={s} showLabel={false} />
           <div
             className={cn(
               "mt-2 font-serif text-lg",
-              current === s ? "text-[#C2A36B]" : "text-[#F4E8DA]",
+              current === s ? "text-[#CE6A4A]" : "text-[#F2EDE7]",
             )}
           >
             {s}
@@ -170,7 +170,7 @@ function StatusControl({ current, onChange }) {
 
 function StatCard({ label, value, hint }) {
   return (
-    <div className="p-6 border border-[#4E1E32] bg-[#2E1220]">
+    <div className="p-6 rounded-2xl border border-[#262321] bg-[#1B1917]">
       <div className="overline mb-3">{label}</div>
       <div className="font-serif-display text-4xl tabular-nums">{value}</div>
       {hint && <div className="overline mt-2">{hint}</div>}
@@ -221,7 +221,7 @@ function EventForm({ venueId, onCreated }) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           data-testid="event-title-input"
-          className="w-full bg-transparent border-b border-[#4E1E32] py-2 focus:border-[#C2A36B] outline-none font-light transition-colors duration-300"
+          className="w-full bg-transparent border-b border-[#262321] py-2 focus:border-[#CE6A4A] outline-none font-light transition-colors duration-300"
         />
       </div>
       <div>
@@ -232,7 +232,7 @@ function EventForm({ venueId, onCreated }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           data-testid="event-description-input"
-          className="w-full bg-transparent border border-[#4E1E32] p-3 focus:border-[#C2A36B] outline-none font-light transition-colors duration-300 resize-none"
+          className="w-full bg-transparent rounded-xl border border-[#262321] p-3 focus:border-[#CE6A4A] outline-none font-light transition-colors duration-300 resize-none"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -244,7 +244,7 @@ function EventForm({ venueId, onCreated }) {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             data-testid="event-date-input"
-            className="w-full bg-transparent border-b border-[#4E1E32] py-2 focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA] transition-colors duration-300"
+            className="w-full bg-transparent border-b border-[#262321] py-2 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7] transition-colors duration-300"
           />
         </div>
         <div>
@@ -255,7 +255,7 @@ function EventForm({ venueId, onCreated }) {
             value={time}
             onChange={(e) => setTime(e.target.value)}
             data-testid="event-time-input"
-            className="w-full bg-transparent border-b border-[#4E1E32] py-2 focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA] transition-colors duration-300"
+            className="w-full bg-transparent border-b border-[#262321] py-2 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7] transition-colors duration-300"
           />
         </div>
       </div>
@@ -265,7 +265,7 @@ function EventForm({ venueId, onCreated }) {
           value={tier}
           onChange={(e) => setTier(e.target.value)}
           data-testid="event-tier-select"
-          className="w-full bg-[#2E1220] border border-[#4E1E32] py-2 px-3 focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA] transition-colors duration-300"
+          className="w-full rounded-full bg-[#1B1917] border border-[#262321] py-2 px-3 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7] transition-colors duration-300"
         >
           <option value="">Open to all members</option>
           <option value="Regular">Regular and above</option>
@@ -308,23 +308,23 @@ function CorrespondenceRow({ msg, onRespond }) {
   const isPending = msg.status === "pending";
   const statusColor =
     msg.status === "acknowledged"
-      ? "text-[#C2A36B]"
+      ? "text-[#CE6A4A]"
       : msg.status === "declined"
         ? "text-[#C08B70]"
         : msg.status === "fulfilled"
-          ? "text-[#7A9B7A]"
-          : "text-[#B39586]";
+          ? "text-[#79A17F]"
+          : "text-[#8F8781]";
 
   return (
     <div
-      className="p-5 sm:p-6 border border-[#4E1E32] bg-[#2E1220]"
+      className="p-5 sm:p-6 rounded-2xl border border-[#262321] bg-[#1B1917]"
       data-testid={`concierge-row-${msg.id}`}
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <div>
           <div className="overline">{CONCIERGE_TYPE_LABEL[msg.request_type] || "Note"}</div>
           <div className="font-serif-display text-xl mt-1">
-            {msg.member_name} · <span className="text-[#C2A36B]">{msg.member_tier}</span>
+            {msg.member_name} · <span className="text-[#CE6A4A]">{msg.member_tier}</span>
           </div>
         </div>
         <div className={`text-xs tracking-widest uppercase ${statusColor}`}>
@@ -332,7 +332,7 @@ function CorrespondenceRow({ msg, onRespond }) {
         </div>
       </div>
 
-      <p className="mt-4 font-serif italic text-[#F4E8DA]/90 leading-relaxed">
+      <p className="mt-4 font-serif text-[#F2EDE7]/90 leading-relaxed">
         {`"${msg.message}"`}
       </p>
       {(msg.party_size || msg.arrival_time) && (
@@ -354,7 +354,7 @@ function CorrespondenceRow({ msg, onRespond }) {
       {msg.response && !isPending && (
         <div className="mt-4 pt-4 border-t border-white/[0.05]">
           <div className="overline-accent mb-1">Your reply</div>
-          <p className="text-sm text-[#F4E8DA]/85 font-light">{msg.response}</p>
+          <p className="text-sm text-[#F2EDE7]/85 font-light">{msg.response}</p>
         </div>
       )}
 
@@ -366,7 +366,7 @@ function CorrespondenceRow({ msg, onRespond }) {
             onChange={(e) => setResponse(e.target.value)}
             placeholder="A quiet reply (optional)"
             data-testid={`concierge-reply-${msg.id}`}
-            className="w-full bg-transparent border border-[#4E1E32] p-3 text-sm text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300 resize-none placeholder:text-[#7A5C55]"
+            className="w-full bg-transparent rounded-xl border border-[#262321] p-3 text-sm text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
           />
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -392,7 +392,7 @@ function CorrespondenceRow({ msg, onRespond }) {
               onClick={() => act("declined")}
               disabled={busy}
               data-testid={`concierge-decline-${msg.id}`}
-              className="overline text-[#B39586] hover:text-[#C08B70] transition-colors duration-300"
+              className="overline text-[#8F8781] hover:text-[#C08B70] transition-colors duration-300"
             >
               Send regrets
             </button>
@@ -488,7 +488,7 @@ export default function StaffDashboard() {
               value={selectedId || ""}
               onChange={(e) => setSelectedId(e.target.value)}
               data-testid="venue-select"
-              className="bg-[#2E1220] border border-[#4E1E32] py-2 px-3 focus:border-[#C2A36B] outline-none font-light text-[#F4E8DA]"
+              className="rounded-full bg-[#1B1917] border border-[#262321] py-2 px-3 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7]"
             >
               {venues.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -505,7 +505,7 @@ export default function StaffDashboard() {
         <StatusControl current={selectedVenue.status} onChange={updateStatus} />
       </div>
 
-      <div className="mt-14 flex items-center gap-1 border-b border-[#4E1E32] overflow-x-auto" role="tablist">
+      <div className="mt-14 flex items-center gap-1 border-b border-[#262321] overflow-x-auto" role="tablist">
         {[
           { k: "overview", l: "Overview" },
           { k: "bookings", l: "Bookings", badge: pendingBookings },
@@ -522,13 +522,13 @@ export default function StaffDashboard() {
             className={cn(
               "px-5 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap inline-flex items-center gap-2",
               tab === t.k
-                ? "text-[#C2A36B] border-[#C2A36B]"
-                : "text-[#B39586] border-transparent hover:text-[#F4E8DA]",
+                ? "text-[#CE6A4A] border-[#CE6A4A]"
+                : "text-[#8F8781] border-transparent hover:text-[#F2EDE7]",
             )}
           >
             {t.l}
             {t.badge > 0 && (
-              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[9px] font-medium bg-[#C2A36B] text-[#1A0912]">
+              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[9px] font-medium bg-[#CE6A4A] text-[#0B0A0A]">
                 {t.badge}
               </span>
             )}
@@ -548,7 +548,7 @@ export default function StaffDashboard() {
           <div>
             <div className="overline mb-6">What regulars return for</div>
             {analytics.top_offerings.length === 0 ? (
-              <div className="text-[#B39586] font-light">
+              <div className="text-[#8F8781] font-light">
                 No returns recorded yet — check-in feedback will populate this.
               </div>
             ) : (
@@ -559,7 +559,7 @@ export default function StaffDashboard() {
                     className="flex items-baseline justify-between border-b border-white/[0.05] pb-3"
                   >
                     <div className="flex items-baseline gap-4">
-                      <span className="font-serif text-[#C2A36B] tabular-nums w-8">
+                      <span className="font-serif text-[#CE6A4A] tabular-nums w-8">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <span className="font-serif-display text-xl">{o.name}</span>
@@ -576,7 +576,7 @@ export default function StaffDashboard() {
       {tab === "bookings" && (
         <div className="mt-10 animate-fade-up" data-testid="staff-bookings-tab">
           {bookings.length === 0 ? (
-            <div className="text-[#B39586] font-light py-8">
+            <div className="text-[#8F8781] font-light py-8">
               No reservations held yet. Members will book from the venue page and appear here.
             </div>
           ) : (
@@ -592,7 +592,7 @@ export default function StaffDashboard() {
       {tab === "correspondence" && (
         <div className="mt-10 animate-fade-up">
           {correspondence.length === 0 ? (
-            <div className="text-[#B39586] font-light py-8">
+            <div className="text-[#8F8781] font-light py-8">
               No notes from members yet. When they arrive, you&apos;ll find them here.
             </div>
           ) : (
@@ -608,13 +608,13 @@ export default function StaffDashboard() {
       {tab === "redemptions" && (
         <div className="mt-10 animate-fade-up">
           {redemptions.length === 0 ? (
-            <div className="text-[#B39586] font-light py-8">No redemptions held here yet.</div>
+            <div className="text-[#8F8781] font-light py-8">No redemptions held here yet.</div>
           ) : (
             <div className="space-y-3">
               {redemptions.map((r) => (
                 <div
                   key={r.id}
-                  className="flex items-center justify-between gap-4 p-5 border border-[#4E1E32]"
+                  className="flex items-center justify-between gap-4 p-5 rounded-2xl border border-[#262321]"
                   data-testid={`staff-redemption-${r.id}`}
                 >
                   <div className="min-w-0">
@@ -622,11 +622,11 @@ export default function StaffDashboard() {
                     <div className="overline mt-1">
                       {r.member_name} · {r.member_tier}
                     </div>
-                    <div className="text-xs text-[#7A5C55] mt-1">
+                    <div className="text-xs text-[#6B6560] mt-1">
                       {new Date(r.timestamp).toLocaleString()}
                     </div>
                   </div>
-                  <div className="font-mono tracking-widest text-[#C2A36B] text-sm">{r.code}</div>
+                  <div className="font-mono tracking-widest text-[#CE6A4A] text-sm">{r.code}</div>
                 </div>
               ))}
             </div>
@@ -644,7 +644,7 @@ export default function StaffDashboard() {
             <div className="overline mb-6">On the calendar</div>
             <div className="space-y-3">
               {(analytics.venue?.events || []).length === 0 && (
-                <div className="text-[#B39586] font-light">No events yet.</div>
+                <div className="text-[#8F8781] font-light">No events yet.</div>
               )}
             </div>
           </div>
@@ -659,13 +659,13 @@ export default function StaffDashboard() {
               <h2 className="font-serif-display text-3xl leading-tight">
                 A single QR — every arriving member.
               </h2>
-              <p className="text-[#B39586] font-light mt-4 leading-relaxed">
+              <p className="text-[#8F8781] font-light mt-4 leading-relaxed">
                 Display this at the entrance or on the reservation stand. When a
                 member scans it in the Table app, they are checked into {selectedVenue.name} and awarded 100
                 Table Points.
               </p>
               <div className="mt-6 overline">Check-in address</div>
-              <div className="font-mono text-xs sm:text-sm text-[#C2A36B] break-all mt-1">
+              <div className="font-mono text-xs sm:text-sm text-[#CE6A4A] break-all mt-1">
                 {checkinUrl}
               </div>
             </div>

@@ -14,11 +14,11 @@ function LedgerRow({ item }) {
       data-testid={`ledger-${item.id}`}
     >
       <div className="flex items-center gap-4 min-w-0">
-        <div className="h-8 w-8 flex-shrink-0 border border-[#4E1E32] flex items-center justify-center">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full border border-[#262321] flex items-center justify-center">
           {isEarn ? (
-            <ArrowUpRight strokeWidth={1.2} className="h-3.5 w-3.5 text-[#C2A36B]" />
+            <ArrowUpRight strokeWidth={1.2} className="h-3.5 w-3.5 text-[#CE6A4A]" />
           ) : (
-            <ArrowDownLeft strokeWidth={1.2} className="h-3.5 w-3.5 text-[#F4E8DA]" />
+            <ArrowDownLeft strokeWidth={1.2} className="h-3.5 w-3.5 text-[#F2EDE7]" />
           )}
         </div>
         <div className="min-w-0">
@@ -34,7 +34,7 @@ function LedgerRow({ item }) {
       </div>
       <div
         className={`font-serif-display text-2xl tabular-nums ${
-          isEarn ? "text-[#C2A36B]" : "text-[#F4E8DA]"
+          isEarn ? "text-[#CE6A4A]" : "text-[#F2EDE7]"
         }`}
       >
         {isEarn ? "+" : ""}
@@ -92,7 +92,7 @@ export default function Wallet() {
         <div data-testid="wallet-balance">
           <AnimatedNumber
             value={wallet.balance}
-            className="font-serif-display text-8xl sm:text-9xl leading-none text-[#F4E8DA] tabular-nums block"
+            className="font-serif-display text-8xl sm:text-9xl leading-none text-[#F2EDE7] tabular-nums block"
           />
         </div>
         <div className="mt-6 grid grid-cols-3 gap-6 max-w-md">
@@ -122,11 +122,11 @@ export default function Wallet() {
           if (!nextPerk) return null;
           const gap = nextPerk.cost - wallet.balance;
           return (
-            <div className="mt-6 inline-flex items-center gap-2 text-sm text-[#B39586] font-light">
-              <SparkleIcon strokeWidth={1.2} className="h-3.5 w-3.5 text-[#C2A36B]" />
+            <div className="mt-6 inline-flex items-center gap-2 text-sm text-[#8F8781] font-light">
+              <SparkleIcon strokeWidth={1.2} className="h-3.5 w-3.5 text-[#CE6A4A]" />
               <span>
                 {gap} more to unlock{" "}
-                <span className="text-[#C2A36B]">{nextPerk.name}</span>
+                <span className="text-[#CE6A4A]">{nextPerk.name}</span>
               </span>
             </div>
           );
@@ -151,7 +151,7 @@ export default function Wallet() {
             {redemptions.filter((r) => !r.redeemed).slice(0, 3).map((r) => (
               <div
                 key={r.id}
-                className="p-5 border border-[#C2A36B]/30 bg-[#2E1220]"
+                className="p-5 rounded-2xl border border-[#CE6A4A]/30 bg-[#1B1917]"
                 data-testid={`redemption-${r.id}`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -160,11 +160,11 @@ export default function Wallet() {
                       {r.venue_name}
                     </div>
                     <div className="font-serif-display text-2xl">{r.perk_name}</div>
-                    <div className="text-sm text-[#B39586] mt-1 font-light">
+                    <div className="text-sm text-[#8F8781] mt-1 font-light">
                       {r.perk_description}
                     </div>
                   </div>
-                  <div className="font-mono text-xs tracking-widest text-[#C2A36B] whitespace-nowrap">
+                  <div className="font-mono text-xs tracking-widest text-[#CE6A4A] whitespace-nowrap">
                     {r.code}
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export default function Wallet() {
         <div className="overline mb-4">Ledger</div>
         <div>
           {wallet.ledger.length === 0 ? (
-            <div className="text-[#B39586] font-light py-8">
+            <div className="text-[#8F8781] font-light py-8">
               Your ledger will fill as you visit the rooms.
             </div>
           ) : (

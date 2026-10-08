@@ -223,11 +223,14 @@ function inputProps(id, error) {
 }
 
 function Group({ title, children }) {
+  const id = `pf-group-${title.toLowerCase()}`;
   return (
-    <fieldset className="pt-6 first:pt-0">
-      <legend className="tbl-eyebrow mb-3">{title}</legend>
+    <section role="group" aria-labelledby={id} className="pt-7 first:pt-0">
+      <h3 id={id} className="tbl-eyebrow mb-3">
+        {title}
+      </h3>
       {children}
-    </fieldset>
+    </section>
   );
 }
 

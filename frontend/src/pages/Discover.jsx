@@ -1,203 +1,190 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Shuffle, ChefHat, Flame } from "lucide-react";
-import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { VenueCard, VibePill } from "@/components/VenueCard";
-import { StatusIndicator } from "@/components/StatusIndicator";
-import { TierBadge } from "@/components/TierBadge";
+import { Section } from "@/components/Section";
+import { RestaurantTabs } from "@/components/RestaurantTabs";
+import { FilterChips } from "@/components/FilterChips";
+import { RestaurantCard } from "@/components/RestaurantCard";
+import { TierCard } from "@/components/TierCard";
+import { NetworkList } from "@/components/NetworkList";
+import { EventCard } from "@/components/EventCard";
+import { BookingModal } from "@/components/BookingModal";
+import { StatusDot } from "@/components/StatusPill";
+import { PARTNER_FILTERS, byUrgency, isUpcoming, usePartners } from "@/lib/partnersService";
 import { cn } from "@/lib/utils";
 
-const VIBE_FILTERS = [
-  { key: "all", label: "All", match: () => true },
-  { key: "chefs-pick", label: "Chef's Picks", match: (v) => v.vibes?.includes("Chef's Pick") },
-  { key: "date-night", label: "Date Night", match: (v) => v.vibes?.includes("Date Night") },
-  { key: "buzzing", label: "Buzzing", match: (v) => v.vibes?.includes("Buzzing") || v.status === "At Capacity" },
-  { key: "solo", label: "Solo", match: (v) => v.vibes?.includes("Solo-Friendly") },
-  { key: "group", label: "Groups", match: (v) => v.vibes?.includes("Group-Friendly") },
-  { key: "new", label: "Just Opened", match: (v) => v.vibes?.includes("Just Opened") },
-];
+const HERO_ROTATE_MS = 8000;
 
-function FeaturedRoom({ venue }) {
-  if (!venue) return null;
-  const priceStr = "$".repeat(venue.price_level || 3);
+function greeting() {
+  const h = new Date().getHours();
+  if (h >= 4 && h < 12) return "Good morning";
+  if (h >= 12 && h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** Chef's picks and 2× nights lead the hero rotation. */
+function heroOrder(a, b) {
+  const score = (p) => (p.chefs_pick ? 2 : 0) + (p.double_points_tonight ? 1 : 0);
+  return score(b) - score(a);
+}
+
+function HeroRotation({ partners, onHold }) {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const ids = partners.map((p) => p.id).join();
+
+  useEffect(() => setIndex(0), [ids]);
+  useEffect(() => {
+    if (paused || partners.length < 2 || prefersReducedMotion()) return undefined;
+    const t = setInterval(() => setIndex((i) => (i + 1) % partners.length), HERO_ROTATE_MS);
+    return () => clearInterval(t);
+  }, [paused, partners.length]);
+
+  const partner = partners[index % partners.length];
+  const dots = partners.length > 1 && (
+    <div className="absolute inset-x-0 bottom-2 z-[2] flex justify-center gap-1.5" role="group" aria-label="Featured partners">
+      {partners.map((p, i) => (
+        <button
+          key={p.id}
+          type="button"
+          onClick={() => setIndex(i)}
+          aria-label={`Show ${p.name}`}
+          aria-current={i === index ? "true" : undefined}
+          className={cn(
+            "h-1.5 rounded-full transition-all",
+            i === index ? "w-4 bg-ritual-text" : "w-1.5 bg-ritual-muted hover:bg-ritual-text",
+          )}
+        />
+      ))}
+    </div>
+  );
+
   return (
-    <Link
-      to={`/venues/${venue.id}`}
-      data-testid={`featured-${venue.id}`}
-      className="block relative overflow-hidden group card-invite mt-8"
+    <div
+      className="desk:h-full"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
     >
-      <div className="grid grid-cols-1 md:grid-cols-5">
-        <div className="md:col-span-3 relative aspect-[4/3] md:aspect-auto md:min-h-[360px]">
-          <img
-            src={venue.image_url}
-            alt={venue.name}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#1B1917]/60 md:to-[#1B1917]" />
-          <div className="absolute top-5 left-5 inline-flex items-center gap-2 overline-accent">
-            <Flame strokeWidth={1.4} className="h-3.5 w-3.5" />
-            Chef&apos;s pick tonight
-          </div>
-        </div>
-        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#1B1917]">
-          <div className="overline">
-            {venue.neighborhood} · {venue.cuisine}
-          </div>
-          <h2 className="font-serif-display text-4xl sm:text-5xl leading-[0.98]">
-            {venue.name}
-          </h2>
-          <p className="font-serif text-lg text-[#F2EDE7]/80">
-            &ldquo;{venue.tagline}&rdquo;
-          </p>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            {(venue.vibes || []).map((v) => (
-              <VibePill key={v} vibe={v} />
-            ))}
-          </div>
-          <div className="mt-3 flex items-center gap-4 overline">
-            <StatusIndicator status={venue.status} />
-            <span className="text-[#CE6A4A] tracking-widest">{priceStr}</span>
-            {venue.chef && (
-              <span className="inline-flex items-center gap-1 text-[#F2EDE7]/60">
-                <ChefHat strokeWidth={1.2} className="h-3 w-3" />
-                {venue.chef}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
+      <RestaurantCard
+        key={partner.id}
+        partner={partner}
+        variant="hero"
+        onHold={onHold}
+        overlay={dots}
+        className="h-[400px] desk:h-full desk:min-h-[460px] animate-fade"
+      />
+    </div>
   );
 }
 
 export default function Discover() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [venues, setVenues] = useState([]);
+  const { data: partners = [], isLoading, isError, refetch } = usePartners();
   const [filter, setFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-  const [rolling, setRolling] = useState(false);
+  const [holding, setHolding] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const { data } = await api.get("/venues");
-        if (!cancelled) setVenues(data);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const match = (PARTNER_FILTERS.find((f) => f.key === filter) || PARTNER_FILTERS[0]).match;
+  const filtered = useMemo(() => partners.filter(match), [partners, match]);
+  const hero = useMemo(() => [...filtered].sort(heroOrder), [filtered]);
+  const grid = useMemo(() => [...filtered].sort(byUrgency), [filtered]);
+  const events = useMemo(() => {
+    const now = new Date();
+    return filtered
+      .flatMap((p) => p.events.filter((e) => isUpcoming(e, now)).map((e) => ({ event: e, partner: p })))
+      .sort((a, b) => `${a.event.date}${a.event.time}`.localeCompare(`${b.event.date}${b.event.time}`));
+  }, [filtered]);
 
-  const active = VIBE_FILTERS.find((f) => f.key === filter) || VIBE_FILTERS[0];
-  const featured = useMemo(
-    () => venues.find((v) => v.vibes?.includes("Chef's Pick") && v.featured) || venues.find((v) => v.featured),
-    [venues],
-  );
-  const filtered = useMemo(
-    () => venues.filter(active.match),
-    [venues, active],
-  );
-
-  const hour = new Date().getHours();
-  const timeGreeting =
-    hour < 4
-      ? "After midnight"
-      : hour < 11
-        ? "This morning"
-        : hour < 15
-          ? "Lunch service"
-          : hour < 17
-            ? "Aperitivo soon"
-            : hour < 20
-              ? "Dinner is on"
-              : hour < 22
-                ? "The room is on"
-                : "Late service";
-
-  const surpriseMe = () => {
-    if (filtered.length === 0 || rolling) return;
-    setRolling(true);
-    const pick = filtered[Math.floor(Math.random() * filtered.length)];
-    setTimeout(() => {
-      setRolling(false);
-      navigate(`/venues/${pick.id}`);
-    }, 600);
-  };
+  const firstName = user?.name?.split(" ")[0] || "there";
 
   return (
-    <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 pb-16" data-testid="discover-page">
-      <div className="animate-fade-up">
-        <div className="overline inline-flex items-center gap-2">
-          <span className="h-1.5 w-1.5 bg-[#CE6A4A] status-dot-pulse" />
-          {timeGreeting} · Six rooms
-        </div>
-        <div className="mt-3 flex items-end justify-between flex-wrap gap-4">
-          <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl leading-[1.02]">
-            <span className="text-[#CE6A4A]">{user?.name?.split(" ")[0] || "Guest"}</span>,
-            <br />
-            your Table continues.
-          </h1>
-          <TierBadge tier={user?.tier} testId="header-tier-badge" />
-        </div>
-      </div>
+    <>
+      <Section withNav data-testid="discover-page">
+        <RestaurantTabs />
 
-      {!loading && featured && <FeaturedRoom venue={featured} />}
+        <div className="flex flex-col gap-4 desk:flex-row desk:items-end desk:justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-ritual-muted" data-testid="partner-count">
+              <StatusDot tone="open" />
+              {partners.length} {partners.length === 1 ? "partner" : "partners"} live in Bandra West
+            </div>
+            <h1 className="tbl-h1 mt-2">
+              {greeting()}, {firstName}.
+            </h1>
+          </div>
+          <FilterChips value={filter} onChange={setFilter} />
+        </div>
 
-      <div className="mt-12 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto" role="tablist" data-testid="discover-filters">
-          {VIBE_FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              data-testid={`filter-${f.key}`}
-              role="tab"
-              aria-selected={filter === f.key}
-              className={cn(
-                "px-3.5 py-2 rounded-full text-[12.5px] font-semibold transition-colors duration-300 whitespace-nowrap",
-                filter === f.key
-                  ? "bg-[#F2EDE7] text-[#141312]"
-                  : "bg-[#1F1D1B] text-[#B9B1AA] hover:text-[#F2EDE7]",
-              )}
-            >
-              {f.label}
+        {isError ? (
+          <div className="tbl-panel p-8 text-center">
+            <p className="text-ritual-muted">Partners couldn&apos;t load.</p>
+            <button type="button" onClick={() => refetch()} className="mt-4 tbl-pill tbl-pill--filled tbl-pill--lg">
+              Try again
             </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 desk:grid-cols-[1.7fr_1fr] gap-4">
+            {isLoading ? (
+              <div className="tbl-panel h-[400px] desk:h-[460px]" aria-busy="true" />
+            ) : hero.length ? (
+              <HeroRotation partners={hero} onHold={setHolding} />
+            ) : (
+              <div className="tbl-panel h-[400px] desk:h-[460px] flex flex-col items-center justify-center gap-4 p-8 text-center">
+                <p className="text-ritual-muted">No partners match this filter tonight.</p>
+                <button type="button" onClick={() => setFilter("all")} className="tbl-pill tbl-pill--filled tbl-pill--lg">
+                  Show all partners
+                </button>
+              </div>
+            )}
+            <div className="flex flex-col gap-4 min-w-0">
+              <TierCard />
+              <NetworkList partners={grid} className="flex-1" />
+            </div>
+          </div>
+        )}
+      </Section>
+
+      <Section aria-labelledby="filling-in-fast">
+        <div className="tbl-eyebrow">Discover · Grid</div>
+        <h2 id="filling-in-fast" className="tbl-h2 mt-1.5 scroll-mt-6">
+          Filling in fast
+        </h2>
+        {grid.length ? (
+          <div className="mt-5 grid grid-cols-2 desk:grid-cols-4 gap-3">
+            {grid.map((p) => (
+              <RestaurantCard key={p.id} partner={p} />
+            ))}
+          </div>
+        ) : (
+          !isLoading && <p className="mt-4 text-[14px] text-ritual-muted">Nothing matches this filter yet.</p>
+        )}
+
+        <EventsBlock events={events} className="mt-10" />
+      </Section>
+
+      {holding && <BookingModal venue={holding} onClose={() => setHolding(null)} />}
+    </>
+  );
+}
+
+export function EventsBlock({ events, className, heading = "h2" }) {
+  const Heading = heading;
+  return (
+    <div className={className} data-testid="events-block">
+      <Heading className="tbl-h2">Events</Heading>
+      <p className="mt-1 text-[14px] text-ritual-muted">What your tier opens, across every partner.</p>
+      {events.length ? (
+        <div className="mt-5 grid grid-cols-1 desk:grid-cols-3 gap-3">
+          {events.map(({ event, partner }) => (
+            <EventCard key={event.id} event={event} partner={partner} />
           ))}
         </div>
-        <button
-          onClick={surpriseMe}
-          disabled={rolling || filtered.length === 0}
-          data-testid="surprise-me-button"
-          className="overline inline-flex items-center gap-2 text-[#CE6A4A] hover:text-[#F2EDE7] transition-colors duration-300 pr-2 whitespace-nowrap flex-none"
-          aria-label="Pick a random room"
-        >
-          <Shuffle
-            strokeWidth={1.2}
-            className={`h-4 w-4 transition-transform duration-500 ${rolling ? "rotate-180" : ""}`}
-          />
-          Surprise me
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="mt-16 overline text-center">Loading rooms…</div>
       ) : (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filtered.map((v, i) => (
-            <VenueCard venue={v} index={i} key={v.id} />
-          ))}
-        </div>
-      )}
-
-      {!loading && filtered.length === 0 && (
-        <div className="mt-16 text-center overline">No rooms in this category tonight.</div>
+        <p className="mt-4 text-[14px] text-ritual-muted">No upcoming events on the calendar.</p>
       )}
     </div>
   );

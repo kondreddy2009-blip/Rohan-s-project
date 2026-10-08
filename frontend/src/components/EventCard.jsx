@@ -26,25 +26,25 @@ export function EventCard({ event, partner, className }) {
   if (locked) {
     const away = pointsToTier(user?.lifetime_points, event.tier_required);
     action = (
-      <span className="tbl-pill tbl-pill--muted tbl-pill--lg" aria-disabled="true">
+      <span className="tbl-pill tbl-pill--muted" aria-disabled="true">
         {away.toLocaleString("en-IN")} pts away
       </span>
     );
   } else if (event.rsvped) {
     action = (
-      <button type="button" onClick={onRsvp} disabled={rsvp.isPending} className="tbl-above tbl-pill tbl-pill--tint tbl-pill--lg" aria-label={`Cancel RSVP for ${event.title}`}>
+      <button type="button" onClick={onRsvp} disabled={rsvp.isPending} className="tbl-above tbl-pill tbl-pill--tint" aria-label={`Cancel RSVP for ${event.title}`}>
         Going
       </button>
     );
   } else if (seatsLeft !== null && seatsLeft <= 0) {
     action = (
-      <button type="button" disabled className="tbl-pill tbl-pill--lg">
+      <button type="button" disabled className="tbl-pill">
         Full
       </button>
     );
   } else {
     action = (
-      <button type="button" onClick={onRsvp} disabled={rsvp.isPending} className="tbl-above tbl-pill tbl-pill--accent tbl-pill--lg" data-testid={`rsvp-${event.id}`}>
+      <button type="button" onClick={onRsvp} disabled={rsvp.isPending} className="tbl-above tbl-pill tbl-pill--accent px-4" data-testid={`rsvp-${event.id}`}>
         RSVP
       </button>
     );
@@ -73,7 +73,7 @@ export function EventCard({ event, partner, className }) {
         </div>
       </div>
       <div className="tbl-footer-strip flex items-center justify-between gap-3 px-4 py-3">
-        <span className="text-[12px] text-ritual-muted">{meta}</span>
+        <span className="text-[12px] leading-snug text-ritual-muted">{meta}</span>
         {action}
       </div>
     </article>

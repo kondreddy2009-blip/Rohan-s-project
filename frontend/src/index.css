@@ -364,6 +364,11 @@ a.tbl-pill:hover {
   background: color-mix(in srgb, var(--ritual-accent) 18%, transparent);
   color: var(--ritual-accent);
 }
+/* Accent tint that stays legible over bright photos */
+.tbl-pill--tint-solid {
+  background: color-mix(in srgb, var(--ritual-accent) 30%, var(--ritual-bg));
+  color: var(--ritual-accent-hover);
+}
 .tbl-pill--glass {
   background: color-mix(in srgb, var(--ritual-bg) 60%, transparent);
   color: var(--ritual-text);
@@ -377,7 +382,7 @@ a.tbl-pill:hover {
 .tbl-pill--muted,
 .tbl-pill:disabled {
   background: var(--ritual-surface-2);
-  color: var(--ritual-text-faint);
+  color: var(--ritual-text-muted);
   cursor: not-allowed;
   filter: none;
 }

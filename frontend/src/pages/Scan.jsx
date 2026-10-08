@@ -115,7 +115,7 @@ export default function Scan() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-5 sm:px-8 py-10 sm:py-14" data-testid="scan-page">
+    <div className="mx-auto max-w-2xl py-2" data-testid="scan-page">
       <div className="overline">Live check-in</div>
       <h1 className="font-serif-display text-4xl sm:text-5xl mt-2 leading-tight">
         Scan the room&apos;s QR.

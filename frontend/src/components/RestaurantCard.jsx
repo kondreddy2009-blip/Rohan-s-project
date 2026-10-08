@@ -11,11 +11,11 @@ function PartnerChips({ partner, showPoints }) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
       {showPoints && (
-        <span className="tbl-pill tbl-pill--tint" data-testid="chip-points-per-visit">
+        <span className="tbl-pill tbl-pill--tint-solid" data-testid="chip-points-per-visit">
           {partner.points_per_visit} pts per visit
         </span>
       )}
-      {partner.double_points_tonight && <span className="tbl-pill tbl-pill--tint">2× points tonight</span>}
+      {partner.double_points_tonight && <span className="tbl-pill tbl-pill--tint-solid">2× points tonight</span>}
       {partner.chefs_pick && <span className="tbl-pill tbl-pill--glass">Chef&apos;s pick</span>}
     </div>
   );

@@ -5,11 +5,15 @@ import "@/App.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "@/components/Layout";
+import { AdminGuard, AdminPartnerFormRoute } from "@/components/AdminGuard";
+import { PartnerFormProvider } from "@/components/PartnerFormModal";
 
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Discover from "@/pages/Discover";
 import VenueDetail from "@/pages/VenueDetail";
+import RestaurantPage from "@/pages/RestaurantPage";
+import Events from "@/pages/Events";
 import CheckIn from "@/pages/CheckIn";
 import Scan from "@/pages/Scan";
 import Wallet from "@/pages/Wallet";
@@ -34,20 +38,59 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/venues/:id"
+        path="/restaurant/:slug"
         element={
           <ProtectedRoute>
             <Layout>
-              <VenueDetail />
+              <RestaurantPage />
             </Layout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/checkin/:id"
+        path="/events"
         element={
           <ProtectedRoute>
             <Layout>
+              <Events />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/venues/:id"
+        element={
+          <ProtectedRoute>
+            <VenueDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/partners/new"
+        element={
+          <ProtectedRoute>
+            <AdminGuard>
+              <AdminPartnerFormRoute />
+            </AdminGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/partners/:slug/edit"
+        element={
+          <ProtectedRoute>
+            <AdminGuard>
+              <AdminPartnerFormRoute />
+            </AdminGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/admin/*" element={<Navigate to="/discover" replace />} />
+      <Route
+        path="/checkin/:id"
+        element={
+          <ProtectedRoute>
+            <Layout single>
               <CheckIn />
             </Layout>
           </ProtectedRoute>
@@ -57,7 +100,7 @@ function AppRoutes() {
         path="/scan"
         element={
           <ProtectedRoute>
-            <Layout>
+            <Layout single>
               <Scan />
             </Layout>
           </ProtectedRoute>
@@ -67,7 +110,7 @@ function AppRoutes() {
         path="/wallet"
         element={
           <ProtectedRoute>
-            <Layout>
+            <Layout single>
               <Wallet />
             </Layout>
           </ProtectedRoute>
@@ -77,7 +120,7 @@ function AppRoutes() {
         path="/redeem"
         element={
           <ProtectedRoute>
-            <Layout>
+            <Layout single>
               <Redeem />
             </Layout>
           </ProtectedRoute>
@@ -87,7 +130,7 @@ function AppRoutes() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <Layout>
+            <Layout single>
               <Profile />
             </Layout>
           </ProtectedRoute>
@@ -97,7 +140,7 @@ function AppRoutes() {
         path="/staff"
         element={
           <ProtectedRoute staff>
-            <Layout>
+            <Layout single>
               <StaffDashboard />
             </Layout>
           </ProtectedRoute>
@@ -114,7 +157,9 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <PartnerFormProvider>
+            <AppRoutes />
+          </PartnerFormProvider>
           <Toaster
             theme="dark"
             position="top-center"

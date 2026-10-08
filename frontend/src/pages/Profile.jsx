@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, useIsAdmin } from "@/lib/auth-context";
 import { TierBadge } from "@/components/TierBadge";
+import { StatusPill } from "@/components/StatusPill";
+import { usePartnerForm } from "@/components/PartnerFormModal";
+import { usePartners } from "@/lib/partnersService";
+import { TIER_ORDER, tierLabel } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
-
-const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
 const CONCIERGE_TYPE_LABEL = {
   hold_table: "Hold a table",
@@ -59,7 +61,7 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
                   active ? "text-[#CE6A4A]" : "text-[#6B6560]",
                 )}
               >
-                {t}
+                {tierLabel(t)}
               </div>
             </div>
           );
@@ -67,7 +69,7 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
       </div>
       {next && (
         <div className="mt-8">
-          <div className="overline mb-2">Toward {next}</div>
+          <div className="overline mb-2">Toward {tierLabel(next)}</div>
           <div className="relative h-px bg-[#262321]">
             <div
               className="absolute inset-y-0 left-0 bg-[#CE6A4A]"
@@ -75,7 +77,7 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
             />
           </div>
           <div className="mt-3 font-serif text-lg text-[#F2EDE7]/80">
-            {pointsToNext} more points until {next}.
+            {pointsToNext} more points until {tierLabel(next)}.
           </div>
         </div>
       )}
@@ -127,8 +129,53 @@ function TimelineEntry({ item, index }) {
   );
 }
 
+function PartnersAdmin() {
+  const { data: partners = [] } = usePartners();
+  const { openPartnerForm } = usePartnerForm();
+  return (
+    <div className="mt-14 animate-fade-up" data-testid="profile-partners-section">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="overline mb-2">Partners</div>
+          <p className="text-[#8F8781] font-light">
+            {partners.length} {partners.length === 1 ? "restaurant" : "restaurants"} on Table.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => openPartnerForm()}
+          className="tbl-pill tbl-pill--tint tbl-pill--lg"
+          data-testid="profile-add-partner"
+        >
+          + Add partner
+        </button>
+      </div>
+      <ul className="mt-6 tbl-divide">
+        {partners.map((p) => (
+          <li key={p.id} className="flex items-center justify-between gap-4 py-3">
+            <Link to={`/restaurant/${p.slug}`} className="min-w-0 group">
+              <div className="font-bold truncate group-hover:text-ritual-accent-hover">{p.name}</div>
+              <div className="text-[13px] text-ritual-muted truncate">
+                {p.area} · {p.cuisine} · {p.points_per_visit} pts
+              </div>
+            </Link>
+            <div className="flex items-center gap-2 flex-none">
+              <StatusPill partner={p} className="tbl-pill--filled backdrop-blur-none" />
+              <button type="button" onClick={() => openPartnerForm(p)} className="tbl-pill tbl-pill--filled">
+                Edit
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const isAdmin = useIsAdmin();
+  const navigate = useNavigate();
   const [wallet, setWallet] = useState(null);
   const [history, setHistory] = useState([]);
   const [correspondence, setCorrespondence] = useState([]);
@@ -166,7 +213,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 sm:px-8 py-8 sm:py-14" data-testid="profile-page">
+    <div className="py-2" data-testid="profile-page">
       <div className="flex items-start justify-between gap-4 animate-fade-up">
         <div>
           <div className="overline">Member profile</div>
@@ -234,6 +281,8 @@ export default function Profile() {
           progressPercent={wallet.progress_percent}
         />
       </div>
+
+      {isAdmin && <PartnersAdmin />}
 
       {(user.role === "staff" || user.role === "admin") && (
         <div className="mt-14 animate-fade-up">
@@ -382,6 +431,20 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      <div className="mt-14 pt-8 hairline-t">
+        <button
+          type="button"
+          onClick={async () => {
+            await logout();
+            navigate("/login", { replace: true });
+          }}
+          className="btn-ghost"
+          data-testid="logout-button"
+        >
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }

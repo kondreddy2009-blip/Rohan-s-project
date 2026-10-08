@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { tierLabel } from "@/lib/tiers";
 
 export function TierBadge({ tier, className, testId }) {
   if (!tier) return null;
@@ -12,7 +13,7 @@ export function TierBadge({ tier, className, testId }) {
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-[#CE6A4A]" />
-      {tier}
+      {tierLabel(tier)}
     </span>
   );
 }

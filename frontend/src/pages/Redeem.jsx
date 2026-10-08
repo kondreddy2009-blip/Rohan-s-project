@@ -7,8 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { Sparkles } from "@/components/Sparkles";
 import { cn } from "@/lib/utils";
-
-const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
+import { TIER_ORDER, tierLabel } from "@/lib/tiers";
 
 export default function Redeem() {
   const { user, refresh } = useAuth();
@@ -66,7 +65,7 @@ export default function Redeem() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 sm:py-14" data-testid="redeem-page">
+    <div className="py-2" data-testid="redeem-page">
       <div className="overline">Redeem</div>
       <h1 className="font-serif-display text-4xl sm:text-5xl mt-2">
         {step === "done"
@@ -164,10 +163,10 @@ export default function Redeem() {
                     </div>
                     <div className="overline mt-2">
                       {!p.tier_ok
-                        ? `${p.tier_required} tier required`
+                        ? `${tierLabel(p.tier_required)} tier required`
                         : !p.affordable
                           ? "Not enough Table Points yet"
-                          : `Reserved for ${p.tier_required}+`}
+                          : `Reserved for ${tierLabel(p.tier_required)}+`}
                     </div>
                   </div>
                   <div className="text-right">

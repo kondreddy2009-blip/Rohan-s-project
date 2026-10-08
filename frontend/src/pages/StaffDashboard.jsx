@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { QRDisplay } from "@/components/QRDisplay";
 import { cn } from "@/lib/utils";
+import { tierLabel } from "@/lib/tiers";
 
 const STATUS_OPTIONS = ["Quiet", "Filling In", "At Capacity"];
 
@@ -62,7 +63,7 @@ function BookingRow({ booking, onAct }) {
           </div>
           <div className="font-serif-display text-xl mt-1">
             {booking.member_name}{" "}
-            <span className="text-[#CE6A4A]">· {booking.member_tier}</span>
+            <span className="text-[#CE6A4A]">· {tierLabel(booking.member_tier)}</span>
           </div>
         </div>
         <div className={cn("text-xs tracking-widest uppercase", BOOKING_STATUS_COLOR[booking.status])}>
@@ -268,9 +269,9 @@ function EventForm({ venueId, onCreated }) {
           className="w-full rounded-full bg-[#1B1917] border border-[#262321] py-2 px-3 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7] transition-colors duration-300"
         >
           <option value="">Open to all members</option>
-          <option value="Regular">Regular and above</option>
-          <option value="Insider">Insider and above</option>
-          <option value="Inner Circle">Inner Circle only</option>
+          <option value="Regular">Silver and above</option>
+          <option value="Insider">Gold and above</option>
+          <option value="Inner Circle">Table Black only</option>
         </select>
       </div>
       <button
@@ -324,7 +325,7 @@ function CorrespondenceRow({ msg, onRespond }) {
         <div>
           <div className="overline">{CONCIERGE_TYPE_LABEL[msg.request_type] || "Note"}</div>
           <div className="font-serif-display text-xl mt-1">
-            {msg.member_name} · <span className="text-[#CE6A4A]">{msg.member_tier}</span>
+            {msg.member_name} · <span className="text-[#CE6A4A]">{tierLabel(msg.member_tier)}</span>
           </div>
         </div>
         <div className={`text-xs tracking-widest uppercase ${statusColor}`}>
@@ -469,7 +470,7 @@ export default function StaffDashboard() {
   const checkinUrl = `${window.location.origin}/checkin/${selectedVenue.id}`;
 
   return (
-    <div className="mx-auto max-w-5xl px-5 sm:px-8 py-8 sm:py-14" data-testid="staff-dashboard">
+    <div className="py-2" data-testid="staff-dashboard">
       <div className="flex items-start justify-between gap-4 flex-wrap animate-fade-up">
         <div>
           <div className="overline">Staff dashboard</div>
@@ -620,7 +621,7 @@ export default function StaffDashboard() {
                   <div className="min-w-0">
                     <div className="font-serif-display text-xl">{r.perk_name}</div>
                     <div className="overline mt-1">
-                      {r.member_name} · {r.member_tier}
+                      {r.member_name} · {tierLabel(r.member_tier)}
                     </div>
                     <div className="text-xs text-[#6B6560] mt-1">
                       {new Date(r.timestamp).toLocaleString()}

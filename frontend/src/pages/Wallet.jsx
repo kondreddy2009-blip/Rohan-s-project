@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { TierBadge } from "@/components/TierBadge";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useAuth } from "@/lib/auth-context";
+import { tierLabel } from "@/lib/tiers";
 
 function LedgerRow({ item }) {
   const isEarn = item.type === "earn";
@@ -75,7 +76,7 @@ export default function Wallet() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 sm:px-8 py-8 sm:py-14" data-testid="wallet-page">
+    <div className="py-2" data-testid="wallet-page">
       <div className="flex items-start justify-between gap-4 animate-fade-up">
         <div>
           <div className="overline">Table Wallet</div>
@@ -108,7 +109,7 @@ export default function Wallet() {
           </div>
           <div>
             <div className="overline mb-1">Tier</div>
-            <div className="font-serif text-xl">{wallet.tier}</div>
+            <div className="font-serif text-xl">{tierLabel(wallet.tier)}</div>
           </div>
         </div>
 
@@ -140,6 +141,9 @@ export default function Wallet() {
           className="btn-primary inline-block"
         >
           Redeem at any room
+        </Link>
+        <Link to="/scan" data-testid="wallet-scan-button" className="btn-ghost inline-block ml-3">
+          Scan to check in
         </Link>
       </div>
 

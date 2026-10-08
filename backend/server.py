@@ -1288,10 +1288,10 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Placeholder photos — swap for the partners' own images via the admin form.
 SEED_IMAGES = {
-    "bombay-canteen": "https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&q=85",
-    "soda-bottle-co": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?crop=entropy&cs=srgb&fm=jpg&q=85",
-    "masque": "https://images.unsplash.com/photo-1643101570532-88c8ecc07c1f?crop=entropy&cs=srgb&fm=jpg&q=85",
-    "sonder-bar": "https://images.unsplash.com/photo-1575444758702-4a6b9222336e?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "bombay-canteen": "https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&q=80&w=1200",
+    "soda-bottle-co": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?crop=entropy&cs=srgb&fm=jpg&q=80&w=1200",
+    "masque": "https://images.unsplash.com/photo-1643101570532-88c8ecc07c1f?crop=entropy&cs=srgb&fm=jpg&q=80&w=1200",
+    "sonder-bar": "https://images.unsplash.com/photo-1575444758702-4a6b9222336e?crop=entropy&cs=srgb&fm=jpg&q=80&w=1200",
 }
 
 

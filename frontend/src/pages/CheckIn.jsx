@@ -61,7 +61,7 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-5 sm:px-8 py-10 sm:py-16 min-h-[80vh] flex flex-col" data-testid="checkin-page">
+    <div className="mx-auto max-w-2xl py-2 min-h-[60vh] flex flex-col" data-testid="checkin-page">
       <div className="overline">Check-in</div>
       <h1 className="font-serif-display text-4xl sm:text-5xl mt-2">{venue.name}</h1>
       <div className="overline mt-2">{venue.neighborhood} · {venue.type}</div>

@@ -8,9 +8,9 @@ const MAX_ROWS = 5;
 export function NetworkList({ partners, className }) {
   const rows = partners.slice(0, MAX_ROWS);
   return (
-    <div className={cn("tbl-panel p-6 flex flex-col", className)} data-testid="network-list">
+    <div className={cn("tbl-panel p-5 flex flex-col", className)} data-testid="network-list">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[16px] font-bold tracking-[-0.01em]">Tonight across the network</h2>
+        <h2 className="text-[14px] font-bold tracking-[-0.01em] whitespace-nowrap">Tonight across the network</h2>
         <Link to="/events" className="text-[13px] font-semibold text-ritual-accent hover:text-ritual-accent-hover">
           Events
         </Link>

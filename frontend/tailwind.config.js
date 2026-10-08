@@ -7,12 +7,26 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        desk: '700px'
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
       },
       colors: {
+        ritual: {
+          bg: 'var(--ritual-bg)',
+          surface: 'var(--ritual-surface)',
+          'surface-2': 'var(--ritual-surface-2)',
+          border: 'var(--ritual-border)',
+          text: 'var(--ritual-text)',
+          muted: 'var(--ritual-text-muted)',
+          faint: 'var(--ritual-text-faint)',
+          accent: 'var(--ritual-accent)',
+          'accent-hover': 'var(--ritual-accent-hover)'
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

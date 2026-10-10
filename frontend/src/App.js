@@ -6,7 +6,6 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "@/components/Layout";
 
-import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Discover from "@/pages/Discover";
 import VenueDetail from "@/pages/VenueDetail";
@@ -20,8 +19,9 @@ import StaffDashboard from "@/pages/StaffDashboard";
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/restaurant-login" element={<Login staff />} />
 
       <Route
         path="/discover"

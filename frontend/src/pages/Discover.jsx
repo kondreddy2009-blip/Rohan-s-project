@@ -1,203 +1,357 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Shuffle, ChefHat, Flame } from "lucide-react";
+import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { VenueCard, VibePill } from "@/components/VenueCard";
-import { StatusIndicator } from "@/components/StatusIndicator";
-import { TierBadge } from "@/components/TierBadge";
+import { FillingFastCard, fillingFastStatus } from "@/components/FillingFastCard";
+import { EventCard } from "@/components/EventCard";
+import { BrandLockup } from "@/components/BrandLockup";
 import { cn } from "@/lib/utils";
 
-const VIBE_FILTERS = [
+const TIER_THRESHOLDS = { Guest: 0, Regular: 500, Insider: 1500, "Inner Circle": 3000 };
+
+const isWalkIn = (v) =>
+  v.availability !== "fully_booked" && v.status !== "At Capacity" && !(v.wait_minutes > 0);
+
+const FILTERS = [
   { key: "all", label: "All", match: () => true },
-  { key: "chefs-pick", label: "Chef's Picks", match: (v) => v.vibes?.includes("Chef's Pick") },
-  { key: "date-night", label: "Date Night", match: (v) => v.vibes?.includes("Date Night") },
-  { key: "buzzing", label: "Buzzing", match: (v) => v.vibes?.includes("Buzzing") || v.status === "At Capacity" },
-  { key: "solo", label: "Solo", match: (v) => v.vibes?.includes("Solo-Friendly") },
-  { key: "group", label: "Groups", match: (v) => v.vibes?.includes("Group-Friendly") },
-  { key: "new", label: "Just Opened", match: (v) => v.vibes?.includes("Just Opened") },
+  { key: "walk-in", label: "Walk-in now", match: isWalkIn },
+  { key: "under-800", label: "Under ₹800", match: (v) => (v.price_level || 3) <= 2 },
+  { key: "2x", label: "2x points", match: (v) => (v.loyalty_points_per_checkin || 0) >= 10 },
 ];
 
-function FeaturedRoom({ venue }) {
-  if (!venue) return null;
-  const priceStr = "₹".repeat(venue.price_level || 3);
+const NAV = [
+  { label: "Discover", to: "/discover", testId: "nav-discover" },
+  { label: "Events", to: "/discover#events", testId: "nav-events" },
+  { label: "Wallet", to: "/wallet", testId: "nav-wallet" },
+  { label: "Profile", to: "/profile", testId: "nav-profile" },
+];
+
+const panel = "w-full text-[#F4F1EC] px-5 sm:px-10 lg:px-16 py-8 sm:py-10";
+const inner = "mx-auto max-w-[1280px]";
+
+function Header({ user, points }) {
   return (
-    <Link
-      to={`/venues/${venue.id}`}
-      data-testid={`featured-${venue.id}`}
-      className="block relative overflow-hidden group card-invite mt-8"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-5">
-        <div className="md:col-span-3 relative aspect-[4/3] md:aspect-auto md:min-h-[360px]">
-          <img
-            src={venue.image_url}
-            alt={venue.name}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-r from-transparent to-[#2E1220]/60 md:to-[#2E1220]" />
-          <div className="absolute top-5 left-5 inline-flex items-center gap-2 overline-accent">
-            <Flame strokeWidth={1.4} className="h-3.5 w-3.5" />
-            Chef&apos;s pick tonight
-          </div>
+    <header className="grid grid-cols-[auto_1fr_auto] items-center gap-4 pb-5 border-b border-white/[0.08]">
+      <div className="flex items-center min-w-0">
+        <Link to="/discover" data-testid="brand-home-link" className="shrink-0">
+<BrandLockup />
+        </Link>
+      </div>
+        <nav className="flex items-center justify-center gap-2 overflow-x-auto" data-testid="top-nav">
+          {NAV.map((n) => (
+            <Link
+              key={n.label}
+              to={n.to}
+              data-testid={n.testId}
+              onClick={() => {
+                if (n.to.endsWith("#events")) {
+                  document.getElementById("events")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className={cn(
+                "rounded-full px-6 py-3 text-base font-semibold whitespace-nowrap transition-colors",
+                n.label === "Discover"
+                  ? "bg-[#2A2826] text-white"
+                  : "text-[#8E8982] hover:text-white",
+              )}
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
+      <div className="flex items-center gap-3 shrink-0">
+        <span className="hidden sm:inline-flex rounded-full bg-[#3A2219] px-4 py-2 text-sm font-bold text-[#E27D60]">
+          {points.toLocaleString("en-IN")} pts
+        </span>
+        <Link
+          to="/profile"
+          aria-label="Profile"
+          className="grid h-10 w-10 place-items-center rounded-lg bg-[#D8694A] text-sm font-extrabold text-[#1A0F0B]"
+        >
+          {(user?.name || "G").trim()[0].toUpperCase()}
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function Hero({ venue }) {
+  if (!venue) return null;
+  const { label, dot } = fillingFastStatus(venue);
+  const reordered = (venue.regulars_order || venue.signature_offerings?.map((o) => o.name) || []).slice(0, 2);
+  const tags = [
+    venue.loyalty_points_per_checkin >= 10 ? "2x points tonight" : null,
+    ...(venue.vibes || []).slice(0, 1),
+  ].filter(Boolean);
+
+  return (
+    <div className="overflow-hidden rounded-2xl bg-[#1F1D1B]" data-testid={`featured-${venue.id}`}>
+      <div className="relative min-h-[420px] sm:min-h-[556px]">
+        <img src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20" />
+        <div className="absolute inset-x-5 top-5 flex items-start justify-between">
+          <span className="inline-flex items-center gap-2 rounded-full bg-black/55 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold">
+            <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />
+            {venue.status === "Quiet" ? `Quiet · ${label.toLowerCase()}` : label}
+          </span>
+          <span className="rounded-full bg-black/55 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold">
+            {"₹".repeat(venue.price_level || 3)}
+          </span>
         </div>
-        <div className="md:col-span-2 p-6 sm:p-8 flex flex-col justify-center gap-3 bg-[#2E1220]">
-          <div className="overline">
+        <div className="absolute inset-x-6 bottom-6">
+          <div className="text-[13px] font-semibold text-white/75">
             {venue.neighborhood} · {venue.cuisine}
           </div>
-          <h2 className="font-serif-display text-4xl sm:text-5xl leading-[0.98]">
-            {venue.name}
-          </h2>
-          <p className="font-serif italic text-lg text-[#F4E8DA]/80">
-            &ldquo;{venue.tagline}&rdquo;
-          </p>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            {(venue.vibes || []).map((v) => (
-              <VibePill key={v} vibe={v} />
-            ))}
-          </div>
-          <div className="mt-3 flex items-center gap-4 overline">
-            <StatusIndicator status={venue.status} queueLength={venue.queue_length} />
-            <span className="text-[#C2A36B] tracking-widest">{priceStr}</span>
-            {venue.chef && (
-              <span className="inline-flex items-center gap-1 text-[#F4E8DA]/60">
-                <ChefHat strokeWidth={1.2} className="h-3 w-3" />
-                {venue.chef}
+          <h2 className="mt-1 text-4xl sm:text-5xl font-extrabold tracking-tight leading-none">{venue.name}</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tags.map((t, i) => (
+              <span
+                key={t}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-bold",
+                  i === 0 && t.includes("points")
+                    ? "bg-[#4A2A20] text-[#E27D60]"
+                    : "bg-white/15 text-white backdrop-blur-sm",
+                )}
+              >
+                {t}
               </span>
-            )}
+            ))}
           </div>
         </div>
       </div>
-    </Link>
+      <div className="flex items-center justify-between gap-4 px-6 py-5">
+        <div className="min-w-0">
+          <div className="text-xs text-[#8E8982]">Most re-ordered</div>
+          <div className="mt-0.5 text-[15px] font-bold truncate">{reordered.join(" · ") || venue.tagline}</div>
+        </div>
+        <Link
+          to={`/venues/${venue.id}`}
+          className="shrink-0 rounded-full bg-[#D8694A] px-6 py-3 text-sm font-extrabold text-[#1A0F0B] hover:bg-[#E27D60] transition-colors"
+        >
+          Hold table
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
+
+// Falls back to the signed-in user's own fields if /wallet hasn't loaded (or failed).
+function tierInfo(wallet, user) {
+  if (wallet) return wallet;
+  const pts = user?.lifetime_points || 0;
+  const tier = user?.tier || "Guest";
+  const next = TIER_ORDER[TIER_ORDER.indexOf(tier) + 1] || null;
+  const floor = TIER_THRESHOLDS[tier] ?? 0;
+  const span = next ? TIER_THRESHOLDS[next] - floor : 1;
+  return {
+    tier,
+    lifetime_points: pts,
+    next_tier: next,
+    points_to_next: next ? Math.max(0, TIER_THRESHOLDS[next] - pts) : 0,
+    progress_percent: next ? Math.min(100, Math.round(((pts - floor) / span) * 100)) : 100,
+  };
+}
+
+function TierCard({ wallet, partners }) {
+  const tier = wallet?.tier || "Guest";
+  const pts = wallet?.lifetime_points || 0;
+  return (
+    <div
+      className="rounded-2xl p-6 text-[#1A0F0B] bg-gradient-to-br from-[#CC6A4C] to-[#8E4132]"
+      data-testid="tier-card"
+    >
+      <div className="text-[11px] font-extrabold tracking-[0.16em] uppercase opacity-70">Table tier</div>
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <div className="text-4xl font-extrabold tracking-tight">{tier}</div>
+        <div className="text-right text-xs font-bold leading-snug">
+          {pts.toLocaleString("en-IN")} pts
+          <br />
+          {partners} partner{partners === 1 ? "" : "s"}
+        </div>
+      </div>
+      <div className="mt-4 h-1.5 w-full rounded-full bg-black/25">
+        <div
+          className="h-full rounded-full bg-[#1A0F0B]"
+          style={{ width: `${wallet?.progress_percent ?? 0}%` }}
+        />
+      </div>
+      <div className="mt-3 text-xs font-bold">
+        {wallet?.next_tier
+          ? `${wallet.points_to_next.toLocaleString("en-IN")} more pts for ${wallet.next_tier}`
+          : "You're at the top tier"}
+      </div>
+    </div>
+  );
+}
+
+function Tonight({ venues }) {
+  return (
+    <div className="rounded-2xl bg-[#1F1D1B] p-6 flex-1" data-testid="tonight-list">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-[15px] font-bold">Tonight across the network</h3>
+        <a href="#events" className="text-xs font-bold text-[#E27D60]">Events</a>
+      </div>
+      <ul className="mt-3">
+        {venues.map((v, i) => {
+          const { label, dot } = fillingFastStatus(v);
+          return (
+            <li key={v.id} className={cn(i > 0 && "border-t border-white/[0.08]")}>
+              <Link to={`/venues/${v.id}`} className="flex items-center gap-3 py-3">
+                <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold truncate">{v.name}</div>
+                  <div className="text-xs text-[#8E8982] truncate">
+                    {v.neighborhood} · {v.cuisine}
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-[#B8B2AA] whitespace-nowrap">{label}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
 export default function Discover() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [venues, setVenues] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [wallet, setWallet] = useState(null);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [rolling, setRolling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setLoading(true);
+    (async () => {
       try {
         const { data } = await api.get("/venues");
         if (!cancelled) setVenues(data);
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
-    load();
+    })();
+    api.get("/events").then(({ data }) => !cancelled && setEvents(data)).catch(() => {});
+    api.get("/wallet").then(({ data }) => !cancelled && setWallet(data)).catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const active = VIBE_FILTERS.find((f) => f.key === filter) || VIBE_FILTERS[0];
+  const active = FILTERS.find((f) => f.key === filter) || FILTERS[0];
+  const filtered = useMemo(() => venues.filter(active.match), [venues, active]);
   const featured = useMemo(
-    () => venues.find((v) => v.vibes?.includes("Chef's Pick") && v.featured) || venues.find((v) => v.featured),
-    [venues],
+    () => filtered.find((v) => v.featured) || filtered[0],
+    [filtered],
   );
-  const filtered = useMemo(
-    () => venues.filter(active.match),
-    [venues, active],
+  const tonight = useMemo(() => filtered.slice(0, 4), [filtered]);
+  const fillingFast = useMemo(() => {
+    const urgency = (v) =>
+      v.availability === "fully_booked" || v.status === "At Capacity" ? 2 : v.wait_minutes > 0 ? 1 : 0;
+    return [...filtered].sort((a, b) => urgency(b) - urgency(a)).slice(0, 4);
+  }, [filtered]);
+
+  const partners = useMemo(
+    () => new Set((wallet?.ledger || []).map((l) => l.venue_name).filter(Boolean)).size,
+    [wallet],
   );
 
   const hour = new Date().getHours();
-  const timeGreeting =
-    hour < 4
-      ? "After midnight"
-      : hour < 11
-        ? "This morning"
-        : hour < 15
-          ? "Lunch service"
-          : hour < 17
-            ? "Aperitivo soon"
-            : hour < 20
-              ? "Dinner is on"
-              : hour < 22
-                ? "The room is on"
-                : "Late service";
-
-  const surpriseMe = () => {
-    if (filtered.length === 0 || rolling) return;
-    setRolling(true);
-    const pick = filtered[Math.floor(Math.random() * filtered.length)];
-    setTimeout(() => {
-      setRolling(false);
-      navigate(`/venues/${pick.id}`);
-    }, 600);
-  };
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const firstName = user?.name?.split(" ")[0] || "Guest";
+  const info = tierInfo(wallet, user);
+  const points = info.lifetime_points;
+  const pointsAway = (tier) =>
+    Math.max(0, (TIER_THRESHOLDS[tier] ?? 0) - info.lifetime_points);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 pb-16" data-testid="discover-page">
-      <div className="animate-fade-up">
-        <div className="overline inline-flex items-center gap-2">
-          <span className="h-1.5 w-1.5 bg-[#C2A36B] status-dot-pulse" />
-          {timeGreeting} · Six rooms
-        </div>
-        <div className="mt-3 flex items-end justify-between flex-wrap gap-4">
-          <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl leading-[1.02]">
-            <span className="italic text-[#C2A36B]">{user?.name?.split(" ")[0] || "Guest"}</span>,
-            <br />
-            your Table continues.
-          </h1>
-          <TierBadge tier={user?.tier} testId="header-tier-badge" />
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#171513]" data-testid="discover-page">
+      <section className={panel}>
+        <div className={inner}>
+        <Header user={user} points={points} />
 
-      {!loading && featured && <FeaturedRoom venue={featured} />}
-
-      <div className="mt-12 flex items-center justify-between gap-4 border-b border-[#4E1E32] overflow-x-auto">
-        <div className="flex items-center gap-1" role="tablist" data-testid="discover-filters">
-          {VIBE_FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              data-testid={`filter-${f.key}`}
-              role="tab"
-              aria-selected={filter === f.key}
-              className={cn(
-                "px-4 py-3 overline transition-colors duration-300 border-b -mb-px whitespace-nowrap",
-                filter === f.key
-                  ? "text-[#C2A36B] border-[#C2A36B]"
-                  : "text-[#B39586] border-transparent hover:text-[#F4E8DA]",
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="mt-7 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#8E8982]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#7DBE8A]" />
+              {venues.length} partners live tonight
+            </div>
+            <h1 className="mt-1.5 text-4xl sm:text-[40px] font-extrabold tracking-[-0.04em] leading-tight">
+              {greeting}, {firstName}.
+            </h1>
+          </div>
+          <div className="flex flex-wrap gap-2" role="tablist" data-testid="discover-filters">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                role="tab"
+                aria-selected={filter === f.key}
+                data-testid={`filter-${f.key}`}
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  "rounded-full px-4 py-2 text-[13px] font-semibold transition-colors",
+                  filter === f.key
+                    ? "bg-[#F5F5F3] text-[#171513]"
+                    : "bg-[#2A2826] text-[#B8B2AA] hover:text-white",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <button
-          onClick={surpriseMe}
-          disabled={rolling || filtered.length === 0}
-          data-testid="surprise-me-button"
-          className="overline inline-flex items-center gap-2 text-[#C2A36B] hover:text-[#F4E8DA] transition-colors duration-300 pr-2 whitespace-nowrap"
-          aria-label="Pick a random room"
-        >
-          <Shuffle
-            strokeWidth={1.2}
-            className={`h-4 w-4 transition-transform duration-500 ${rolling ? "rotate-180" : ""}`}
-          />
-          Surprise me
-        </button>
-      </div>
 
-      {loading ? (
-        <div className="mt-16 overline text-center">Loading rooms…</div>
-      ) : (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filtered.map((v, i) => (
-            <VenueCard venue={v} index={i} key={v.id} />
-          ))}
+        {loading ? (
+          <div className="mt-16 text-center text-sm text-[#8E8982]">Loading rooms…</div>
+        ) : filtered.length === 0 ? (
+          <div className="mt-16 text-center text-sm text-[#8E8982]">No rooms match tonight.</div>
+        ) : (
+          <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.62fr_1fr] gap-5">
+            <Hero venue={featured} />
+            <div className="flex flex-col gap-5">
+              <TierCard wallet={info} partners={partners} />
+              <Tonight venues={tonight} />
+            </div>
+          </div>
+        )}
         </div>
-      )}
+      </section>
 
-      {!loading && filtered.length === 0 && (
-        <div className="mt-16 text-center overline">No rooms in this category tonight.</div>
+      {!loading && (
+        <section className={cn(panel, "border-t border-white/[0.06]")} data-testid="filling-fast-section">
+          <div className={inner}>
+          <div className="text-[11px] font-extrabold tracking-[0.18em] uppercase text-[#8E8982]">
+            Discover · Grid
+          </div>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-[-0.03em]">Filling in fast</h2>
+          <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {fillingFast.map((v) => (
+              <FillingFastCard venue={v} key={v.id} />
+            ))}
+          </div>
+
+          {events.length > 0 && (
+            <div id="events" className="mt-12 scroll-mt-6" data-testid="events-section">
+              <h2 className="text-3xl font-extrabold tracking-[-0.03em]">Events</h2>
+              <p className="mt-1 text-sm text-[#8E8982]">What your tier opens, across every partner.</p>
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {events.map((e) => (
+                  <EventCard
+                    event={e}
+                    userTier={info.tier}
+                    pointsAway={pointsAway(e.tier_required)}
+                    key={e.id}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          </div>
+        </section>
       )}
     </div>
   );

@@ -60,6 +60,8 @@ export default function Wallet() {
       setWallet(w.data);
       setRedemptions(r.data);
       await refresh();
+    } catch {
+      /* 401s are handled globally (redirect to login); other errors leave the loader */
     } finally {
       setLoading(false);
     }

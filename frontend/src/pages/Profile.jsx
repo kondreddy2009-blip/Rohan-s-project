@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { TierBadge } from "@/components/TierBadge";
+import { User, Crown, CalendarDays, BarChart3, Star, Compass, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -31,97 +31,122 @@ const BOOKING_STATUS_LABEL = {
 };
 
 const BOOKING_STATUS_COLOR = {
-  awaiting_payment: "text-[#C08B70]",
-  pending: "text-[#B39586]",
-  confirmed: "text-[#C2A36B]",
-  declined: "text-[#C08B70]",
-  seated: "text-[#7A9B7A]",
-  cancelled: "text-[#7A5C55]",
+  awaiting_payment: "text-[#E8A33D]",
+  pending: "text-[#B8B2AA]",
+  confirmed: "text-[#E27D60]",
+  declined: "text-[#E8A33D]",
+  seated: "text-[#7DBE8A]",
+  cancelled: "text-[#8E8982]",
 };
 
-function TierJourney({ current, next, pointsToNext, progressPercent }) {
+const card = "rounded-2xl bg-[#1A1917] border border-white/[0.04] p-6 sm:p-7";
+const sectionTitle = "text-2xl font-extrabold tracking-tight text-white";
+const sub = "mt-1 text-sm text-[#8E8982]";
+
+function IconCircle({ icon: Icon, className }) {
   return (
-    <div>
-      <div className="overline mb-4">Your journey</div>
-      <div className="flex items-center gap-2">
-        {TIER_ORDER.map((t, i) => {
-          const currentIdx = TIER_ORDER.indexOf(current);
-          const active = i <= currentIdx;
-          return (
-            <div key={t} className="flex-1">
-              <div
-                className={cn(
-                  "h-px w-full",
-                  active ? "bg-[#C2A36B]" : "bg-[#4E1E32]",
-                )}
-              />
-              <div
-                className={cn(
-                  "overline mt-2 whitespace-nowrap",
-                  active ? "text-[#C2A36B]" : "text-[#7A5C55]",
-                )}
-              >
-                {t}
-              </div>
-            </div>
-          );
-        })}
+    <span className={cn("grid shrink-0 place-items-center rounded-full bg-[#262422]", className)}>
+      <Icon strokeWidth={1.6} className="h-5 w-5 text-[#F4764F]" />
+    </span>
+  );
+}
+
+function Stat({ icon, label, value, first }) {
+  return (
+    <div className={cn("flex items-center gap-4 py-1 sm:px-6", !first && "sm:border-l sm:border-white/[0.08]", first && "sm:pl-0")}>
+      <IconCircle icon={icon} className="h-12 w-12" />
+      <div>
+        <div className="text-sm text-[#8E8982]">{label}</div>
+        <div className="text-xl font-bold">{value}</div>
       </div>
-      {next && (
-        <div className="mt-8">
-          <div className="overline mb-2">Toward {next}</div>
-          <div className="relative h-px bg-[#4E1E32]">
-            <div
-              className="absolute inset-y-0 left-0 bg-[#C2A36B]"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className="mt-3 font-serif text-lg text-[#F4E8DA]/80 italic">
-            {pointsToNext} more points until {next}.
-          </div>
-        </div>
-      )}
-      {!next && (
-        <div className="mt-8 overline-accent">You are at the highest tier.</div>
-      )}
     </div>
   );
 }
 
-function TimelineEntry({ item, index }) {
+function TierJourney({ current, next, pointsToNext, progressPercent }) {
+  const idx = TIER_ORDER.indexOf(current);
+  const span = (idx / (TIER_ORDER.length - 1)) * 100;
   return (
-    <div
-      className="flex gap-5 py-6 border-b border-white/[0.05] animate-fade-up"
-      style={{ animationDelay: `${Math.min(index * 60, 400)}ms` }}
-      data-testid={`history-${item.id}`}
-    >
-      <div className="w-16 h-20 flex-shrink-0 overflow-hidden hidden sm:block">
-        {item.venue_image ? (
-          <img
-            src={item.venue_image}
-            alt={item.venue_name}
-            className="h-full w-full object-cover"
-          />
-        ) : null}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="overline">
-          {new Date(item.timestamp).toLocaleDateString(undefined, {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
+    <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6 items-center">
+      <div>
+        <h2 className={sectionTitle}>Your journey</h2>
+        <p className={sub}>Your history will grow with each table you take.</p>
+        <div className="relative mt-7">
+          <div className="absolute top-3 left-[12.5%] right-[12.5%] h-0.5 bg-white/10">
+            <div
+              className="h-full bg-gradient-to-r from-[#6B3A2E] to-[#F4764F]"
+              style={{ width: `${span}%` }}
+            />
+          </div>
+          <div className="relative grid grid-cols-4">
+            {TIER_ORDER.map((t, i) => {
+              const isCurrent = i === idx;
+              return (
+                <div key={t} className="flex flex-col items-center">
+                  <span
+                    className={cn(
+                      "h-6 w-6 rounded-full border-2 bg-[#1A1917]",
+                      isCurrent
+                        ? "border-[#F4764F] bg-[#F4764F] ring-4 ring-[#F4764F]/25"
+                        : i < idx
+                          ? "border-[#F4764F]"
+                          : "border-[#4A4743]",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "mt-3 text-[11px] font-bold tracking-[0.16em] uppercase text-center",
+                      isCurrent ? "text-[#F4764F]" : "text-[#8E8982]",
+                    )}
+                  >
+                    {t}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="font-serif-display text-2xl mt-1">{item.venue_name}</div>
-        <div className="text-sm text-[#B39586] mt-1 font-light">
+      </div>
+      <div className="flex items-center gap-5 rounded-xl bg-[#2A1B16] border border-[#F4764F]/15 p-5">
+        <IconCircle icon={Crown} className="h-16 w-16 bg-[#3D2118]" />
+        <div className="border-l border-white/[0.1] pl-5">
+          {next ? (
+            <>
+              <div className="font-bold text-white">{pointsToNext.toLocaleString("en-IN")} more points.</div>
+              <p className="mt-1 text-sm text-[#B8B2AA]">
+                Until you reach {next}. {progressPercent}% of the way there.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="font-bold text-white">You&apos;re at the highest tier.</div>
+              <p className="mt-1 text-sm text-[#B8B2AA]">Enjoy exclusive access, curated experiences and more.</p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TimelineEntry({ item }) {
+  return (
+    <div className="flex gap-4 py-4 border-t border-white/[0.08] first:border-t-0" data-testid={`history-${item.id}`}>
+      {item.venue_image && (
+        <img src={item.venue_image} alt={item.venue_name} className="h-16 w-16 rounded-xl object-cover shrink-0" />
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="text-xs text-[#8E8982]">
+          {new Date(item.timestamp).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+        </div>
+        <div className="text-lg font-bold">{item.venue_name}</div>
+        <div className="text-sm text-[#8E8982]">
           {item.venue_type} · {item.venue_neighborhood}
         </div>
         {item.item_ordered && (
-          <div className="mt-3 font-serif italic text-[#F4E8DA]/85">
-            {`"${item.item_ordered}"`}{" "}
-            {item.would_return === true && (
-              <span className="overline-accent ml-2">Would return</span>
-            )}
+          <div className="mt-1 text-sm text-[#B8B2AA]">
+            &ldquo;{item.item_ordered}&rdquo;
+            {item.would_return === true && <span className="ml-2 text-xs font-bold text-[#F4764F]">Would return</span>}
           </div>
         )}
       </div>
@@ -135,6 +160,7 @@ export default function Profile() {
   const [history, setHistory] = useState([]);
   const [correspondence, setCorrespondence] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [coverImage, setCoverImage] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -149,7 +175,8 @@ export default function Profile() {
       setCorrespondence(c.data);
       setBookings(b.data);
     }
-    load();
+    load().catch(() => {}); // 401s are handled globally (redirect to login)
+    api.get("/venues").then(({ data }) => setCoverImage(data?.[0]?.image_url || null)).catch(() => {});
   }, []);
 
   const cancelBooking = async (id) => {
@@ -164,120 +191,151 @@ export default function Profile() {
   };
 
   if (!wallet || !user) {
-    return <div className="mx-auto max-w-3xl px-5 py-16 overline text-center">Loading…</div>;
+    return <div className="mx-auto max-w-3xl px-5 py-16 text-sm text-[#8E8982] text-center">Loading…</div>;
   }
 
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const streak = new Set(
+    history.filter((h) => new Date(h.timestamp).getTime() >= weekAgo).map((h) => new Date(h.timestamp).toDateString()),
+  ).size;
+
   return (
-    <div className="mx-auto max-w-3xl px-5 sm:px-8 py-8 sm:py-14" data-testid="profile-page">
-      <div className="flex items-start justify-between gap-4 animate-fade-up">
-        <div>
-          <div className="overline">Member profile</div>
-          <h1 className="font-serif-display text-4xl sm:text-5xl mt-2">{user.name}</h1>
-          <div className="mt-2 overline">{user.email}</div>
-        </div>
-        <TierBadge tier={user.tier} testId="profile-tier-badge" />
+    <div className="mx-auto max-w-[1100px] px-4 sm:px-6 pt-2 pb-10 space-y-4" data-testid="profile-page">
+      <div>
+        <div className="text-xs font-semibold tracking-[0.2em] uppercase text-[#8E8982]">Member profile</div>
+        <h1 className="mt-1 text-4xl sm:text-5xl font-extrabold tracking-[-0.03em]">{user.name}</h1>
       </div>
 
-      <div className="mt-10 grid grid-cols-3 gap-6 sm:gap-10 animate-fade-up delay-100">
-        <div>
-          <div className="overline mb-2">Member since</div>
-          <div className="font-serif text-xl">
-            {new Date(user.member_since).toLocaleDateString(undefined, {
-              month: "short",
-              year: "numeric",
-            })}
+      {/* Identity + stats */}
+      <section className={card}>
+        <div className="flex items-center gap-5 flex-wrap">
+          <span className="grid h-[104px] w-[104px] shrink-0 place-items-center rounded-full bg-[#4A2A20]">
+            <User strokeWidth={1.4} className="h-12 w-12 text-[#F4764F]" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="text-3xl font-extrabold tracking-tight">{user.name}</div>
+            <div className="mt-1 font-semibold text-[#B8B2AA]">{user.email}</div>
           </div>
+          <span
+            data-testid="profile-tier-badge"
+            className="inline-flex items-center gap-2 rounded-full border border-[#F4764F]/60 bg-[#2A1B16] px-5 py-2.5 text-xs font-extrabold tracking-[0.16em] uppercase text-[#F4764F]"
+          >
+            <Crown strokeWidth={2} className="h-4 w-4" />
+            {user.tier}
+          </span>
         </div>
-        <div>
-          <div className="overline mb-2">Visits</div>
-          <div className="font-serif text-xl">{wallet.visits}</div>
+        <div className="mt-6 pt-5 border-t border-white/[0.08] grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0">
+          <Stat
+            first
+            icon={CalendarDays}
+            label="Member since"
+            value={new Date(user.member_since).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+          />
+          <Stat icon={BarChart3} label="Visits" value={wallet.visits} />
+          <Stat icon={Star} label="Lifetime" value={wallet.lifetime_points.toLocaleString()} />
         </div>
-        <div>
-          <div className="overline mb-2">Lifetime</div>
-          <div className="font-serif text-xl">{wallet.lifetime_points.toLocaleString()}</div>
-        </div>
-      </div>
+      </section>
 
-      {(() => {
-        const now = Date.now();
-        const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
-        const dates = new Set(
-          history
-            .filter((h) => new Date(h.timestamp).getTime() >= sevenDaysAgo)
-            .map((h) => new Date(h.timestamp).toDateString()),
-        );
-        const streak = dates.size;
-        if (streak === 0) return null;
-        return (
-          <div className="mt-10 border border-[#C2A36B]/30 bg-[#2E1220] p-5 sm:p-6 flex items-center justify-between gap-6 animate-fade-up delay-200">
-            <div>
-              <div className="overline-accent mb-1">A streak</div>
-              <div className="font-serif-display text-2xl">
-                {streak} {streak === 1 ? "night" : "nights"} this week.
-              </div>
-              <div className="text-sm text-[#B39586] font-light mt-1">
-                {streak >= 4
-                  ? "The room knows you well."
-                  : streak >= 2
-                    ? "The night has a rhythm now."
-                    : "A quiet beginning."}
-              </div>
-            </div>
-            <div className="font-serif-display text-6xl text-[#C2A36B] tabular-nums">{streak}</div>
-          </div>
-        );
-      })()}
-
-      <div className="mt-14 animate-fade-up delay-200">
+      {/* Journey */}
+      <section className={card}>
         <TierJourney
           current={wallet.tier}
           next={wallet.next_tier}
           pointsToNext={wallet.points_to_next}
           progressPercent={wallet.progress_percent}
         />
+      </section>
+
+      {streak > 0 && (
+        <section className={cn(card, "flex items-center justify-between gap-6")}>
+          <div>
+            <div className="text-xs font-extrabold tracking-[0.16em] uppercase text-[#F4764F]">A streak</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              {streak} {streak === 1 ? "night" : "nights"} this week.
+            </div>
+            <div className={sub}>
+              {streak >= 4 ? "The room knows you well." : streak >= 2 ? "The night has a rhythm now." : "A quiet beginning."}
+            </div>
+          </div>
+          <div className="text-6xl font-extrabold text-[#F4764F] tabular-nums">{streak}</div>
+        </section>
+      )}
+
+      {/* Story + discover */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <section className={card}>
+          <h2 className={sectionTitle}>Your TABLE story</h2>
+          <p className={sub}>Rooms you have kept company with.</p>
+          {history.length === 0 ? (
+            <div className="mt-6 flex flex-col items-center text-center py-4">
+              <IconCircle icon={CalendarDays} className="h-20 w-20 bg-[#3D2118]" />
+              <div className="mt-4 font-bold">Your restaurant visits will appear here.</div>
+              <p className="mt-1 max-w-[260px] text-sm text-[#8E8982]">
+                Start dining, exploring and creating your story with TABLE.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4">
+              {history.map((h) => (
+                <TimelineEntry key={h.id} item={h} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="relative overflow-hidden rounded-2xl bg-[#1A1917] border border-white/[0.04] p-6 sm:p-7 min-h-[270px] flex flex-col">
+          {coverImage && (
+            <>
+              <img src={coverImage} alt="" className="absolute right-0 top-0 h-3/5 w-3/5 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1A1917] via-[#1A1917]/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1917] via-transparent to-transparent" />
+            </>
+          )}
+          <div className="relative">
+            <h2 className={sectionTitle}>Discover your next table</h2>
+            <p className="mt-1 max-w-[240px] text-sm text-[#B8B2AA]">
+              Explore curated dining experiences and find your next favourite room.
+            </p>
+          </div>
+          <Link
+            to="/discover"
+            className="relative mt-auto flex items-center justify-between rounded-full bg-[#F4764F] px-5 py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors"
+          >
+            <span className="flex items-center gap-3">
+              <Compass strokeWidth={1.8} className="h-5 w-5" />
+              Explore restaurants
+            </span>
+            <ArrowRight className="h-5 w-5" />
+          </Link>
+        </section>
       </div>
 
       {(user.role === "staff" || user.role === "admin") && (
-        <div className="mt-14 animate-fade-up">
-          <div className="overline mb-3">Staff access</div>
-          <Link to="/staff" className="btn-ghost inline-block" data-testid="profile-staff-link">
+        <section className={card}>
+          <h2 className={sectionTitle}>Staff access</h2>
+          <Link
+            to="/staff"
+            className="mt-4 inline-block rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold hover:border-[#F4764F]"
+            data-testid="profile-staff-link"
+          >
             Open Staff Dashboard
           </Link>
-        </div>
+        </section>
       )}
 
-      <div className="mt-14 animate-fade-up">
-        <div className="overline mb-2">A curated timeline</div>
-        <p className="text-[#B39586] font-light">Rooms you have kept company with.</p>
-        <div className="mt-6">
-          {history.length === 0 ? (
-            <div className="text-[#B39586] font-light py-8">
-              Your history will grow with each table you take.
-            </div>
-          ) : (
-            history.map((h, i) => <TimelineEntry key={h.id} item={h} index={i} />)
-          )}
-        </div>
-      </div>
-
       {bookings.length > 0 && (
-        <div className="mt-14 animate-fade-up" data-testid="reservations-section">
-          <div className="overline mb-2">Your reservations</div>
-          <p className="text-[#B39586] font-light">Tables held in your name.</p>
-          <div className="mt-6 space-y-4">
+        <section className={card} data-testid="reservations-section">
+          <h2 className={sectionTitle}>Your reservations</h2>
+          <p className={sub}>Tables held in your name.</p>
+          <div className="mt-5 space-y-3">
             {bookings.map((b) => {
               const cancellable = ["pending", "confirmed", "awaiting_payment"].includes(b.status);
               return (
-                <div
-                  key={b.id}
-                  className="p-5 border border-[#4E1E32] bg-[#2E1220]"
-                  data-testid={`reservation-${b.id}`}
-                >
-                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                <div key={b.id} className="rounded-xl bg-[#232120] p-5" data-testid={`reservation-${b.id}`}>
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div>
-                      <div className="overline">Reservation</div>
-                      <div className="font-serif-display text-xl mt-1">{b.venue_name}</div>
-                      <div className="overline mt-1">
+                      <div className="text-lg font-bold">{b.venue_name}</div>
+                      <div className="text-sm text-[#8E8982]">
                         {new Date(b.date + "T00:00:00").toLocaleDateString(undefined, {
                           weekday: "short",
                           month: "short",
@@ -289,99 +347,83 @@ export default function Profile() {
                         {b.party_size}
                       </div>
                     </div>
-                    <div className={cn("text-xs tracking-widest uppercase", BOOKING_STATUS_COLOR[b.status])}>
+                    <div className={cn("text-xs font-bold tracking-widest uppercase", BOOKING_STATUS_COLOR[b.status])}>
                       {BOOKING_STATUS_LABEL[b.status]}
                     </div>
                   </div>
-                  <div className="mt-4 flex items-baseline gap-4 flex-wrap">
-                    <div className="overline">Code</div>
-                    <div
-                      className="font-mono tracking-[0.28em] text-[#C2A36B]"
+                  <div className="mt-3 flex items-baseline gap-3 flex-wrap">
+                    <span className="text-xs text-[#8E8982]">Code</span>
+                    <span
+                      className="font-mono tracking-[0.28em] text-[#F4764F]"
                       data-testid={`reservation-code-${b.id}`}
                     >
                       {b.code}
-                    </div>
+                    </span>
                   </div>
                   {b.payment_status === "paid" && (
-                    <div className="mt-2 overline text-[#B39586]">
+                    <div className="mt-2 text-xs text-[#8E8982]">
                       ₹{b.deposit_amount} deposit paid · adjusted against your bill
                     </div>
                   )}
                   {b.payment_status === "refunded" && (
-                    <div className="mt-2 overline text-[#7A9B7A]">
-                      ₹{b.deposit_amount} deposit refunded
-                    </div>
+                    <div className="mt-2 text-xs text-[#7DBE8A]">₹{b.deposit_amount} deposit refunded</div>
                   )}
-                  {b.note && (
-                    <p className="mt-3 font-serif italic text-[#F4E8DA]/80 text-sm">
-                      {`"${b.note}"`}
-                    </p>
-                  )}
+                  {b.note && <p className="mt-3 text-sm italic text-[#B8B2AA]">&ldquo;{b.note}&rdquo;</p>}
                   {b.staff_reply && (
-                    <div className="mt-4 pt-4 border-t border-white/[0.05]">
-                      <div className="overline-accent mb-1">The room replied</div>
-                      <p className="text-sm text-[#F4E8DA]/85 font-light">{b.staff_reply}</p>
+                    <div className="mt-4 pt-4 border-t border-white/[0.08]">
+                      <div className="mb-1 text-xs font-bold text-[#F4764F]">The room replied</div>
+                      <p className="text-sm text-[#B8B2AA]">{b.staff_reply}</p>
                     </div>
                   )}
                   {cancellable && (
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() => cancelBooking(b.id)}
-                        data-testid={`reservation-cancel-${b.id}`}
-                        className="overline text-[#B39586] hover:text-[#C08B70] transition-colors duration-300"
-                      >
-                        Release the table
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => cancelBooking(b.id)}
+                      data-testid={`reservation-cancel-${b.id}`}
+                      className="mt-4 text-sm font-semibold text-[#8E8982] hover:text-[#E8A33D] transition-colors"
+                    >
+                      Release the table
+                    </button>
                   )}
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {correspondence.length > 0 && (
-        <div className="mt-14 animate-fade-up">
-          <div className="overline mb-2">Your correspondence</div>
-          <p className="text-[#B39586] font-light">Notes sent to the rooms.</p>
-          <div className="mt-6 space-y-4">
+        <section className={card}>
+          <h2 className={sectionTitle}>Your correspondence</h2>
+          <p className={sub}>Notes sent to the rooms.</p>
+          <div className="mt-5 space-y-3">
             {correspondence.map((c) => (
-              <div
-                key={c.id}
-                className="p-5 border border-[#4E1E32] bg-[#2E1220]"
-                data-testid={`correspondence-${c.id}`}
-              >
-                <div className="flex items-baseline justify-between gap-3">
+              <div key={c.id} className="rounded-xl bg-[#232120] p-5" data-testid={`correspondence-${c.id}`}>
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="overline">{CONCIERGE_TYPE_LABEL[c.request_type] || "Note"}</div>
-                    <div className="font-serif-display text-xl mt-1">{c.venue_name}</div>
+                    <div className="text-xs text-[#8E8982]">{CONCIERGE_TYPE_LABEL[c.request_type] || "Note"}</div>
+                    <div className="text-lg font-bold">{c.venue_name}</div>
                   </div>
                   <div
                     className={cn(
-                      "text-xs tracking-widest uppercase",
-                      c.status === "pending" && "text-[#B39586]",
-                      c.status === "acknowledged" && "text-[#C2A36B]",
-                      c.status === "declined" && "text-[#C08B70]",
-                      c.status === "fulfilled" && "text-[#7A9B7A]",
+                      "text-xs font-bold tracking-widest uppercase",
+                      c.status === "pending" && "text-[#B8B2AA]",
+                      c.status === "acknowledged" && "text-[#F4764F]",
+                      c.status === "declined" && "text-[#E8A33D]",
+                      c.status === "fulfilled" && "text-[#7DBE8A]",
                     )}
                   >
                     {CONCIERGE_STATUS_LABEL[c.status]}
                   </div>
                 </div>
-                <p className="mt-3 font-serif italic text-[#F4E8DA]/85 leading-relaxed">
-                  {`"${c.message}"`}
-                </p>
+                <p className="mt-3 text-sm italic text-[#B8B2AA] leading-relaxed">&ldquo;{c.message}&rdquo;</p>
                 {c.response && (
-                  <div className="mt-4 pt-4 border-t border-white/[0.05]">
-                    <div className="overline-accent mb-1">The room replied</div>
-                    <p className="text-sm text-[#F4E8DA]/85 font-light leading-relaxed">
-                      {c.response}
-                    </p>
+                  <div className="mt-4 pt-4 border-t border-white/[0.08]">
+                    <div className="mb-1 text-xs font-bold text-[#F4764F]">The room replied</div>
+                    <p className="text-sm text-[#B8B2AA] leading-relaxed">{c.response}</p>
                   </div>
                 )}
-                <div className="overline mt-4">
+                <div className="mt-3 text-xs text-[#8E8982]">
                   {new Date(c.created_at).toLocaleString(undefined, {
                     month: "short",
                     day: "numeric",
@@ -392,7 +434,7 @@ export default function Profile() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

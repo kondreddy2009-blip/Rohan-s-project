@@ -301,6 +301,8 @@ class EventIn(BaseModel):
     date: str  # ISO date
     time: str  # e.g. "21:00"
     tier_required: Optional[Literal["Guest", "Regular", "Insider", "Inner Circle"]] = None
+    capacity: Optional[int] = Field(default=None, ge=1, le=500)
+    image_url: Optional[str] = Field(default=None, max_length=500)
 
 
 class OfferingFeedbackIn(BaseModel):
@@ -347,7 +349,7 @@ class VerifyPaymentIn(BaseModel):
 class LoyaltyRewardIn(BaseModel):
     id: Optional[str] = None
     name: str = Field(min_length=1, max_length=80)
-    description: str = Field(min_length=1, max_length=280)
+    description: str = Field(default="", max_length=280)
     cost: int = Field(ge=1, le=100000)
 
 
@@ -543,6 +545,26 @@ async def list_venues(daypart: Optional[str] = None):
     # Custom sort: featured first, then name
     venues.sort(key=lambda v: (not v.get("featured", False), v["name"]))
     return venues
+
+
+@api.get("/events")
+async def list_events():
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    events = await db.events.find({"date": {"$gte": today}}, {"_id": 0}).to_list(100)
+    events.sort(key=lambda e: (e["date"], e["time"]))
+    events = events[:12]
+    venue_ids = list({e["venue_id"] for e in events})
+    venues = await db.venues.find(
+        {"id": {"$in": venue_ids}}, {"_id": 0, "id": 1, "name": 1, "neighborhood": 1, "image_url": 1}
+    ).to_list(len(venue_ids) or 1)
+    venue_map = {v["id"]: v for v in venues}
+    for e in events:
+        v = venue_map.get(e["venue_id"])
+        if v:
+            e["venue_name"] = v["name"]
+            e["venue_neighborhood"] = v.get("neighborhood")
+            e["venue_image_url"] = e.get("image_url") or v.get("image_url")
+    return events
 
 
 @api.get("/venues/{venue_id}")
@@ -916,6 +938,8 @@ async def create_event(venue_id: str, payload: EventIn, user: dict = Depends(req
         "date": payload.date,
         "time": payload.time,
         "tier_required": payload.tier_required,
+        "capacity": payload.capacity,
+        "image_url": (payload.image_url or "").strip() or None,
         "created_at": _now_iso(),
     }
     await db.events.insert_one(event)
@@ -1409,7 +1433,7 @@ async def update_venue_loyalty_redemption(
     _assert_staff_can_manage(user, venue_id)
     result = await db.venue_redemptions.update_one(
         {"id": redemption_id, "venue_id": venue_id},
-        {"$set": {"redeemed": payload.redeemed}},
+        {"$set": {"redeemed": payload.redeemed, "redeemed_at": _now_iso() if payload.redeemed else None}},
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Redemption not found")
@@ -1587,54 +1611,64 @@ SEED_VENUES = [
     },
 ]
 
+def _seed_event_date(days_ahead: int) -> str:
+    return (datetime.now(timezone.utc) + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
+
+
 SEED_EVENTS = [
     {
         "venue_id": "venue-verre",
         "title": "Natural Wine Table",
         "description": "A guided five-glass flight from the Loire, poured tableside.",
-        "date": "2026-02-27",
+        "date": _seed_event_date(1),
         "time": "20:30",
         "tier_required": None,
+        "capacity": 24,
     },
     {
         "venue_id": "venue-osteria",
         "title": "Pasta Sunday",
         "description": "Six house-made shapes, one long table, all evening.",
-        "date": "2026-03-01",
+        "date": _seed_event_date(5),
         "time": "19:00",
         "tier_required": None,
+        "capacity": 40,
     },
     {
         "venue_id": "venue-ikigai",
         "title": "A Winter Course",
         "description": "A twelve-course omakase built around Hokkaido winter fish.",
-        "date": "2026-03-14",
+        "date": _seed_event_date(12),
         "time": "19:30",
         "tier_required": "Inner Circle",
+        "capacity": 12,
     },
     {
         "venue_id": "venue-salle-privee",
         "title": "The March Tasting",
         "description": "A five-course seasonal menu, silverware only.",
-        "date": "2026-03-08",
+        "date": _seed_event_date(8),
         "time": "20:00",
         "tier_required": "Insider",
+        "capacity": 20,
     },
     {
         "venue_id": "venue-la-petite",
         "title": "Solo Counter Night",
         "description": "Ten seats reserved for solo diners at the chef’s pass.",
-        "date": "2026-02-24",
+        "date": _seed_event_date(3),
         "time": "19:00",
         "tier_required": None,
+        "capacity": 10,
     },
     {
         "venue_id": "venue-chambre",
         "title": "Piano After Dinner",
         "description": "A late-service pianist and off-menu pours until close.",
-        "date": "2026-03-10",
+        "date": _seed_event_date(10),
         "time": "22:00",
         "tier_required": "Inner Circle",
+        "capacity": 16,
     },
 ]
 

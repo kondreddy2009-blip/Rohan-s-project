@@ -9,36 +9,36 @@
    Table — palette + type system
    ------------------------------------------------------------------------- */
 :root {
-  --ritual-bg: #1A0912;
-  --ritual-surface: #2E1220;
-  --ritual-surface-2: #3E1826;
-  --ritual-border: #4E1E32;
-  --ritual-text: #F4E8DA;
-  --ritual-text-muted: #B39586;
-  --ritual-text-faint: #7A5C55;
-  --ritual-accent: #c2a36b;
-  --ritual-accent-hover: #d1b37d;
+  --ritual-bg: #141312;
+  --ritual-surface: #1F1D1B;
+  --ritual-surface-2: #262422;
+  --ritual-border: #3A3733;
+  --ritual-text: #F4F1EC;
+  --ritual-text-muted: #8E8982;
+  --ritual-text-faint: #6B665F;
+  --ritual-accent: #F4764F;
+  --ritual-accent-hover: #F78963;
 
-  /* shadcn dark tokens re-tuned to Table (burgundy) */
-  --background: 339 48% 7%;
-  --foreground: 32 59% 91%;
-  --card: 335 44% 13%;
-  --card-foreground: 32 59% 91%;
-  --popover: 335 44% 13%;
-  --popover-foreground: 32 59% 91%;
-  --primary: 38 42% 59%;
-  --primary-foreground: 339 48% 7%;
-  --secondary: 335 44% 18%;
-  --secondary-foreground: 32 59% 91%;
-  --muted: 335 44% 18%;
-  --muted-foreground: 20 19% 61%;
-  --accent: 38 42% 59%;
-  --accent-foreground: 339 48% 7%;
+  /* shadcn dark tokens re-tuned to Table (grey + orange) */
+  --background: 40 6% 7%;
+  --foreground: 36 27% 94%;
+  --card: 30 7% 12%;
+  --card-foreground: 36 27% 94%;
+  --popover: 30 7% 12%;
+  --popover-foreground: 36 27% 94%;
+  --primary: 14 89% 61%;
+  --primary-foreground: 40 6% 7%;
+  --secondary: 30 6% 14%;
+  --secondary-foreground: 36 27% 94%;
+  --muted: 30 6% 14%;
+  --muted-foreground: 38 5% 54%;
+  --accent: 14 89% 61%;
+  --accent-foreground: 40 6% 7%;
   --destructive: 0 62% 42%;
-  --destructive-foreground: 32 59% 91%;
-  --border: 335 44% 21%;
-  --input: 335 44% 18%;
-  --ring: 38 42% 59%;
+  --destructive-foreground: 36 27% 94%;
+  --border: 30 5% 21%;
+  --input: 30 6% 14%;
+  --ring: 14 89% 61%;
   --radius: 0.125rem;
 }
 
@@ -79,30 +79,31 @@ body::after {
    Editorial type helpers
    ------------------------------------------------------------------------- */
 .font-serif-display {
-  font-family: "Cormorant Garamond", "Playfair Display", serif;
-  font-weight: 300;
-  letter-spacing: -0.01em;
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .font-serif {
-  font-family: "Cormorant Garamond", serif;
+  font-family: "Inter", sans-serif;
 }
 
 .font-sans {
-  font-family: "Manrope", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .overline {
-  font-family: "Manrope", sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  text-decoration: none; /* neutralise Tailwind's .overline utility */
   color: var(--ritual-text-muted);
 }
 
 .overline-accent {
-  font-family: "Manrope", sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.22em;
@@ -230,7 +231,7 @@ textarea:focus-visible,
   transition: border-color 400ms ease, transform 500ms ease;
 }
 .card-invite:hover {
-  border-color: rgba(194, 163, 107, 0.35);
+  border-color: rgba(244, 118, 79, 0.35);
   transform: translateY(-3px);
 }
 

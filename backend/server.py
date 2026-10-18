@@ -965,6 +965,23 @@ async def venue_redemptions(venue_id: str, user: dict = Depends(require_staff_or
     return items
 
 
+@api.patch("/staff/venues/{venue_id}/redemptions/{redemption_id}")
+async def update_perk_redemption(
+    venue_id: str,
+    redemption_id: str,
+    payload: LoyaltyRedemptionUpdateIn,
+    user: dict = Depends(require_staff_or_admin),
+):
+    _assert_staff_can_manage(user, venue_id)
+    result = await db.redemptions.update_one(
+        {"id": redemption_id, "venue_id": venue_id},
+        {"$set": {"redeemed": payload.redeemed, "redeemed_at": _now_iso() if payload.redeemed else None}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Redemption not found")
+    return {"ok": True, "redeemed": payload.redeemed}
+
+
 # ---------------------------------------------------------------------------
 # Concierge (messaging) endpoints
 # ---------------------------------------------------------------------------

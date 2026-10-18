@@ -1281,13 +1281,14 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
   );
 }
 
-function LoyaltyRedemptionRow({ redemption, onToggled }) {
+function LoyaltyRedemptionRow({ redemption, onToggled, kind = "loyalty" }) {
   const [busy, setBusy] = useState(false);
 
   const toggle = async () => {
     setBusy(true);
     try {
-      await api.patch(`/staff/venues/${redemption.venue_id}/loyalty/redemptions/${redemption.id}`, {
+      const base = kind === "perk" ? "redemptions" : "loyalty/redemptions";
+      await api.patch(`/staff/venues/${redemption.venue_id}/${base}/${redemption.id}`, {
         redeemed: !redemption.redeemed,
       });
       onToggled?.();
@@ -1304,8 +1305,11 @@ function LoyaltyRedemptionRow({ redemption, onToggled }) {
       data-testid={`loyalty-redemption-${redemption.id}`}
     >
       <div className="min-w-0">
-        <div className="font-serif-display text-xl">{redemption.reward_name}</div>
-        <div className="overline mt-1">{redemption.member_name}</div>
+        <div className="font-serif-display text-xl">{redemption.reward_name || redemption.perk_name}</div>
+        <div className="overline mt-1">
+          {redemption.member_name}
+          {redemption.member_tier ? ` · ${redemption.member_tier}` : ""}
+        </div>
         <div className="text-xs text-[color:var(--st-faint)] mt-1">
           {new Date(redemption.timestamp).toLocaleString()}
         </div>
@@ -1464,23 +1468,7 @@ function RedemptionsTab({ venue, perkRedemptions, loyaltyRedemptions, onChanged,
             r.kind === "loyalty" ? (
               <LoyaltyRedemptionRow key={r.id} redemption={r} onToggled={onChanged} />
             ) : (
-              <div
-                key={r.id}
-                className="flex items-center justify-between gap-4 p-6 rounded-2xl border border-[color:var(--st-border)] bg-[color:var(--st-card)]"
-                data-testid={`staff-redemption-${r.id}`}
-              >
-                <div className="min-w-0">
-                  <div className="font-serif-display text-xl">{r.title}</div>
-                  <div className="overline mt-1">
-                    {r.member_name} · {r.member_tier}
-                  </div>
-                  <div className="text-xs text-[color:var(--st-faint)] mt-1">{new Date(r.timestamp).toLocaleString()}</div>
-                </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="font-mono tracking-widest text-[color:var(--st-gold)] text-sm">{r.code}</div>
-                  <span className="text-xs tracking-widest uppercase text-[color:var(--st-muted)]">{r.redeemed ? "Redeemed" : "Pending"}</span>
-                </div>
-              </div>
+              <LoyaltyRedemptionRow key={r.id} redemption={r} onToggled={onChanged} kind="perk" />
             ),
           )}
         </div>

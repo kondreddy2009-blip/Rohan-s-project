@@ -6,12 +6,12 @@ export function TierBadge({ tier, className, testId }) {
     <span
       data-testid={testId}
       className={cn(
-        "inline-flex items-center gap-1.5 border border-[#C2A36B]/40 px-2.5 py-1",
-        "overline text-[#C2A36B]",
+        "inline-flex items-center gap-1.5 border border-[#F4764F]/40 px-2.5 py-1",
+        "overline text-[#F4764F]",
         className,
       )}
     >
-      <span className="h-1 w-1 bg-[#C2A36B]" />
+      <span className="h-1 w-1 bg-[#F4764F]" />
       {tier}
     </span>
   );

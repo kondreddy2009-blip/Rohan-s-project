@@ -94,7 +94,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
       name: "Table",
       description: `Reservation deposit — ${venue.name}`,
       prefill: { name: user?.name, email: user?.email },
-      theme: { color: "#C2A36B" },
+      theme: { color: "#F4764F" },
       handler: async (response) => {
         try {
           const { data } = await api.post(`/bookings/${booking.id}/verify-payment`, {
@@ -150,19 +150,19 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#1A0912]/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/85 backdrop-blur-sm"
       onClick={onClose}
       data-testid="booking-modal"
     >
       <div
-        className="relative w-full sm:max-w-lg bg-[#2E1220] border border-[#4E1E32] p-8 sm:p-10 max-h-[92vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg rounded-2xl bg-[#1F1D1B] border border-white/[0.08] p-8 sm:p-10 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           data-testid="booking-close"
           aria-label="Close"
-          className="absolute top-4 right-4 text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-300"
+          className="absolute top-4 right-4 text-[#8E8982] hover:text-[#F4F1EC] transition-colors duration-300"
         >
           <X strokeWidth={1.2} className="h-5 w-5" />
         </button>
@@ -176,17 +176,17 @@ export function BookingModal({ venue, onClose, onBooked }) {
             <h2 className="font-serif-display text-3xl mt-3 leading-tight">
               {confirmed.venue_name} is expecting you.
             </h2>
-            <div className="mt-6 p-6 border border-[#C2A36B]/30 bg-[#1A0912]">
+            <div className="mt-6 p-6 border border-[#F4764F]/30 bg-[#141312]">
               <div className="overline mb-2">Reservation code</div>
               <div
-                className="font-mono tracking-[0.28em] text-[#C2A36B] text-2xl"
+                className="font-sans tabular-nums tracking-[0.28em] text-[#F4764F] text-2xl"
                 data-testid="booking-code"
               >
                 {confirmed.code}
               </div>
               {confirmed.payment_status === "paid" && (
                 <div
-                  className="mt-4 pt-4 border-t border-white/[0.05] text-sm text-[#B39586] font-light"
+                  className="mt-4 pt-4 border-t border-white/[0.05] text-sm text-[#8E8982] font-light"
                   data-testid="booking-deposit-paid"
                 >
                   ₹{confirmed.deposit_amount} deposit paid — adjusted against your final bill.
@@ -195,7 +195,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
               <div className="mt-5 grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <div className="overline mb-1">Date</div>
-                  <div className="text-[#F4E8DA]/85 font-light">
+                  <div className="text-[#F4F1EC]/85 font-light">
                     {new Date(confirmed.date + "T00:00:00").toLocaleDateString(undefined, {
                       month: "short",
                       day: "numeric",
@@ -204,17 +204,17 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 </div>
                 <div>
                   <div className="overline mb-1">Time</div>
-                  <div className="text-[#F4E8DA]/85 font-light">{confirmed.time}</div>
+                  <div className="text-[#F4F1EC]/85 font-light">{confirmed.time}</div>
                 </div>
                 <div>
                   <div className="overline mb-1">Party</div>
-                  <div className="text-[#F4E8DA]/85 font-light">{confirmed.party_size}</div>
+                  <div className="text-[#F4F1EC]/85 font-light">{confirmed.party_size}</div>
                 </div>
               </div>
             </div>
-            <p className="mt-6 text-sm text-[#B39586] font-light">
+            <p className="mt-6 text-sm text-[#8E8982] font-light">
               Show this code at the host stand — the room will confirm it shortly. You&apos;ll find
-              it under <span className="text-[#C2A36B]">Your reservations</span> in your profile.
+              it under <span className="text-[#F4764F]">Your reservations</span> in your profile.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <button
@@ -233,17 +233,17 @@ export function BookingModal({ venue, onClose, onBooked }) {
             <h2 className="font-serif-display text-3xl mt-2 leading-tight">
               A table at {venue.name}.
             </h2>
-            <p className="text-sm text-[#B39586] font-light mt-2">
+            <p className="text-sm text-[#8E8982] font-light mt-2">
               Hours {venue.hours || "—"}. The room seats each slot in stride.
             </p>
 
             {/* Date picker */}
             <div className="mt-8">
-              <label className="overline block mb-3 inline-flex items-center gap-2">
+              <label className="overline flex mb-3 items-center gap-2">
                 <CalendarDays strokeWidth={1.4} className="h-3 w-3" />
                 Choose a night
               </label>
-              <div className="flex gap-2 overflow-x-auto pb-2" data-testid="booking-dates">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-testid="booking-dates">
                 {dateOptions.map((d) => {
                   const iso = isoDate(d);
                   const active = iso === selectedDate;
@@ -255,20 +255,20 @@ export function BookingModal({ venue, onClose, onBooked }) {
                       data-testid={`booking-date-${iso}`}
                       className={`shrink-0 px-4 py-3 border transition-colors duration-300 min-w-[92px] text-left ${
                         active
-                          ? "border-[#C2A36B] bg-[#1A0912]"
-                          : "border-[#4E1E32] hover:border-[#B39586]"
+                          ? "border-[#F4764F] bg-[#141312]"
+                          : "border-[#3A3733] hover:border-[#8E8982]"
                       }`}
                     >
                       <div
                         className={`text-xs tracking-widest uppercase ${
-                          active ? "text-[#C2A36B]" : "text-[#B39586]"
+                          active ? "text-[#F4764F]" : "text-[#8E8982]"
                         }`}
                       >
                         {labelFor(d, today)}
                       </div>
                       <div
                         className={`font-serif text-lg mt-1 ${
-                          active ? "text-[#F4E8DA]" : "text-[#F4E8DA]/70"
+                          active ? "text-[#F4F1EC]" : "text-[#F4F1EC]/70"
                         }`}
                       >
                         {d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
@@ -281,7 +281,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
             {/* Time slots */}
             <div className="mt-6">
-              <label className="overline block mb-3 inline-flex items-center gap-2">
+              <label className="overline flex mb-3 items-center gap-2">
                 <Clock3 strokeWidth={1.4} className="h-3 w-3" />
                 Pick a time
               </label>
@@ -301,12 +301,12 @@ export function BookingModal({ venue, onClose, onBooked }) {
                         disabled={disabled}
                         onClick={() => setSelectedTime(s.time)}
                         data-testid={`booking-slot-${s.time}`}
-                        className={`px-2 py-2.5 border font-mono text-sm tracking-wider transition-colors duration-200 ${
+                        className={`px-2 py-2.5 border font-sans text-sm tabular-nums tracking-wider transition-colors duration-200 ${
                           active
-                            ? "border-[#C2A36B] text-[#C2A36B] bg-[#1A0912]"
+                            ? "border-[#F4764F] text-[#F4764F] bg-[#141312]"
                             : disabled
-                              ? "border-[#331420] text-[#7A5C55] cursor-not-allowed line-through"
-                              : "border-[#4E1E32] text-[#F4E8DA] hover:border-[#B39586]"
+                              ? "border-[#2A2724] text-[#6B665F] cursor-not-allowed line-through"
+                              : "border-[#3A3733] text-[#F4F1EC] hover:border-[#8E8982]"
                         }`}
                       >
                         {s.time}
@@ -319,22 +319,22 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
             {/* Party size */}
             <div className="mt-6">
-              <label className="overline block mb-3 inline-flex items-center gap-2">
+              <label className="overline flex mb-3 items-center gap-2">
                 <Users strokeWidth={1.4} className="h-3 w-3" />
                 Party of
               </label>
-              <div className="inline-flex items-center border border-[#4E1E32]">
+              <div className="inline-flex items-center border border-[#3A3733]">
                 <button
                   type="button"
                   onClick={() => setPartySize((p) => Math.max(1, p - 1))}
                   data-testid="booking-party-decrement"
-                  className="px-3 py-3 text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-200"
+                  className="px-3 py-3 text-[#8E8982] hover:text-[#F4F1EC] transition-colors duration-200"
                   aria-label="Decrease party size"
                 >
                   <Minus strokeWidth={1.4} className="h-4 w-4" />
                 </button>
                 <div
-                  className="px-6 font-serif-display text-2xl text-[#F4E8DA] tabular-nums min-w-[3.5rem] text-center"
+                  className="px-6 font-serif-display text-2xl text-[#F4F1EC] tabular-nums min-w-[3.5rem] text-center"
                   data-testid="booking-party-size"
                 >
                   {partySize}
@@ -343,7 +343,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
                   type="button"
                   onClick={() => setPartySize((p) => Math.min(20, p + 1))}
                   data-testid="booking-party-increment"
-                  className="px-3 py-3 text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-200"
+                  className="px-3 py-3 text-[#8E8982] hover:text-[#F4F1EC] transition-colors duration-200"
                   aria-label="Increase party size"
                 >
                   <Plus strokeWidth={1.4} className="h-4 w-4" />
@@ -361,12 +361,12 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Celebrating a birthday. A quiet corner if possible."
                 data-testid="booking-note-input"
-                className="w-full bg-transparent border border-[#4E1E32] p-3 text-sm text-[#F4E8DA] font-light focus:border-[#C2A36B] outline-none transition-colors duration-300 resize-none placeholder:text-[#7A5C55]"
+                className="w-full bg-transparent border border-[#3A3733] p-3 text-sm text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B665F]"
               />
             </div>
 
             {depositAmount > 0 && (
-              <p className="mt-6 text-sm text-[#B39586] font-light" data-testid="booking-deposit-notice">
+              <p className="mt-6 text-sm text-[#8E8982] font-light" data-testid="booking-deposit-notice">
                 A ₹{depositAmount} deposit holds this table — it&apos;s adjusted against your final bill.
               </p>
             )}
@@ -388,7 +388,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="overline text-[#B39586] hover:text-[#F4E8DA] transition-colors duration-300"
+                className="overline text-[#8E8982] hover:text-[#F4F1EC] transition-colors duration-300"
               >
                 Cancel
               </button>

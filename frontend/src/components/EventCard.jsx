@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
@@ -19,9 +19,17 @@ export function EventCard({ event, userTier, pointsAway }) {
   const userIdx = TIER_ORDER.indexOf(userTier || "Guest");
   const requiredIdx = required ? TIER_ORDER.indexOf(required) : -1;
   const locked = requiredIdx > userIdx;
+  const navigate = useNavigate();
+  const openVenue = () => navigate(`/venues/${event.venue_id}`);
 
   return (
-    <div className="rounded-2xl bg-[#1F1D1B] overflow-hidden" data-testid={`event-card-${event.id}`}>
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={openVenue}
+      onKeyDown={(e) => e.key === "Enter" && openVenue()}
+      className="rounded-2xl bg-[#1F1D1B] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
+      data-testid={`event-card-${event.id}`}>
       <div className="relative aspect-[16/9] overflow-hidden">
         <img
           src={event.venue_image_url}

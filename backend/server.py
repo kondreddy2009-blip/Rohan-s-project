@@ -17,7 +17,11 @@ import requests
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, status, UploadFile, File, Form
+from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
+from io import BytesIO
+from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi.middleware.cors import CORSMiddleware
 from cryptography.fernet import Fernet, InvalidToken
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -444,8 +448,8 @@ def _venue_loyalty_key(member_id: str, venue_id: str) -> str:
 
 
 async def award_venue_points(member_id: str, venue_id: str, venue_name: str, amount: int, description: str) -> dict:
-    """Credit venue-specific loyalty points. These are separate from the
-    cross-venue Table Points balance and can only be redeemed at this venue."""
+    """Credit venue-specific loyalty points. These are separate from the Table Points
+    ledger (also redeemable only at its own venue) and are configured by staff."""
     if amount <= 0:
         account = await db.venue_loyalty.find_one(
             {"member_id": member_id, "venue_id": venue_id}, {"_id": 0}
@@ -760,8 +764,41 @@ async def checkin_feedback(payload: OfferingFeedbackIn, user: dict = Depends(get
 # ---------------------------------------------------------------------------
 # Wallet endpoints
 # ---------------------------------------------------------------------------
+async def venue_point_balances(member_id: str) -> dict:
+    """Spendable Table Points per restaurant, derived from the ledger.
+
+    Every ledger row carries the venue where the points were earned or spent, so a member's balance
+    at one restaurant is the sum of its rows. Points can only be redeemed at the restaurant that issued them.
+    """
+    rows = await db.points_ledger.aggregate([
+        {"$match": {"member_id": member_id, "venue_id": {"$ne": None}}},
+        {"$group": {"_id": "$venue_id", "balance": {"$sum": "$points_delta"}, "venue_name": {"$last": "$venue_name"}}},
+    ]).to_list(500)
+    return {r["_id"]: {"balance": r["balance"], "venue_name": r["venue_name"]} for r in rows}
+
+
 @api.get("/wallet")
 async def get_wallet(user: dict = Depends(get_current_user)):
+    balances = await venue_point_balances(user["id"])
+    spendable = {vid: b for vid, b in balances.items() if b["balance"] > 0}
+    venue_docs = await db.venues.find(
+        {"id": {"$in": list(spendable)}}, {"_id": 0, "id": 1, "name": 1, "image_url": 1, "neighborhood": 1}
+    ).to_list(500)
+    venue_by_id = {v["id"]: v for v in venue_docs}
+    venue_balances = sorted(
+        (
+            {
+                "venue_id": vid,
+                "venue_name": venue_by_id.get(vid, {}).get("name") or b["venue_name"],
+                "image_url": venue_by_id.get(vid, {}).get("image_url"),
+                "neighborhood": venue_by_id.get(vid, {}).get("neighborhood"),
+                "balance": b["balance"],
+            }
+            for vid, b in spendable.items()
+            if vid in venue_by_id  # a restaurant that has left the network can't honour points
+        ),
+        key=lambda x: -x["balance"],
+    )
     ledger = await db.points_ledger.find(
         {"member_id": user["id"]}, {"_id": 0}
     ).sort("timestamp", -1).to_list(200)
@@ -775,6 +812,7 @@ async def get_wallet(user: dict = Depends(get_current_user)):
         "points_to_next": tier_info["points_to_next"],
         "progress_percent": tier_info["progress_percent"],
         "visits": checkins_count,
+        "venues": venue_balances,
         "ledger": ledger,
     }
 
@@ -801,18 +839,30 @@ async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
             detail=f"This perk is reserved for {perk['tier_required']} and above",
         )
 
-    balance = user.get("ritual_points_balance", 0)
-    if balance < perk["cost"]:
-        raise HTTPException(status_code=400, detail="Not enough Table Points")
+    # Points are bound to the restaurant that issued them: only this venue's balance counts.
+    balances = await venue_point_balances(user["id"])
+    venue_balance = max(0, balances.get(venue["id"], {}).get("balance", 0))
+    if venue_balance < perk["cost"]:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"You have {venue_balance} points at {venue['name']}; {perk['name']} costs {perk['cost']}. "
+                "Table Points can only be redeemed at the restaurant where you earned them."
+            ),
+        )
 
     now = _now_iso()
-    new_balance = balance - perk["cost"]
-    redemption_code = "R-" + uuid.uuid4().hex[:8].upper()
-    await db.users.update_one(
-        {"id": user["id"]}, {"$set": {"ritual_points_balance": new_balance}}
+    debit = await db.users.update_one(
+        {"id": user["id"], "ritual_points_balance": {"$gte": perk["cost"]}},
+        {"$inc": {"ritual_points_balance": -perk["cost"]}},
     )
+    if debit.matched_count == 0:
+        raise HTTPException(status_code=400, detail="Not enough Table Points")
+    new_balance = user.get("ritual_points_balance", 0) - perk["cost"]
+    redemption_code = "R-" + uuid.uuid4().hex[:8].upper()
+    ledger_id = str(uuid.uuid4())
     await db.points_ledger.insert_one({
-        "id": str(uuid.uuid4()),
+        "id": ledger_id,
         "member_id": user["id"],
         "venue_id": venue["id"],
         "venue_name": venue["name"],
@@ -821,6 +871,13 @@ async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
         "description": f"{perk['name']} at {venue['name']}",
         "timestamp": now,
     })
+    # Two simultaneous redemptions could both pass the check above; if this venue's balance went
+    # negative the debit we just wrote overspent it, so undo it.
+    after = await venue_point_balances(user["id"])
+    if after.get(venue["id"], {}).get("balance", 0) < 0:
+        await db.points_ledger.delete_one({"id": ledger_id})
+        await db.users.update_one({"id": user["id"]}, {"$inc": {"ritual_points_balance": perk["cost"]}})
+        raise HTTPException(status_code=409, detail="Your points changed while redeeming. Please try again.")
     redemption = {
         "id": str(uuid.uuid4()),
         "code": redemption_code,
@@ -943,6 +1000,117 @@ async def update_profile(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Venue not found")
     return {"ok": True, **updates}
+
+
+# ---------------------------------------------------------------------------
+# Venue photos (food, recipes, restaurant) — stored on local disk, served at /api/uploads
+# ---------------------------------------------------------------------------
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+PHOTO_CATEGORIES = ("food", "recipe", "restaurant")
+PHOTO_MAX_BYTES = 8 * 1024 * 1024
+PHOTO_MAX_PER_VENUE = 60
+# Sniffed from file bytes — never trust the client-supplied content type or filename.
+PHOTO_SIGNATURES = (
+    (b"\xff\xd8\xff", "jpg"),
+    (b"\x89PNG\r\n\x1a\n", "png"),
+    (b"GIF8", "gif"),
+)
+
+
+PHOTO_MAX_EDGE = 1600
+PHOTO_THUMB_EDGE = 480
+Image.MAX_IMAGE_PIXELS = 50_000_000  # reject decompression bombs
+
+
+def _process_photo(data: bytes) -> tuple:
+    """Decode, fix orientation, strip metadata, and return (full, thumb) WebP bytes.
+    Animated GIFs are kept as-is (re-encoding would drop the animation)."""
+    img = Image.open(BytesIO(data))
+    if img.format == "GIF" and getattr(img, "is_animated", False):
+        return data, None
+    img = ImageOps.exif_transpose(img)
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGBA" if "transparency" in img.info else "RGB")
+
+    def encode(edge: int, quality: int) -> bytes:
+        copy = img.copy()
+        copy.thumbnail((edge, edge), Image.LANCZOS)
+        out = BytesIO()
+        copy.save(out, "WEBP", quality=quality, method=4)
+        return out.getvalue()
+
+    return encode(PHOTO_MAX_EDGE, 82), encode(PHOTO_THUMB_EDGE, 75)
+
+
+def _sniff_image_ext(data: bytes) -> Optional[str]:
+    for sig, ext in PHOTO_SIGNATURES:
+        if data.startswith(sig):
+            return ext
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "webp"
+    return None
+
+
+@api.post("/staff/venues/{venue_id}/photos")
+async def upload_venue_photo(
+    venue_id: str,
+    file: UploadFile = File(...),
+    category: str = Form("food"),
+    caption: str = Form(""),
+    user: dict = Depends(require_staff_or_admin),
+):
+    _assert_staff_can_manage(user, venue_id)
+    if category not in PHOTO_CATEGORIES:
+        raise HTTPException(status_code=400, detail="Category must be food, recipe or restaurant")
+    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0, "photos": 1})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    if len(venue.get("photos") or []) >= PHOTO_MAX_PER_VENUE:
+        raise HTTPException(status_code=400, detail=f"Photo limit reached ({PHOTO_MAX_PER_VENUE})")
+    data = await file.read(PHOTO_MAX_BYTES + 1)
+    if len(data) > PHOTO_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Photo must be 8 MB or smaller")
+    ext = _sniff_image_ext(data)
+    if not ext:
+        raise HTTPException(status_code=400, detail="Upload a JPG, PNG, WebP or GIF image")
+    try:
+        full, thumb = await run_in_threadpool(_process_photo, data)
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError, ValueError):
+        raise HTTPException(status_code=400, detail="That image could not be read. Try another file.")
+    photo_id = str(uuid.uuid4())
+    vdir = UPLOAD_DIR / venue_id
+    vdir.mkdir(parents=True, exist_ok=True)
+    if thumb is None:  # animated GIF kept as uploaded
+        full_name, thumb_name = f"{photo_id}.gif", None
+    else:
+        full_name, thumb_name = f"{photo_id}.webp", f"{photo_id}_t.webp"
+        (vdir / thumb_name).write_bytes(thumb)
+    (vdir / full_name).write_bytes(full)
+    photo = {
+        "id": photo_id,
+        "url": f"/api/uploads/{venue_id}/{full_name}",
+        "thumb_url": f"/api/uploads/{venue_id}/{thumb_name}" if thumb_name else f"/api/uploads/{venue_id}/{full_name}",
+        "category": category,
+        "caption": caption.strip()[:140],
+        "uploaded_at": _now_iso(),
+    }
+    await db.venues.update_one({"id": venue_id}, {"$push": {"photos": photo}})
+    return photo
+
+
+@api.delete("/staff/venues/{venue_id}/photos/{photo_id}")
+async def delete_venue_photo(venue_id: str, photo_id: str, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    venue = await db.venues.find_one({"id": venue_id}, {"_id": 0, "photos": 1})
+    photo = next((p for p in (venue or {}).get("photos") or [] if p["id"] == photo_id), None)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    await db.venues.update_one({"id": venue_id}, {"$pull": {"photos": {"id": photo_id}}})
+    for key in ("url", "thumb_url"):
+        if photo.get(key):
+            (UPLOAD_DIR / venue_id / Path(photo[key]).name).unlink(missing_ok=True)
+    return {"ok": True}
 
 
 @api.patch("/staff/venues/{venue_id}/booking-deposit")
@@ -1670,9 +1838,111 @@ async def update_venue_loyalty_redemption(
 
 
 # ---------------------------------------------------------------------------
+# Reviews — members who have dined at a venue can rate it (one review each)
+# ---------------------------------------------------------------------------
+class ReviewIn(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    text: str = Field(default="", max_length=600)
+
+
+async def optional_user(request: Request) -> Optional[dict]:
+    try:
+        return await get_current_user(request)
+    except HTTPException:
+        return None
+
+
+async def _has_dined(member_id: str, venue_id: str) -> bool:
+    if await db.checkins.find_one({"member_id": member_id, "venue_id": venue_id}, {"_id": 1}):
+        return True
+    seated = await db.bookings.find_one(
+        {"member_id": member_id, "venue_id": venue_id, "status": "seated"}, {"_id": 1}
+    )
+    return seated is not None
+
+
+async def _rating_summary(venue_id: str) -> dict:
+    rows = await db.reviews.find({"venue_id": venue_id}, {"_id": 0, "rating": 1}).to_list(5000)
+    count = len(rows)
+    avg = round(sum(r["rating"] for r in rows) / count, 1) if count else None
+    distribution = {str(n): sum(1 for r in rows if r["rating"] == n) for n in range(1, 6)}
+    return {"avg": avg, "count": count, "distribution": distribution}
+
+
+async def _refresh_venue_rating(venue_id: str) -> dict:
+    """Recompute and denormalize onto the venue doc so list endpoints/cards need no join."""
+    summary = await _rating_summary(venue_id)
+    await db.venues.update_one(
+        {"id": venue_id}, {"$set": {"rating_avg": summary["avg"], "rating_count": summary["count"]}}
+    )
+    return summary
+
+
+@api.get("/venues/{venue_id}/reviews")
+async def list_venue_reviews(venue_id: str, user: Optional[dict] = Depends(optional_user)):
+    venue = await resolve_venue(venue_id, {"_id": 0, "id": 1})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    venue_id = venue["id"]
+    reviews = await db.reviews.find({"venue_id": venue_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    summary = await _rating_summary(venue_id)
+    mine = None
+    can_review = False
+    if user and user.get("role") in ("member", "admin"):
+        mine = next((r for r in reviews if r["member_id"] == user["id"]), None)
+        can_review = mine is not None or await _has_dined(user["id"], venue_id)
+    for r in reviews:
+        r["is_mine"] = bool(user and r["member_id"] == user["id"])
+        r.pop("member_id", None)
+    if mine:
+        mine = {k: v for k, v in mine.items() if k != "member_id"}
+    return {"summary": summary, "reviews": reviews, "mine": mine, "can_review": can_review}
+
+
+@api.post("/venues/{venue_id}/reviews")
+async def upsert_venue_review(venue_id: str, payload: ReviewIn, user: dict = Depends(get_current_user)):
+    if user.get("role") not in ("member", "admin"):
+        raise HTTPException(status_code=403, detail="Only members can leave reviews")
+    venue = await resolve_venue(venue_id, {"_id": 0, "id": 1})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    venue_id = venue["id"]
+    if not await _has_dined(user["id"], venue_id):
+        raise HTTPException(status_code=403, detail="Check in or dine here before leaving a review")
+    now = _now_iso()
+    existing = await db.reviews.find_one({"venue_id": venue_id, "member_id": user["id"]}, {"_id": 0})
+    review = {
+        "id": existing["id"] if existing else str(uuid.uuid4()),
+        "venue_id": venue_id,
+        "member_id": user["id"],
+        "member_name": user.get("name") or "Member",
+        "rating": payload.rating,
+        "text": payload.text.strip(),
+        "created_at": existing["created_at"] if existing else now,
+        "updated_at": now,
+    }
+    await db.reviews.replace_one({"venue_id": venue_id, "member_id": user["id"]}, review, upsert=True)
+    summary = await _refresh_venue_rating(venue_id)
+    review.pop("member_id")
+    return {"review": {**review, "is_mine": True}, "summary": summary}
+
+
+@api.delete("/venues/{venue_id}/reviews/mine")
+async def delete_my_review(venue_id: str, user: dict = Depends(get_current_user)):
+    venue = await resolve_venue(venue_id, {"_id": 0, "id": 1})
+    if not venue:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    result = await db.reviews.delete_one({"venue_id": venue["id"], "member_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No review to delete")
+    return {"ok": True, "summary": await _refresh_venue_rating(venue["id"])}
+
+
+# ---------------------------------------------------------------------------
 # Include router + CORS
 # ---------------------------------------------------------------------------
 app.include_router(api)
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 _cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(
@@ -1948,6 +2218,34 @@ SEED_USERS = [
 ]
 
 
+async def _reconcile_demo_ledger(member_id: str, target_balance: int) -> None:
+    """Idempotently make a demo member's ledger consistent with their seeded balance (see seed_database)."""
+    names = {v["id"]: v["name"] for v in SEED_VENUES}
+
+    async def adjust(venue_id: str, delta: int):
+        await db.points_ledger.insert_one({
+            "id": str(uuid.uuid4()),
+            "member_id": member_id,
+            "venue_id": venue_id,
+            "venue_name": names.get(venue_id, venue_id),
+            "points_delta": delta,
+            "type": "earn",
+            "description": f"Opening balance at {names.get(venue_id, venue_id)}",
+            "timestamp": _now_iso(),
+        })
+
+    balances = await venue_point_balances(member_id)
+    for vid, b in balances.items():
+        if b["balance"] < 0 and vid in names:
+            await adjust(vid, -b["balance"])
+    total = sum(b["balance"] for b in (await venue_point_balances(member_id)).values())
+    if total < target_balance:
+        await adjust("venue-verre", target_balance - total)
+        total = target_balance
+    # Points earned since the last restart live in the ledger; keep the stored balance in step with it.
+    await db.users.update_one({"id": member_id}, {"$set": {"ritual_points_balance": total}})
+
+
 async def seed_database():
     # Venues — clear legacy entries that are no longer in SEED_VENUES (e.g. Nocturne pre-pivot)
     seed_ids = [v["id"] for v in SEED_VENUES]
@@ -2044,10 +2342,19 @@ async def seed_database():
                     "timestamp": ts,
                 })
 
+    # Demo accounts get a fixed stored balance on every start; make their ledger add up to it so
+    # per-restaurant balances (which come from the ledger) match, and no venue sits below zero.
+    for u in SEED_USERS:
+        if u.get("role") in ("member", "admin"):
+            member = await db.users.find_one({"email": u["email"].lower()}, {"_id": 0, "id": 1})
+            if member:
+                await _reconcile_demo_ledger(member["id"], u.get("ritual_points_balance", 0))
+
     # Indexes
     await db.users.create_index("email", unique=True)
     await db.venues.create_index("id", unique=True)
     await db.venue_payouts.create_index("venue_id", unique=True)
+    await db.reviews.create_index([("venue_id", 1), ("member_id", 1)], unique=True)
     await db.events.create_index("venue_id")
     await db.checkins.create_index([("member_id", 1), ("timestamp", -1)])
     await db.points_ledger.create_index([("member_id", 1), ("timestamp", -1)])

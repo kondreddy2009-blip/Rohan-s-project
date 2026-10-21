@@ -166,6 +166,18 @@ class TestCheckInAndRedeem:
         }, timeout=10)
         assert r.status_code == 200
 
+    def test_points_only_redeemable_at_earning_restaurant(self):
+        s = _session(ALEX)
+        wallet = s.get(f"{API}/wallet", timeout=10).json()
+        held = {v["venue_id"]: v["balance"] for v in wallet["venues"]}
+        assert held, "alex should hold points at at least one restaurant"
+        assert sum(held.values()) <= wallet["balance"]
+        # A restaurant where Alex has earned nothing can't honour his points, however large his total is.
+        other = next(v for v in ("venue-chambre", "venue-osteria", "venue-ikigai") if v not in held)
+        r = s.post(f"{API}/wallet/redeem", json={"venue_id": other, "perk_code": "priority"}, timeout=10)
+        assert r.status_code == 400, r.text
+        assert "where you earned" in r.json()["detail"]
+
     def test_perks_endpoint(self):
         r = requests.get(f"{API}/perks", timeout=10)
         assert r.status_code == 200

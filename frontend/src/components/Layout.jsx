@@ -1,7 +1,8 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Compass, Wallet, User, LayoutDashboard, LogOut, ScanLine, ChevronLeft } from "lucide-react";
+import { Compass, Wallet, User, LayoutDashboard, LogOut, ScanLine, ChevronLeft, CalendarCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { BrandLockup } from "@/components/BrandLockup";
+import { Footer } from "@/components/Footer";
 import { cn } from "@/lib/utils";
 
 function NavItem({ to, icon: Icon, label, testId, staff }) {
@@ -75,6 +76,16 @@ export function Layout({ children }) {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+            {user === false && (
+              <Link
+                to="/login"
+                state={{ from: location }}
+                data-testid="header-signin"
+                className="rounded-full bg-[#F4764F] px-4 py-2 text-sm font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors"
+              >
+                Sign in
+              </Link>
+            )}
             {user && (
               <button
                 onClick={handleLogout}
@@ -90,6 +101,7 @@ export function Layout({ children }) {
       </header>
 
       <main>{children}</main>
+      {!isStaffContext && <Footer />}
 
       {/* Bottom nav for members */}
       {user && !isStaffContext && (
@@ -97,8 +109,9 @@ export function Layout({ children }) {
           className="fixed bottom-0 inset-x-0 z-40 border-t border-white/[0.06] backdrop-blur-xl bg-[#141312]/95"
           data-testid="bottom-nav"
         >
-          <div className="mx-auto max-w-6xl grid grid-cols-4">
+          <div className="mx-auto max-w-6xl grid grid-cols-5">
             <NavItem to="/discover" icon={Compass} label="Discover" testId="nav-discover" />
+            <NavItem to="/bookings" icon={CalendarCheck} label="Bookings" testId="nav-bookings" />
             <NavItem to="/scan" icon={ScanLine} label="Scan" testId="nav-scan" />
             <NavItem to="/wallet" icon={Wallet} label="Wallet" testId="nav-wallet" />
             <NavItem to="/profile" icon={User} label="Profile" testId="nav-profile" />

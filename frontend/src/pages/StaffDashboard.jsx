@@ -3,9 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Minus, Plus, X, Trash2, LogOut, RefreshCw, LayoutGrid, Store, CalendarDays, Mail, Gift, Star,
-  QrCode, ChartNoAxesColumn, Users, Clock, Database, UtensilsCrossed, Armchair, Image as ImageIcon, Lock, MapPin, User, Info, MessageCircle, Sparkles, Search, Filter, ChevronRight, ChevronDown, CircleCheck, CreditCard, CalendarClock, Sun, Moon, Landmark, Pencil,
+  QrCode, ChartNoAxesColumn, Users, Clock, Database, UtensilsCrossed, Armchair, Image as ImageIcon, Lock, MapPin, User, Info, MessageCircle, Sparkles, Search, Filter, ChevronRight, ChevronDown, CircleCheck, CreditCard, CalendarClock, Sun, Moon, Landmark, Pencil, Upload,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl, formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { BrandLockup } from "@/components/BrandLockup";
 import { StatusIndicator, queueLabel } from "@/components/StatusIndicator";
@@ -708,6 +708,155 @@ function VenueProfileForm({ venue, onSaved }) {
           {busy ? "Saving" : "Save changes"}
         </button>
       </form>
+    </div>
+  );
+}
+
+const PHOTO_CATEGORIES = [
+  { key: "food", label: "Food item" },
+  { key: "recipe", label: "Recipe" },
+  { key: "restaurant", label: "Restaurant" },
+];
+
+function VenuePhotosPanel({ venue, onSaved }) {
+  const [category, setCategory] = useState("food");
+  const [caption, setCaption] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const fileRef = useRef(null);
+  const photos = venue.photos || [];
+  const shown = filter === "all" ? photos : photos.filter((p) => p.category === filter);
+
+  const upload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+    setBusy(true);
+    let ok = 0;
+    for (const file of files) {
+      const body = new FormData();
+      body.append("file", file);
+      body.append("category", category);
+      body.append("caption", caption);
+      try {
+        await api.post(`/staff/venues/${venue.id}/photos`, body);
+        ok += 1;
+      } catch (err) {
+        toast.error(`${file.name}: ${formatApiError(err.response?.data?.detail)}`);
+      }
+    }
+    setBusy(false);
+    if (ok) {
+      toast.success(ok === 1 ? "Photo uploaded." : `${ok} photos uploaded.`);
+      setCaption("");
+      onSaved?.();
+    }
+  };
+
+  const remove = async (photo) => {
+    try {
+      await api.delete(`/staff/venues/${venue.id}/photos/${photo.id}`);
+      toast.success("Photo removed.");
+      onSaved?.();
+    } catch {
+      toast.error("Could not remove the photo.");
+    }
+  };
+
+  const pill = (active) =>
+    cn(
+      "rounded-full border px-4 py-2 text-xs font-semibold tracking-[0.12em] uppercase transition-colors",
+      active
+        ? "border-[color:var(--st-gold)] text-[color:var(--st-gold)]"
+        : "border-[color:var(--st-border)] text-[color:var(--st-muted)] hover:text-[color:var(--st-text)]"
+    );
+
+  return (
+    <div className="mt-14 max-w-3xl" data-testid="venue-photos-panel">
+      <h3 className="font-serif text-2xl text-[color:var(--st-text)]">Photos</h3>
+      <p className="mt-1 text-sm text-[color:var(--st-muted)]">
+        Upload pictures of your dishes, recipes and the restaurant. JPG, PNG, WebP or GIF, up to 8 MB each.
+      </p>
+
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        {PHOTO_CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => setCategory(c.key)}
+            className={pill(category === c.key)}
+            data-testid={`photo-category-${c.key}`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <input
+          type="text"
+          value={caption}
+          maxLength={140}
+          onChange={(e) => setCaption(e.target.value)}
+          placeholder="Caption (optional) — e.g. Truffle risotto"
+          data-testid="photo-caption-input"
+          className="flex-1 rounded-xl border border-[color:var(--st-border)] bg-[color:var(--st-card)] px-4 py-3.5 text-[15px] text-[color:var(--st-text)] outline-none focus:border-[color:var(--st-gold)] transition-colors placeholder:text-[color:var(--st-faint)]"
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          multiple
+          onChange={upload}
+          className="hidden"
+          data-testid="photo-file-input"
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => fileRef.current?.click()}
+          data-testid="upload-photo-button"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-8 py-3.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+        >
+          <Upload strokeWidth={1.75} className="h-4 w-4" />
+          {busy ? "Uploading" : "Upload photo"}
+        </button>
+      </div>
+
+      {photos.length > 0 && (
+        <div className="mt-8 flex flex-wrap gap-2">
+          {[{ key: "all", label: "All" }, ...PHOTO_CATEGORIES].map((c) => (
+            <button key={c.key} type="button" onClick={() => setFilter(c.key)} className={pill(filter === c.key)}>
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {shown.length > 0 ? (
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3" data-testid="photo-grid">
+          {shown.map((p) => (
+            <figure key={p.id} className="group relative overflow-hidden rounded-xl border border-[color:var(--st-border)]">
+              <img src={assetUrl(p.thumb_url || p.url)} alt={p.caption || p.category} className="aspect-square w-full object-cover" />
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-xs text-white">
+                <span className="uppercase tracking-[0.12em] opacity-80">{p.category}</span>
+                {p.caption && <span className="block truncate">{p.caption}</span>}
+              </figcaption>
+              <button
+                type="button"
+                onClick={() => remove(p)}
+                aria-label="Remove photo"
+                data-testid={`photo-delete-${p.id}`}
+                className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white opacity-100 sm:opacity-0 transition group-hover:opacity-100 focus:opacity-100 hover:bg-black/80"
+              >
+                <Trash2 strokeWidth={1.75} className="h-4 w-4" />
+              </button>
+            </figure>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-6 text-sm text-[color:var(--st-faint)]">No photos here yet.</p>
+      )}
     </div>
   );
 }
@@ -1859,6 +2008,14 @@ export default function StaffDashboard() {
         <div className="mt-12 animate-fade-up">
           <VenueProfileForm
             key={selectedVenue.id}
+            venue={selectedVenue}
+            onSaved={() => {
+              loadVenues();
+              loadData(selectedId);
+            }}
+          />
+          <VenuePhotosPanel
+            key={`photos-${selectedVenue.id}`}
             venue={selectedVenue}
             onSaved={() => {
               loadVenues();

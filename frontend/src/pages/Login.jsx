@@ -53,7 +53,7 @@ export default function Login({ staff = false }) {
   const { user, login, register, registerRestaurant, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = useState("signin"); // "signin" | "create"
+  const [mode, setMode] = useState(location.state?.mode === "create" ? "create" : "signin"); // "signin" | "create"
   const [name, setName] = useState("");
   const [email, setEmail] = useState(staff ? "" : "bhandariyashvee@gmail.com");
   const [password, setPassword] = useState(staff ? "" : "ritual2026");
@@ -217,7 +217,7 @@ export default function Login({ staff = false }) {
                 : "Create your venue's account, then add payout details to start taking deposits."
               : mode === "signin"
               ? "Sign in to continue your dining journey."
-              : "Join once. Your Table carries across every room."}
+              : "Join once. Your tier follows you to every room."}
           </p>
 
           <form onSubmit={submit} className="space-y-5" data-testid="login-form">

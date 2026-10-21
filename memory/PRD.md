@@ -25,7 +25,7 @@ Originally built as "Ritual" — an ultra-premium cross-venue loyalty and live-a
 - [x] Venue detail with editorial hero, ranked signature offerings, tier-gated events
 - [x] Check-in flow: QR-style prompt → confirm arrival → +100 pts confirmation → feedback → done
 - [x] Wallet: giant serif balance, tier badge, lifetime / visits / tier, ledger, held redemptions
-- [x] Redeem flow: pick any restaurant → pick perk (tier-gated) → confirm → reservation code
+- [x] Redeem flow: pick a restaurant where you hold points (points are per-restaurant, derived from the ledger) → pick perk (tier-gated) → confirm → reservation code
 - [x] Profile: tier journey ladder, progress %, curated timeline of past visits, correspondence, **reservations**
 - [x] Staff dashboard: multi-venue selector for admin, status control, analytics, redemptions, events, correspondence inbox, **bookings inbox**, QR display
 - [x] Role-based routing (staff → /staff, member → /discover)

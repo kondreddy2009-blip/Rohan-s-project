@@ -8,6 +8,10 @@ import { queueLabel } from "@/components/StatusIndicator";
 import { fillingFastStatus } from "@/components/FillingFastCard";
 import { ConciergeModal } from "@/components/ConciergeModal";
 import { BookingModal } from "@/components/BookingModal";
+import { PhotoGallery } from "@/components/PhotoGallery";
+import { ReviewsSection, RatingBadge } from "@/components/Reviews";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePageTitle } from "@/lib/usePageTitle";
 import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -22,6 +26,8 @@ export default function VenueDetail() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [loyalty, setLoyalty] = useState(null);
   const [redeemingId, setRedeemingId] = useState(null);
+  const [rating, setRating] = useState(null);
+  usePageTitle(venue?.name);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +62,16 @@ export default function VenueDetail() {
     };
   }, [id, user]);
 
+  // Browsing is public; anything that acts on the member's account needs a sign-in first.
+  const requireLogin = (action) => () => {
+    if (!user) {
+      toast.message("Sign in to continue.");
+      navigate("/login", { state: { from: { pathname: `/venues/${id}` } } });
+      return;
+    }
+    action();
+  };
+
   async function handleRedeem(reward) {
     if (!loyalty || loyalty.balance < reward.cost || redeemingId) return;
     setRedeemingId(reward.id);
@@ -72,8 +88,13 @@ export default function VenueDetail() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-5 py-16 text-sm text-[#8E8982] text-center">
-        Loading room…
+      <div className="mx-auto max-w-[1100px] px-3 sm:px-6 space-y-4" aria-busy="true" data-testid="venue-skeleton">
+        <Skeleton className="h-[420px] rounded-2xl bg-white/[0.06]" />
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-4">
+          <Skeleton className="h-40 rounded-2xl bg-white/[0.06]" />
+          <Skeleton className="h-40 rounded-2xl bg-white/[0.06]" />
+        </div>
+        <Skeleton className="h-56 rounded-2xl bg-white/[0.06]" />
       </div>
     );
   }
@@ -143,6 +164,16 @@ export default function VenueDetail() {
           <div className="text-[13px] font-semibold text-white/75">
             {venue.neighborhood} · {venue.cuisine}
             {venue.price_level ? ` · ${"₹".repeat(venue.price_level)}` : ""}
+            {(rating ?? { avg: venue.rating_avg, count: venue.rating_count })?.count > 0 && (
+              <>
+                {" · "}
+                <RatingBadge
+                  avg={(rating ?? { avg: venue.rating_avg }).avg}
+                  count={(rating ?? { count: venue.rating_count }).count}
+                  className="align-middle text-white"
+                />
+              </>
+            )}
           </div>
           <h1 className="mt-1 text-5xl sm:text-6xl font-extrabold tracking-tight leading-none" data-testid="venue-name">
             {venue.name}
@@ -181,6 +212,8 @@ export default function VenueDetail() {
           ))}
         </section>
       </div>
+
+      <PhotoGallery photos={venue.photos} heading={heading} card={card} />
 
       {/* Signature offerings */}
       {(venue.signature_offerings || []).length > 0 && (
@@ -266,6 +299,8 @@ export default function VenueDetail() {
         </section>
       )}
 
+      <ReviewsSection venueId={venue.id} user={user} card={card} heading={heading} onSummary={setRating} />
+
       {/* Kitchen + calendar | CTA */}
       <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-4 items-start">
         <div className="space-y-4">
@@ -326,7 +361,7 @@ export default function VenueDetail() {
             Begin your Table at {venue.name}.
           </div>
           <button
-            onClick={() => setBookingOpen(true)}
+            onClick={requireLogin(() => setBookingOpen(true))}
             data-testid="reserve-table-button"
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#F4764F] py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors"
           >
@@ -334,7 +369,7 @@ export default function VenueDetail() {
             Reserve a table
           </button>
           <button
-            onClick={() => setConciergeOpen(true)}
+            onClick={requireLogin(() => setConciergeOpen(true))}
             data-testid="speak-with-room-button"
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-white/70 py-4 text-sm font-bold hover:bg-white/5 transition-colors"
           >

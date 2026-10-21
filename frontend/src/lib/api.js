@@ -34,3 +34,6 @@ export function formatApiError(detail) {
   if (detail && typeof detail.msg === "string") return detail.msg;
   return String(detail);
 }
+
+// Uploaded files are stored as backend-relative paths (/api/uploads/...); external URLs pass through.
+export const assetUrl = (url) => (url?.startsWith("/") ? `${BACKEND_URL}${url}` : url);

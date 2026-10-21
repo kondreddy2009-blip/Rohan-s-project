@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { X, Users, CalendarDays, Clock3, CheckCircle2, Minus, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Link } from "react-router-dom";
+import { AddToCalendar } from "@/components/AddToCalendar";
 
 function isoDate(d) {
   return d.toISOString().slice(0, 10);
@@ -214,8 +216,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
             </div>
             <p className="mt-6 text-sm text-[#8E8982] font-light">
               Show this code at the host stand — the room will confirm it shortly. You&apos;ll find
-              it under <span className="text-[#F4764F]">Your reservations</span> in your profile.
+              it under <Link to="/bookings" className="text-[#F4764F] underline-offset-4 hover:underline">Your reservations</Link>.
             </p>
+            <div className="mt-5">
+              <AddToCalendar booking={confirmed} />
+            </div>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <button
                 type="button"
@@ -310,6 +315,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
                         }`}
                       >
                         {s.time}
+                        {!disabled && s.remaining <= 2 && (
+                          <span className="mt-0.5 block text-[10px] normal-case tracking-normal text-[#E8A33D]">
+                            {s.remaining} left
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -364,6 +374,13 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 className="w-full bg-transparent border border-[#3A3733] p-3 text-sm text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B665F]"
               />
             </div>
+
+            {selectedTime && (
+              <p className="mt-6 text-sm text-[#F4F1EC]/85" data-testid="booking-summary">
+                {new Date(selectedDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                {" · "}{selectedTime}{" · Party of "}{partySize}
+              </p>
+            )}
 
             {depositAmount > 0 && (
               <p className="mt-6 text-sm text-[#8E8982] font-light" data-testid="booking-deposit-notice">

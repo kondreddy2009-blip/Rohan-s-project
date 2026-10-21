@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { RatingBadge } from "@/components/Reviews";
 
 export function fillingFastStatus(venue) {
   if (venue.availability === "fully_booked" || venue.status === "At Capacity") {
@@ -45,6 +46,9 @@ export function FillingFastCard({ venue }) {
           {venue.neighborhood}
           {venue.cuisine ? ` · ${venue.cuisine}` : ""}
         </div>
+        {venue.rating_count > 0 && (
+          <RatingBadge avg={venue.rating_avg} count={venue.rating_count} className="mt-1.5 text-xs text-[#E8A33D]" />
+        )}
       </div>
     </Link>
   );

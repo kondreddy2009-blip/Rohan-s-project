@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Check, Lock } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { StatusIndicator } from "@/components/StatusIndicator";
 import { Sparkles } from "@/components/Sparkles";
 import { cn } from "@/lib/utils";
 
@@ -13,8 +12,10 @@ const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 export default function Redeem() {
   const { user, refresh } = useAuth();
   const navigate = useNavigate();
-  const [venues, setVenues] = useState([]);
+  const [searchParams] = useSearchParams();
+  const [venues, setVenues] = useState([]); // restaurants where the member holds points, with that balance
   const [perks, setPerks] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [selectedPerk, setSelectedPerk] = useState(null);
   const [step, setStep] = useState("venue"); // venue → perk → confirm → done
@@ -23,15 +24,27 @@ export default function Redeem() {
 
   useEffect(() => {
     async function load() {
-      const [v, p] = await Promise.all([api.get("/venues"), api.get("/perks")]);
-      setVenues(v.data);
-      setPerks(p.data);
+      try {
+        const [w, p] = await Promise.all([api.get("/wallet"), api.get("/perks")]);
+        const owned = (w.data.venues || []).map((v) => ({ ...v, id: v.venue_id, name: v.venue_name }));
+        setVenues(owned);
+        setPerks(p.data);
+        const preset = owned.find((v) => v.id === searchParams.get("venue"));
+        if (preset) {
+          setSelectedVenue(preset);
+          setStep("perk");
+        }
+      } finally {
+        setLoaded(true);
+      }
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const userTierIdx = TIER_ORDER.indexOf(user?.tier || "Guest");
-  const balance = user?.ritual_points_balance || 0;
+  // Points are bound to the restaurant that issued them, so only this room's balance can be spent here.
+  const balance = selectedVenue?.balance || 0;
 
   const affordablePerks = useMemo(
     () =>
@@ -72,7 +85,7 @@ export default function Redeem() {
         {step === "done"
           ? "Held in reserve for you."
           : step === "venue"
-            ? "Choose a room."
+            ? "Choose where to redeem."
             : step === "perk"
               ? "Choose a perk."
               : "A quiet confirmation."}
@@ -88,8 +101,24 @@ export default function Redeem() {
       </div>
 
       {/* Step 1 — Venue */}
+      {step === "venue" && loaded && venues.length === 0 && (
+        <div className="mt-10 border border-[#3A3733] p-8 text-center animate-fade-up" data-testid="redeem-empty">
+          <div className="font-serif-display text-2xl">No points to spend yet.</div>
+          <p className="mt-2 text-sm text-[#8E8982] font-light">
+            Points are earned and redeemed at the same restaurant. Check in at a room to start earning there.
+          </p>
+          <Link to="/discover" className="btn-primary mt-6 inline-block">Find a restaurant</Link>
+        </div>
+      )}
+
+      {step === "venue" && venues.length > 0 && (
+        <p className="mt-8 text-sm text-[#8E8982] font-light">
+          Your points belong to the restaurant where you earned them, so you can redeem them there.
+        </p>
+      )}
+
       {step === "venue" && (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-up">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-up">
           {venues.map((v) => (
             <button
               key={v.id}
@@ -102,13 +131,13 @@ export default function Redeem() {
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <img
-                  src={v.image_url}
+                  src={assetUrl(v.image_url)}
                   alt={v.name}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#141312] via-transparent to-transparent" />
-                <div className="absolute left-4 top-4">
-                  <StatusIndicator status={v.status} />
+                <div className="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-[#F4764F] backdrop-blur-sm" data-testid={`redeem-venue-balance-${v.id}`}>
+                  {v.balance.toLocaleString("en-IN")} pts here
                 </div>
                 <div className="absolute inset-x-4 bottom-4">
                   <div className="overline mb-1.5">{v.neighborhood}</div>
@@ -125,6 +154,9 @@ export default function Redeem() {
         <div className="mt-10 animate-fade-up">
           <div className="overline mb-4">Selected room</div>
           <div className="font-serif-display text-3xl">{selectedVenue.name}</div>
+          <div className="mt-1 text-sm text-[#F4764F]" data-testid="redeem-venue-points">
+            {balance.toLocaleString("en-IN")} points available here
+          </div>
           <button
             onClick={() => setStep("venue")}
             data-testid="change-venue-button"
@@ -166,7 +198,7 @@ export default function Redeem() {
                       {!p.tier_ok
                         ? `${p.tier_required} tier required`
                         : !p.affordable
-                          ? "Not enough Table Points yet"
+                          ? `Needs ${p.cost - balance} more points at ${selectedVenue.name}`
                           : `Reserved for ${p.tier_required}+`}
                     </div>
                   </div>
@@ -197,7 +229,7 @@ export default function Redeem() {
                 <div className="font-serif-display text-3xl text-[#F4764F]">{selectedPerk.cost}</div>
               </div>
               <div>
-                <div className="overline mb-1">Balance now</div>
+                <div className="overline mb-1">Points here</div>
                 <div className="font-serif-display text-3xl">{balance}</div>
               </div>
               <div>

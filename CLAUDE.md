@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-**Table** — a restaurant-only members' loyalty and reservations platform (formerly "Ritual"/"Nocturne" before pivots — see `memory/PRD.md` for full product history). Members earn points at any partner restaurant and redeem perks at *any* other partner restaurant in the network; that cross-venue redemption is the core pitch. Three roles: **Member** (Guest/Regular/Insider/Inner Circle tiers), **Venue Staff** (manages one restaurant), **Admin** (cross-venue oversight).
+**Table** — a restaurant-only members' loyalty and reservations platform (formerly "Ritual"/"Nocturne" before pivots — see `memory/PRD.md` for full product history). Members earn points at a partner restaurant and can only redeem them at that same restaurant (per-restaurant balances are derived from the points ledger); their membership tier, based on lifetime points across all restaurants, is the cross-venue part. Three roles: **Member** (Guest/Regular/Insider/Inner Circle tiers), **Venue Staff** (manages one restaurant), **Admin** (cross-venue oversight).
 
 `memory/PRD.md` is the living product requirements doc — check it for current feature status and design decisions before making product/UX changes.
 
@@ -20,7 +20,7 @@ JWT httpOnly cookies (`access_token` 12h, `refresh_token` 30d), bcrypt password 
 
 ### Key domains in server.py
 
-- **Loyalty** — two separate point systems: global member tier points (`POINTS_PER_CHECKIN`, `TIER_THRESHOLDS`, cross-venue `PERKS`) vs. per-venue loyalty (`/venues/{id}/loyalty`, staff-configurable `points_per_checkin`/`points_per_booking`/custom `rewards`, spent only at that one venue). Don't conflate the two.
+- **Loyalty** — two separate point systems: global member tier points (`POINTS_PER_CHECKIN`, `TIER_THRESHOLDS`, tier-gated `PERKS`; lifetime points drive the tier, but spendable balance is per restaurant via `venue_point_balances`, so `/wallet/redeem` only spends points earned at the venue being redeemed at) vs. per-venue loyalty (`/venues/{id}/loyalty`, staff-configurable `points_per_checkin`/`points_per_booking`/custom `rewards`, spent only at that one venue). Don't conflate the two.
 - **Bookings** — `/venues/{id}/availability` parses each venue's `hours` string into 30-min slots (handles ranges crossing midnight) with a `SLOT_CAPACITY_PER_TIME` cap; `POST /bookings` issues a `T-XXXXXX` code (look-alike characters excluded) and returns 409 on a full slot. Optional Razorpay deposit flow (`razorpay_configured()` gates it — disabled until both `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` are set).
 - **Concierge** — free-text messaging between a member and a venue (`CONCIERGE_TYPE_LABEL`), separate from bookings and check-ins.
 

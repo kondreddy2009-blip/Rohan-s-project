@@ -325,7 +325,10 @@ export default function Profile() {
 
       {bookings.length > 0 && (
         <section className={card} data-testid="reservations-section">
-          <h2 className={sectionTitle}>Your reservations</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className={sectionTitle}>Your reservations</h2>
+            <Link to="/bookings" className="text-sm font-bold text-[#E27D60] hover:text-[#F4764F]">Manage all →</Link>
+          </div>
           <p className={sub}>Tables held in your name.</p>
           <div className="mt-5 space-y-3">
             {bookings.map((b) => {

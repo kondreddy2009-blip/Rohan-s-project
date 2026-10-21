@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ArrowDownLeft, Sparkles as SparkleIcon } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { TierBadge } from "@/components/TierBadge";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useAuth } from "@/lib/auth-context";
@@ -114,20 +114,26 @@ export default function Wallet() {
           </div>
         </div>
 
+        <p className="mt-4 max-w-md text-sm text-[#8E8982] font-light">
+          Points belong to the restaurant where you earned them and can only be redeemed there.
+        </p>
+
         {(() => {
+          const top = wallet.venues?.[0];
+          const topBalance = top?.balance || 0;
           const nextPerk = [
             { cost: 250, name: "Priority Seating" },
             { cost: 500, name: "Complimentary Signature" },
             { cost: 750, name: "Early Access Booking" },
             { cost: 1000, name: "Inner Circle Experience" },
-          ].find((p) => wallet.balance < p.cost);
+          ].find((p) => topBalance < p.cost);
           if (!nextPerk) return null;
-          const gap = nextPerk.cost - wallet.balance;
+          const gap = nextPerk.cost - topBalance;
           return (
             <div className="mt-6 inline-flex items-center gap-2 text-sm text-[#8E8982] font-light">
               <SparkleIcon strokeWidth={1.2} className="h-3.5 w-3.5 text-[#F4764F]" />
               <span>
-                {gap} more to unlock{" "}
+                {gap} more{top ? ` at ${top.venue_name}` : ""} to unlock{" "}
                 <span className="text-[#F4764F]">{nextPerk.name}</span>
               </span>
             </div>
@@ -135,13 +141,42 @@ export default function Wallet() {
         })()}
       </div>
 
-      <div className="mt-10 animate-fade-up delay-200">
+      {/* Points by restaurant */}
+      <div className="mt-12 animate-fade-up delay-200" data-testid="wallet-venue-balances">
+        <div className="overline mb-4">Points by restaurant</div>
+        {wallet.venues?.length > 0 ? (
+          <div className="space-y-3">
+            {wallet.venues.map((v) => (
+              <div key={v.venue_id} className="flex items-center gap-4 border border-[#3A3733] p-4" data-testid={`wallet-venue-${v.venue_id}`}>
+                {v.image_url && (
+                  <img src={assetUrl(v.image_url)} alt="" className="h-14 w-14 shrink-0 object-cover" loading="lazy" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-serif text-lg truncate">{v.venue_name}</div>
+                  {v.neighborhood && <div className="overline mt-0.5 truncate">{v.neighborhood}</div>}
+                </div>
+                <div className="text-right">
+                  <div className="font-serif-display text-2xl tabular-nums text-[#F4764F]">{v.balance.toLocaleString("en-IN")}</div>
+                  <Link
+                    to={`/redeem?venue=${v.venue_id}`}
+                    data-testid={`wallet-redeem-${v.venue_id}`}
+                    className="overline hover:text-[#F4764F] transition-colors"
+                  >
+                    Redeem here →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[#8E8982] font-light">Check in at a restaurant to start earning points there.</div>
+        )}
         <Link
           to="/redeem"
           data-testid="wallet-redeem-button"
-          className="btn-primary inline-block"
+          className="btn-primary mt-6 inline-block"
         >
-          Redeem at any room
+          Redeem your points
         </Link>
       </div>
 

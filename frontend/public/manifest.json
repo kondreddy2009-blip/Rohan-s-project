@@ -1,0 +1,15 @@
+{
+  "short_name": "Table",
+  "name": "Table — Dine · Earn · Return",
+  "description": "The loyalty and reservations network for restaurants worth returning to.",
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#141312",
+  "background_color": "#141312"
+}

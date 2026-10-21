@@ -9,6 +9,7 @@ import { fillingFastStatus } from "@/components/FillingFastCard";
 import { ConciergeModal } from "@/components/ConciergeModal";
 import { BookingModal } from "@/components/BookingModal";
 import { PhotoGallery } from "@/components/PhotoGallery";
+import { MenuSection } from "@/components/Menu";
 import { ReviewsSection, RatingBadge } from "@/components/Reviews";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePageTitle } from "@/lib/usePageTitle";
@@ -119,7 +120,7 @@ export default function VenueDetail() {
           : venue.status === "Filling In"
             ? "Filling in"
             : "Quiet · seat now";
-  const card = "rounded-2xl bg-[#1F1D1B] p-6";
+  const card = "rounded-2xl bg-[#1B140F] p-6";
   const heading = "text-2xl font-extrabold tracking-tight text-white";
   const facts = [
     { icon: Clock, label: "Hours", value: venue.hours },
@@ -163,7 +164,6 @@ export default function VenueDetail() {
         <div className="absolute inset-x-6 bottom-6">
           <div className="text-[13px] font-semibold text-white/75">
             {venue.neighborhood} · {venue.cuisine}
-            {venue.price_level ? ` · ${"₹".repeat(venue.price_level)}` : ""}
             {(rating ?? { avg: venue.rating_avg, count: venue.rating_count })?.count > 0 && (
               <>
                 {" · "}
@@ -203,7 +203,7 @@ export default function VenueDetail() {
               data-testid={f.testId}
               className={cn("flex items-center gap-4 py-3.5", i > 0 && "border-t border-white/[0.08]")}
             >
-              <f.icon strokeWidth={1.5} className="h-5 w-5 text-[#E27D60] shrink-0" />
+              <f.icon strokeWidth={1.5} className="h-5 w-5 text-[#F0D3AE] shrink-0" />
               <div>
                 <div className="text-xs text-[#8E8982]">{f.label}</div>
                 <div className="text-[15px] font-semibold">{f.value}</div>
@@ -213,6 +213,8 @@ export default function VenueDetail() {
         </section>
       </div>
 
+      <MenuSection menu={venue.menu} photos={venue.photos} heading={heading} card={card} />
+
       <PhotoGallery photos={venue.photos} heading={heading} card={card} />
 
       {/* Signature offerings */}
@@ -220,7 +222,7 @@ export default function VenueDetail() {
         <section className={card}>
           <div className="flex items-center justify-between">
             <h2 className={heading}>What regulars order</h2>
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#E27D60]">
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#F0D3AE]">
               View all <ArrowRight className="h-3.5 w-3.5" />
             </span>
           </div>
@@ -231,7 +233,7 @@ export default function VenueDetail() {
                 className={cn("flex items-center gap-5 py-4", i > 0 && "border-t border-white/[0.08]")}
                 data-testid={`offering-${i}`}
               >
-                <span className="w-6 text-sm font-bold text-[#E27D60] tabular-nums">
+                <span className="w-6 text-sm font-bold text-[#F0D3AE] tabular-nums">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="flex-1 text-[17px] font-semibold">{o.name}</span>
@@ -249,7 +251,7 @@ export default function VenueDetail() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className={heading}>Your loyalty at {venue.name}</h2>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-[#E27D60]" data-testid="venue-loyalty-balance">
+              <span className="text-3xl font-extrabold text-[#F0D3AE]" data-testid="venue-loyalty-balance">
                 {loyalty.balance}
               </span>
               <span className="text-xs text-[#8E8982]">points here</span>
@@ -263,25 +265,25 @@ export default function VenueDetail() {
                   <div
                     key={r.id}
                     className={cn(
-                      "flex items-center justify-between gap-6 rounded-xl bg-[#262422] p-4",
+                      "flex items-center justify-between gap-6 rounded-xl bg-[#241C16] p-4",
                       !affordable && "opacity-50",
                     )}
                     data-testid={`venue-reward-${r.id}`}
                   >
                     <div className="flex items-start gap-4">
-                      <Gift strokeWidth={1.5} className="h-5 w-5 text-[#E27D60] mt-0.5 shrink-0" />
+                      <Gift strokeWidth={1.5} className="h-5 w-5 text-[#F0D3AE] mt-0.5 shrink-0" />
                       <div>
                         <div className="font-bold">{r.name}</div>
                         <p className="text-sm text-[#8E8982] mt-0.5">{r.description}</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
-                      <span className="text-xs font-bold text-[#E27D60]">{r.cost} pts</span>
+                      <span className="text-xs font-bold text-[#F0D3AE]">{r.cost} pts</span>
                       <button
                         onClick={() => handleRedeem(r)}
                         disabled={!affordable || redeemingId === r.id}
                         data-testid={`redeem-venue-reward-${r.id}`}
-                        className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold hover:border-[#E27D60] disabled:cursor-not-allowed"
+                        className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold hover:border-[#F0D3AE] disabled:cursor-not-allowed"
                       >
                         {redeemingId === r.id ? "Redeeming…" : "Redeem"}
                       </button>
@@ -308,11 +310,11 @@ export default function VenueDetail() {
             <section className={card}>
               <h2 className={heading}>In the kitchen</h2>
               <div className="mt-4 flex items-start gap-5">
-                <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#3A2219]">
-                  <ChefHat strokeWidth={1.4} className="h-7 w-7 text-[#E27D60]" />
+                <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#3A2A1B]">
+                  <ChefHat strokeWidth={1.4} className="h-7 w-7 text-[#F0D3AE]" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-[#E27D60]">Chef</div>
+                  <div className="text-sm font-semibold text-[#F0D3AE]">Chef</div>
                   <div className="text-xl font-bold">{venue.chef}</div>
                   <p className="mt-1 text-sm text-[#8E8982] leading-relaxed">
                     Leads the {venue.cuisine || "kitchen"} at {venue.name}. Menu evolves with the
@@ -331,8 +333,8 @@ export default function VenueDetail() {
                   const gated = e.tier_required && TIER_ORDER.indexOf(e.tier_required) > userTierIdx;
                   return (
                     <div key={e.id} className="flex items-start gap-5" data-testid={`event-${e.id}`}>
-                      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#3A2219]">
-                        <Calendar strokeWidth={1.4} className="h-7 w-7 text-[#E27D60]" />
+                      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#3A2A1B]">
+                        <Calendar strokeWidth={1.4} className="h-7 w-7 text-[#F0D3AE]" />
                       </div>
                       <div className="flex-1">
                         <div className="text-sm text-[#8E8982] tabular-nums">
@@ -341,7 +343,7 @@ export default function VenueDetail() {
                         <div className="text-xl font-bold">{e.title}</div>
                         <p className="mt-1 text-sm text-[#8E8982] leading-relaxed">{e.description}</p>
                         {e.tier_required && (
-                          <div className="mt-2 text-xs font-bold text-[#E27D60]">
+                          <div className="mt-2 text-xs font-bold text-[#F0D3AE]">
                             {gated ? `${e.tier_required} Access` : `Open to ${e.tier_required}+`}
                           </div>
                         )}
@@ -363,7 +365,7 @@ export default function VenueDetail() {
           <button
             onClick={requireLogin(() => setBookingOpen(true))}
             data-testid="reserve-table-button"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#F4764F] py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#E8C9A0] py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F3DAB8] transition-colors"
           >
             <CalendarCheck strokeWidth={1.8} className="h-4 w-4" />
             Reserve a table

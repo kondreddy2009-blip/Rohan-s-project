@@ -36,4 +36,4 @@ export function formatApiError(detail) {
 }
 
 // Uploaded files are stored as backend-relative paths (/api/uploads/...); external URLs pass through.
-export const assetUrl = (url) => (url?.startsWith("/") ? `${BACKEND_URL}${url}` : url);
+export const assetUrl = (url) => (url?.startsWith("/api/") ? `${BACKEND_URL}${url}` : url);

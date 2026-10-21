@@ -8,7 +8,7 @@ export function QRDisplay({ value, size = 240, label }) {
           value={value}
           size={size}
           bgColor="#F4F1EC"
-          fgColor="#141312"
+          fgColor="#110C09"
           level="M"
           includeMargin={false}
         />

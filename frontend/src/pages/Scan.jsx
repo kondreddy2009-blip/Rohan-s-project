@@ -151,16 +151,16 @@ export default function Scan() {
             <QRScanner onScan={handleScan} onError={handleScanError} />
           ) : (
             <div className="max-w-sm mx-auto">
-              <div className="w-full aspect-square border border-[#3A3733] flex flex-col items-center justify-center relative">
-                <Camera strokeWidth={0.8} className="h-16 w-16 text-[#F4764F]" />
+              <div className="w-full aspect-square border border-[#3D3128] flex flex-col items-center justify-center relative">
+                <Camera strokeWidth={0.8} className="h-16 w-16 text-[#E8C9A0]" />
                 <div className="overline mt-4 text-center px-6">
                   {cameraSupported ? "Camera ready" : "Camera not available in this environment"}
                 </div>
                 <div className="absolute inset-6 pointer-events-none">
-                  <div className="absolute top-0 left-0 h-6 w-6 border-t border-l border-[#F4764F]" />
-                  <div className="absolute top-0 right-0 h-6 w-6 border-t border-r border-[#F4764F]" />
-                  <div className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-[#F4764F]" />
-                  <div className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-[#F4764F]" />
+                  <div className="absolute top-0 left-0 h-6 w-6 border-t border-l border-[#E8C9A0]" />
+                  <div className="absolute top-0 right-0 h-6 w-6 border-t border-r border-[#E8C9A0]" />
+                  <div className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-[#E8C9A0]" />
+                  <div className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-[#E8C9A0]" />
                 </div>
               </div>
               {cameraSupported && (
@@ -203,7 +203,7 @@ export default function Scan() {
                 value={manualId}
                 onChange={(e) => setManualId(e.target.value)}
                 data-testid="scan-manual-select"
-                className="flex-1 bg-[#1F1D1B] border border-[#3A3733] py-3 px-3 focus:border-[#F4764F] outline-none font-light text-[#F4F1EC]"
+                className="flex-1 bg-[#1B140F] border border-[#3D3128] py-3 px-3 focus:border-[#E8C9A0] outline-none font-light text-[#F4F1EC]"
               >
                 <option value="">Select a room…</option>
                 {venues.map((v) => (
@@ -227,8 +227,8 @@ export default function Scan() {
 
       {step === "success" && result && (
         <div className="mt-16 text-center animate-fade" data-testid="scan-success">
-          <div className="mx-auto w-16 h-16 border border-[#F4764F] flex items-center justify-center">
-            <Check strokeWidth={1} className="h-8 w-8 text-[#F4764F]" />
+          <div className="mx-auto w-16 h-16 border border-[#E8C9A0] flex items-center justify-center">
+            <Check strokeWidth={1} className="h-8 w-8 text-[#E8C9A0]" />
           </div>
           <div className="overline-accent mt-6">Welcomed</div>
           <h2 className="font-serif-display text-4xl mt-3">
@@ -239,7 +239,7 @@ export default function Scan() {
             <AnimatedNumber
               value={result.points_earned}
               prefix="+"
-              className="font-serif-display text-7xl text-[#F4764F] tabular-nums block"
+              className="font-serif-display text-7xl text-[#E8C9A0] tabular-nums block"
             />
             <div className="overline mt-4">
               Balance · <span className="text-[#F4F1EC]"><AnimatedNumber value={result.balance} /></span>

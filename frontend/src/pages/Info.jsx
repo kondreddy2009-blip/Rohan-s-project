@@ -175,7 +175,7 @@ export default function Info({ slug }) {
   if (!page) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen bg-[#141312] text-[#F4F1EC] flex flex-col" data-testid={`info-${slug}`}>
+    <div className="min-h-screen bg-[#110C09] text-[#F4F1EC] flex flex-col" data-testid={`info-${slug}`}>
       <header className="mx-auto w-full max-w-3xl px-5 py-4">
         <Link to="/" aria-label="Table home"><BrandLockup /></Link>
       </header>
@@ -196,7 +196,7 @@ export default function Info({ slug }) {
                 <ul className="mt-3 space-y-2.5">
                   {s.list.map((t) => (
                     <li key={t} className="flex gap-3 leading-relaxed text-[#B8B2AA]">
-                      <span aria-hidden className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E27D60]" />
+                      <span aria-hidden className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#F0D3AE]" />
                       <span>{t}</span>
                     </li>
                   ))}
@@ -211,7 +211,7 @@ export default function Info({ slug }) {
                 {LEGAL_NAME && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Registered name</dt><dd className="mt-1">{LEGAL_NAME}</dd></div>}
                 {BUSINESS_ADDRESS && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Address</dt><dd className="mt-1">{BUSINESS_ADDRESS}</dd></div>}
                 {SUPPORT_PHONE && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Phone</dt><dd className="mt-1"><a href={`tel:${SUPPORT_PHONE}`} className="hover:text-white">{SUPPORT_PHONE}</a></dd></div>}
-                {SUPPORT_EMAIL && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Email</dt><dd className="mt-1"><a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold text-[#E27D60] hover:text-[#F4764F]">{SUPPORT_EMAIL}</a></dd></div>}
+                {SUPPORT_EMAIL && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Email</dt><dd className="mt-1"><a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold text-[#F0D3AE] hover:text-[#E8C9A0]">{SUPPORT_EMAIL}</a></dd></div>}
               </dl>
             </section>
           )}

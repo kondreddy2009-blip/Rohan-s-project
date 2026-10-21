@@ -69,9 +69,9 @@ export default function CheckIn() {
       <div className="mt-12 flex-1 flex flex-col justify-center">
         {step === "scan" && (
           <div className="animate-fade-up text-center">
-            <div className="mx-auto w-40 h-40 border border-[#3A3733] flex items-center justify-center relative overflow-hidden">
-              <QrCode strokeWidth={0.8} className="h-24 w-24 text-[#F4764F]" />
-              <div className="absolute inset-x-0 h-px bg-[#F4764F]/60 animate-fade-up" />
+            <div className="mx-auto w-40 h-40 border border-[#3D3128] flex items-center justify-center relative overflow-hidden">
+              <QrCode strokeWidth={0.8} className="h-24 w-24 text-[#E8C9A0]" />
+              <div className="absolute inset-x-0 h-px bg-[#E8C9A0]/60 animate-fade-up" />
             </div>
             <p className="mt-8 font-serif text-xl text-[#F4F1EC]/80 italic max-w-md mx-auto">
               A quiet gesture. Confirm your arrival to begin.
@@ -89,8 +89,8 @@ export default function CheckIn() {
 
         {step === "confirmed" && result && (
           <div className="animate-fade text-center">
-            <div className="mx-auto w-16 h-16 border border-[#F4764F] flex items-center justify-center">
-              <Check strokeWidth={1} className="h-8 w-8 text-[#F4764F]" />
+            <div className="mx-auto w-16 h-16 border border-[#E8C9A0] flex items-center justify-center">
+              <Check strokeWidth={1} className="h-8 w-8 text-[#E8C9A0]" />
             </div>
             <div className="overline-accent mt-6">Welcomed</div>
             <h2 className="font-serif-display text-4xl mt-3">
@@ -102,7 +102,7 @@ export default function CheckIn() {
                 <AnimatedNumber
                   value={result.points_earned}
                   prefix="+"
-                  className="font-serif-display text-7xl text-[#F4764F] tabular-nums block"
+                  className="font-serif-display text-7xl text-[#E8C9A0] tabular-nums block"
                 />
               </div>
               <div className="overline mt-4">
@@ -130,7 +130,7 @@ export default function CheckIn() {
                 onChange={(e) => setItem(e.target.value)}
                 placeholder="A dish, a pour, a pastry…"
                 data-testid="feedback-item-input"
-                className="w-full bg-transparent border-b border-[#3A3733] py-3 text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300 placeholder:text-[#6B665F]"
+                className="w-full bg-transparent border-b border-[#3D3128] py-3 text-[#F4F1EC] font-light focus:border-[#E8C9A0] outline-none transition-colors duration-300 placeholder:text-[#6B665F]"
               />
             </div>
 
@@ -141,7 +141,7 @@ export default function CheckIn() {
                   type="button"
                   onClick={() => setWouldReturn(true)}
                   data-testid="feedback-yes"
-                  className={`btn-ghost ${wouldReturn === true ? "border-[#F4764F] text-[#F4764F]" : ""}`}
+                  className={`btn-ghost ${wouldReturn === true ? "border-[#E8C9A0] text-[#E8C9A0]" : ""}`}
                 >
                   Yes, gladly
                 </button>
@@ -149,7 +149,7 @@ export default function CheckIn() {
                   type="button"
                   onClick={() => setWouldReturn(false)}
                   data-testid="feedback-no"
-                  className={`btn-ghost ${wouldReturn === false ? "border-[#F4764F] text-[#F4764F]" : ""}`}
+                  className={`btn-ghost ${wouldReturn === false ? "border-[#E8C9A0] text-[#E8C9A0]" : ""}`}
                 >
                   Not quite
                 </button>

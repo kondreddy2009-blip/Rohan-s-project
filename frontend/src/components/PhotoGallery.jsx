@@ -10,7 +10,7 @@ const TABS = [
   { key: "restaurant", label: "The room" },
 ];
 
-function Lightbox({ photos, index, onClose, onIndex }) {
+export function Lightbox({ photos, index, onClose, onIndex }) {
   const photo = photos[index];
   const prev = useCallback(() => onIndex((index - 1 + photos.length) % photos.length), [index, photos.length, onIndex]);
   const next = useCallback(() => onIndex((index + 1) % photos.length), [index, photos.length, onIndex]);
@@ -66,9 +66,10 @@ function Lightbox({ photos, index, onClose, onIndex }) {
   );
 }
 
-export function PhotoGallery({ photos = [], heading, card }) {
+export function PhotoGallery({ photos: all = [], heading, card }) {
   const [tab, setTab] = useState("all");
   const [open, setOpen] = useState(null);
+  const photos = all.filter((p) => p.category !== "menu"); // menu pages live in the Menu section
   if (!photos.length) return null;
 
   const counts = TABS.map((t) => ({ ...t, n: t.key === "all" ? photos.length : photos.filter((p) => p.category === t.key).length }));
@@ -90,7 +91,7 @@ export function PhotoGallery({ photos = [], heading, card }) {
                 data-testid={`gallery-tab-${t.key}`}
                 className={cn(
                   "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  tab === t.key ? "bg-[#F5F5F3] text-[#171513]" : "bg-[#2A2826] text-[#B8B2AA] hover:text-white",
+                  tab === t.key ? "bg-[#F5F5F3] text-[#130E0B]" : "bg-[#271E17] text-[#B8B2AA] hover:text-white",
                 )}
               >
                 {t.label} <span className="opacity-60">{t.n}</span>
@@ -107,7 +108,7 @@ export function PhotoGallery({ photos = [], heading, card }) {
             onClick={() => setOpen(i)}
             aria-label={`Open photo${p.caption ? `: ${p.caption}` : ""}`}
             className={cn(
-              "group relative overflow-hidden rounded-xl bg-[#262422] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D8694A]",
+              "group relative overflow-hidden rounded-xl bg-[#241C16] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C9A0]",
               i === 0 && shown.length >= 3 ? "col-span-2 row-span-2 aspect-square sm:aspect-auto" : "aspect-square",
             )}
           >

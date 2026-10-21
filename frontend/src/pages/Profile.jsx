@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { User, Crown, CalendarDays, BarChart3, Star, Compass, ArrowRight } from "lucide-react";
+import { User, Crown, CalendarDays, BarChart3, Star, Compass, ArrowRight, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -33,7 +33,7 @@ const BOOKING_STATUS_LABEL = {
 const BOOKING_STATUS_COLOR = {
   awaiting_payment: "text-[#E8A33D]",
   pending: "text-[#B8B2AA]",
-  confirmed: "text-[#E27D60]",
+  confirmed: "text-[#F0D3AE]",
   declined: "text-[#E8A33D]",
   seated: "text-[#7DBE8A]",
   cancelled: "text-[#8E8982]",
@@ -45,8 +45,8 @@ const sub = "mt-1 text-sm text-[#8E8982]";
 
 function IconCircle({ icon: Icon, className }) {
   return (
-    <span className={cn("grid shrink-0 place-items-center rounded-full bg-[#262422]", className)}>
-      <Icon strokeWidth={1.6} className="h-5 w-5 text-[#F4764F]" />
+    <span className={cn("grid shrink-0 place-items-center rounded-full bg-[#241C16]", className)}>
+      <Icon strokeWidth={1.6} className="h-5 w-5 text-[#E8C9A0]" />
     </span>
   );
 }
@@ -74,7 +74,7 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
         <div className="relative mt-7">
           <div className="absolute top-3 left-[12.5%] right-[12.5%] h-0.5 bg-white/10">
             <div
-              className="h-full bg-gradient-to-r from-[#6B3A2E] to-[#F4764F]"
+              className="h-full bg-gradient-to-r from-[#6B3A2E] to-[#E8C9A0]"
               style={{ width: `${span}%` }}
             />
           </div>
@@ -87,16 +87,16 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
                     className={cn(
                       "h-6 w-6 rounded-full border-2 bg-[#1A1917]",
                       isCurrent
-                        ? "border-[#F4764F] bg-[#F4764F] ring-4 ring-[#F4764F]/25"
+                        ? "border-[#E8C9A0] bg-[#E8C9A0] ring-4 ring-[#E8C9A0]/25"
                         : i < idx
-                          ? "border-[#F4764F]"
+                          ? "border-[#E8C9A0]"
                           : "border-[#4A4743]",
                     )}
                   />
                   <span
                     className={cn(
                       "mt-3 text-[11px] font-bold tracking-[0.16em] uppercase text-center",
-                      isCurrent ? "text-[#F4764F]" : "text-[#8E8982]",
+                      isCurrent ? "text-[#E8C9A0]" : "text-[#8E8982]",
                     )}
                   >
                     {t}
@@ -107,7 +107,7 @@ function TierJourney({ current, next, pointsToNext, progressPercent }) {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-5 rounded-xl bg-[#2A1B16] border border-[#F4764F]/15 p-5">
+      <div className="flex items-center gap-5 rounded-xl bg-[#2A1B16] border border-[#E8C9A0]/15 p-5">
         <IconCircle icon={Crown} className="h-16 w-16 bg-[#3D2118]" />
         <div className="border-l border-white/[0.1] pl-5">
           {next ? (
@@ -146,7 +146,7 @@ function TimelineEntry({ item }) {
         {item.item_ordered && (
           <div className="mt-1 text-sm text-[#B8B2AA]">
             &ldquo;{item.item_ordered}&rdquo;
-            {item.would_return === true && <span className="ml-2 text-xs font-bold text-[#F4764F]">Would return</span>}
+            {item.would_return === true && <span className="ml-2 text-xs font-bold text-[#E8C9A0]">Would return</span>}
           </div>
         )}
       </div>
@@ -154,8 +154,76 @@ function TimelineEntry({ item }) {
   );
 }
 
+function EditableName({ name, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+  const [busy, setBusy] = useState(false);
+
+  const start = () => {
+    setValue(name);
+    setEditing(true);
+  };
+  const save = async (e) => {
+    e.preventDefault();
+    const next = value.trim();
+    if (!next || next === name) return setEditing(false);
+    setBusy(true);
+    const ok = await onSave(next);
+    setBusy(false);
+    if (ok) setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="text-3xl font-extrabold tracking-tight truncate" data-testid="profile-name">{name}</div>
+        <button
+          type="button"
+          onClick={start}
+          aria-label="Edit name"
+          data-testid="profile-edit-name"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 text-[#E8C9A0] transition-colors hover:border-[#E8C9A0]"
+        >
+          <Pencil strokeWidth={1.8} className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={save} className="flex items-center gap-2" data-testid="profile-name-form">
+      <input
+        autoFocus
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        maxLength={80}
+        aria-label="Your name"
+        data-testid="profile-name-input"
+        onKeyDown={(e) => e.key === "Escape" && setEditing(false)}
+        className="min-w-0 flex-1 rounded-xl border border-[#E8C9A0]/40 bg-[#241C16] px-4 py-2 text-2xl font-extrabold tracking-tight text-white outline-none focus:border-[#E8C9A0]"
+      />
+      <button
+        type="submit"
+        disabled={busy || !value.trim()}
+        aria-label="Save name"
+        data-testid="profile-save-name"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#F07F5E] text-[#2A0F07] transition-colors hover:bg-[#F59273] disabled:opacity-50"
+      >
+        <Check strokeWidth={2.2} className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setEditing(false)}
+        aria-label="Cancel"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 text-[#B8B2AA] transition-colors hover:text-white"
+      >
+        <X strokeWidth={2} className="h-5 w-5" />
+      </button>
+    </form>
+  );
+}
+
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const [wallet, setWallet] = useState(null);
   const [history, setHistory] = useState([]);
   const [correspondence, setCorrespondence] = useState([]);
@@ -178,6 +246,18 @@ export default function Profile() {
     load().catch(() => {}); // 401s are handled globally (redirect to login)
     api.get("/venues").then(({ data }) => setCoverImage(data?.[0]?.image_url || null)).catch(() => {});
   }, []);
+
+  const saveName = async (name) => {
+    try {
+      await api.patch("/members/me", { name });
+      await refresh();
+      toast.success("Name updated.");
+      return true;
+    } catch (e) {
+      toast.error(formatApiError(e.response?.data?.detail) || "Could not update your name.");
+      return false;
+    }
+  };
 
   const cancelBooking = async (id) => {
     try {
@@ -210,15 +290,15 @@ export default function Profile() {
       <section className={card}>
         <div className="flex items-center gap-5 flex-wrap">
           <span className="grid h-[104px] w-[104px] shrink-0 place-items-center rounded-full bg-[#4A2A20]">
-            <User strokeWidth={1.4} className="h-12 w-12 text-[#F4764F]" />
+            <User strokeWidth={1.4} className="h-12 w-12 text-[#E8C9A0]" />
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-3xl font-extrabold tracking-tight">{user.name}</div>
+            <EditableName name={user.name} onSave={saveName} />
             <div className="mt-1 font-semibold text-[#B8B2AA]">{user.email}</div>
           </div>
           <span
             data-testid="profile-tier-badge"
-            className="inline-flex items-center gap-2 rounded-full border border-[#F4764F]/60 bg-[#2A1B16] px-5 py-2.5 text-xs font-extrabold tracking-[0.16em] uppercase text-[#F4764F]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#E8C9A0]/60 bg-[#2A1B16] px-5 py-2.5 text-xs font-extrabold tracking-[0.16em] uppercase text-[#E8C9A0]"
           >
             <Crown strokeWidth={2} className="h-4 w-4" />
             {user.tier}
@@ -249,7 +329,7 @@ export default function Profile() {
       {streak > 0 && (
         <section className={cn(card, "flex items-center justify-between gap-6")}>
           <div>
-            <div className="text-xs font-extrabold tracking-[0.16em] uppercase text-[#F4764F]">A streak</div>
+            <div className="text-xs font-extrabold tracking-[0.16em] uppercase text-[#E8C9A0]">A streak</div>
             <div className="mt-1 text-2xl font-extrabold">
               {streak} {streak === 1 ? "night" : "nights"} this week.
             </div>
@@ -257,7 +337,7 @@ export default function Profile() {
               {streak >= 4 ? "The room knows you well." : streak >= 2 ? "The night has a rhythm now." : "A quiet beginning."}
             </div>
           </div>
-          <div className="text-6xl font-extrabold text-[#F4764F] tabular-nums">{streak}</div>
+          <div className="text-6xl font-extrabold text-[#E8C9A0] tabular-nums">{streak}</div>
         </section>
       )}
 
@@ -299,7 +379,7 @@ export default function Profile() {
           </div>
           <Link
             to="/discover"
-            className="relative mt-auto flex items-center justify-between rounded-full bg-[#F4764F] px-5 py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors"
+            className="relative mt-auto flex items-center justify-between rounded-full bg-[#E8C9A0] px-5 py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F3DAB8] transition-colors"
           >
             <span className="flex items-center gap-3">
               <Compass strokeWidth={1.8} className="h-5 w-5" />
@@ -315,7 +395,7 @@ export default function Profile() {
           <h2 className={sectionTitle}>Staff access</h2>
           <Link
             to="/staff"
-            className="mt-4 inline-block rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold hover:border-[#F4764F]"
+            className="mt-4 inline-block rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold hover:border-[#E8C9A0]"
             data-testid="profile-staff-link"
           >
             Open Staff Dashboard
@@ -327,7 +407,7 @@ export default function Profile() {
         <section className={card} data-testid="reservations-section">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className={sectionTitle}>Your reservations</h2>
-            <Link to="/bookings" className="text-sm font-bold text-[#E27D60] hover:text-[#F4764F]">Manage all →</Link>
+            <Link to="/bookings" className="text-sm font-bold text-[#F0D3AE] hover:text-[#E8C9A0]">Manage all →</Link>
           </div>
           <p className={sub}>Tables held in your name.</p>
           <div className="mt-5 space-y-3">
@@ -357,7 +437,7 @@ export default function Profile() {
                   <div className="mt-3 flex items-baseline gap-3 flex-wrap">
                     <span className="text-xs text-[#8E8982]">Code</span>
                     <span
-                      className="font-mono tracking-[0.28em] text-[#F4764F]"
+                      className="font-mono tracking-[0.28em] text-[#E8C9A0]"
                       data-testid={`reservation-code-${b.id}`}
                     >
                       {b.code}
@@ -374,7 +454,7 @@ export default function Profile() {
                   {b.note && <p className="mt-3 text-sm italic text-[#B8B2AA]">&ldquo;{b.note}&rdquo;</p>}
                   {b.staff_reply && (
                     <div className="mt-4 pt-4 border-t border-white/[0.08]">
-                      <div className="mb-1 text-xs font-bold text-[#F4764F]">The room replied</div>
+                      <div className="mb-1 text-xs font-bold text-[#E8C9A0]">The room replied</div>
                       <p className="text-sm text-[#B8B2AA]">{b.staff_reply}</p>
                     </div>
                   )}
@@ -411,7 +491,7 @@ export default function Profile() {
                     className={cn(
                       "text-xs font-bold tracking-widest uppercase",
                       c.status === "pending" && "text-[#B8B2AA]",
-                      c.status === "acknowledged" && "text-[#F4764F]",
+                      c.status === "acknowledged" && "text-[#E8C9A0]",
                       c.status === "declined" && "text-[#E8A33D]",
                       c.status === "fulfilled" && "text-[#7DBE8A]",
                     )}
@@ -422,7 +502,7 @@ export default function Profile() {
                 <p className="mt-3 text-sm italic text-[#B8B2AA] leading-relaxed">&ldquo;{c.message}&rdquo;</p>
                 {c.response && (
                   <div className="mt-4 pt-4 border-t border-white/[0.08]">
-                    <div className="mb-1 text-xs font-bold text-[#F4764F]">The room replied</div>
+                    <div className="mb-1 text-xs font-bold text-[#E8C9A0]">The room replied</div>
                     <p className="text-sm text-[#B8B2AA] leading-relaxed">{c.response}</p>
                   </div>
                 )}

@@ -4,10 +4,10 @@ import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 const VIBE_COLORS = {
-  "Chef's Pick": "bg-[#F4764F]/12 text-[#F4764F] border-[#F4764F]/40",
-  "Insider Access": "bg-[#F4764F]/12 text-[#F4764F] border-[#F4764F]/40",
-  "Date Night": "bg-[#E27D60]/15 text-[#E29B87] border-[#E27D60]/40",
-  Buzzing: "bg-[#E27D60]/15 text-[#E29B87] border-[#E27D60]/40",
+  "Chef's Pick": "bg-[#E8C9A0]/12 text-[#E8C9A0] border-[#E8C9A0]/40",
+  "Insider Access": "bg-[#E8C9A0]/12 text-[#E8C9A0] border-[#E8C9A0]/40",
+  "Date Night": "bg-[#F0D3AE]/15 text-[#E29B87] border-[#F0D3AE]/40",
+  Buzzing: "bg-[#F0D3AE]/15 text-[#E29B87] border-[#F0D3AE]/40",
   "Just Opened": "bg-[#E27D8B]/15 text-[#E2A0B6] border-[#E27D8B]/40",
   "Solo-Friendly": "bg-[#89A88C]/15 text-[#A6C4A9] border-[#89A88C]/40",
   "Neighborhood Favorite": "bg-[#89A88C]/15 text-[#A6C4A9] border-[#89A88C]/40",
@@ -28,7 +28,6 @@ export function VibePill({ vibe, className = "" }) {
 
 export function VenueCard({ venue, index = 0 }) {
   const topOffering = venue.signature_offerings?.[0]?.name;
-  const priceStr = "₹".repeat(venue.price_level || 3);
   const vibes = venue.vibes || [];
   const primaryVibe = vibes[0];
   const [ref, visible] = useReveal();
@@ -48,7 +47,7 @@ export function VenueCard({ venue, index = 0 }) {
           className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#141312] via-[#141312]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#110C09] via-[#110C09]/20 to-transparent" />
 
         {/* Top-left status */}
         <div className="absolute left-5 top-5">
@@ -82,9 +81,6 @@ export function VenueCard({ venue, index = 0 }) {
             <h3 className="font-serif-display text-3xl leading-tight text-[#F4F1EC]">
               {venue.name}
             </h3>
-            <span className="text-[#F4764F] font-serif text-sm tracking-widest">
-              {priceStr}
-            </span>
           </div>
         </div>
       </div>

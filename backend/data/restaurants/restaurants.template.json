@@ -1,0 +1,37 @@
+{
+  "restaurants": [
+    {
+      "name": "Restaurant Name",
+      "slug": "restaurant-name",
+      "cuisine": "North Indian",
+      "price_level": 2,
+      "neighborhood": "Area / locality",
+      "hours": "12:00 – 23:00",
+      "tagline": "One line that sells the place (max 140 characters)",
+      "description": "A short paragraph about the restaurant, the room and the food.",
+      "chef": "Chef name (optional)",
+      "vibes": ["Family", "Date Night"],
+      "featured": false,
+      "cover_photo": "photos/restaurant-name/cover.jpg",
+      "photos": [
+        { "file": "photos/restaurant-name/interior-1.jpg", "category": "restaurant", "caption": "The main room" },
+        { "file": "photos/restaurant-name/butter-chicken.jpg", "category": "food", "caption": "Butter chicken" },
+        { "file": "photos/restaurant-name/butter-chicken-recipe.jpg", "category": "recipe", "caption": "How we make it" },
+        { "file": "photos/restaurant-name/menu-1.jpg", "category": "menu", "caption": "Menu, page 1" },
+        { "file": "photos/restaurant-name/menu-2.jpg", "category": "menu", "caption": "Menu, page 2" }
+      ],
+      "menu": [
+        {
+          "name": "Starters",
+          "items": [
+            { "name": "Paneer Tikka", "description": "Charred in the tandoor, mint chutney", "price": 320, "veg": true },
+            { "name": "Chicken Seekh", "description": "", "price": 380, "veg": false }
+          ]
+        }
+      ],
+      "loyalty_points_per_checkin": 50,
+      "loyalty_points_per_booking": 30,
+      "staff": { "email": "staff@restaurant.com", "password": "choose-a-strong-password", "name": "Front desk" }
+    }
+  ]
+}

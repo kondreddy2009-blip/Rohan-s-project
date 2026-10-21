@@ -23,7 +23,7 @@ export function Sparkles({ count = 22 }) {
       {dots.map((d) => (
         <span
           key={d.i}
-          className="absolute rounded-full bg-[#F4764F]"
+          className="absolute rounded-full bg-[#E8C9A0]"
           style={{
             width: `${d.size}px`,
             height: `${d.size}px`,

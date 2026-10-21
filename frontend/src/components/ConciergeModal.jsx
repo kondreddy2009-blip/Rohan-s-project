@@ -38,12 +38,12 @@ export function ConciergeModal({ venue, onClose, onSent }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#110C09]/85 backdrop-blur-sm"
       onClick={onClose}
       data-testid="concierge-modal"
     >
       <div
-        className="relative w-full sm:max-w-lg bg-[#1F1D1B] border border-[#3A3733] p-8 sm:p-10 max-h-[90vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg bg-[#1B140F] border border-[#3D3128] p-8 sm:p-10 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -75,8 +75,8 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   data-testid={`concierge-type-${t.code}`}
                   className={`px-3 py-3 border text-xs tracking-wider uppercase transition-colors duration-300 ${
                     type === t.code
-                      ? "border-[#F4764F] text-[#F4764F]"
-                      : "border-[#3A3733] text-[#8E8982] hover:text-[#F4F1EC]"
+                      ? "border-[#E8C9A0] text-[#E8C9A0]"
+                      : "border-[#3D3128] text-[#8E8982] hover:text-[#F4F1EC]"
                   }`}
                 >
                   {t.label}
@@ -97,7 +97,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   onChange={(e) => setPartySize(e.target.value)}
                   placeholder="2"
                   data-testid="concierge-party-input"
-                  className="w-full bg-transparent border-b border-[#3A3733] py-2 text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300"
+                  className="w-full bg-transparent border-b border-[#3D3128] py-2 text-[#F4F1EC] font-light focus:border-[#E8C9A0] outline-none transition-colors duration-300"
                 />
               </div>
               <div>
@@ -107,7 +107,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   value={arrivalTime}
                   onChange={(e) => setArrivalTime(e.target.value)}
                   data-testid="concierge-arrival-input"
-                  className="w-full bg-transparent border-b border-[#3A3733] py-2 text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300"
+                  className="w-full bg-transparent border-b border-[#3D3128] py-2 text-[#F4F1EC] font-light focus:border-[#E8C9A0] outline-none transition-colors duration-300"
                 />
               </div>
             </div>
@@ -128,7 +128,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                     : "Anything the room should know."
               }
               data-testid="concierge-message-input"
-              className="w-full bg-transparent border border-[#3A3733] p-3 text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B665F]"
+              className="w-full bg-transparent border border-[#3D3128] p-3 text-[#F4F1EC] font-light focus:border-[#E8C9A0] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B665F]"
             />
           </div>
 

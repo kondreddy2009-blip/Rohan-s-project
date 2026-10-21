@@ -96,7 +96,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
       name: "Table",
       description: `Reservation deposit — ${venue.name}`,
       prefill: { name: user?.name, email: user?.email },
-      theme: { color: "#F4764F" },
+      theme: { color: "#E8C9A0" },
       handler: async (response) => {
         try {
           const { data } = await api.post(`/bookings/${booking.id}/verify-payment`, {
@@ -152,12 +152,12 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#110C09]/85 backdrop-blur-sm"
       onClick={onClose}
       data-testid="booking-modal"
     >
       <div
-        className="relative w-full sm:max-w-lg rounded-2xl bg-[#1F1D1B] border border-white/[0.08] p-8 sm:p-10 max-h-[92vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg rounded-2xl bg-[#1B140F] border border-white/[0.08] p-8 sm:p-10 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -178,10 +178,10 @@ export function BookingModal({ venue, onClose, onBooked }) {
             <h2 className="font-serif-display text-3xl mt-3 leading-tight">
               {confirmed.venue_name} is expecting you.
             </h2>
-            <div className="mt-6 p-6 border border-[#F4764F]/30 bg-[#141312]">
+            <div className="mt-6 p-6 border border-[#E8C9A0]/30 bg-[#110C09]">
               <div className="overline mb-2">Reservation code</div>
               <div
-                className="font-sans tabular-nums tracking-[0.28em] text-[#F4764F] text-2xl"
+                className="font-sans tabular-nums tracking-[0.28em] text-[#E8C9A0] text-2xl"
                 data-testid="booking-code"
               >
                 {confirmed.code}
@@ -216,7 +216,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
             </div>
             <p className="mt-6 text-sm text-[#8E8982] font-light">
               Show this code at the host stand — the room will confirm it shortly. You&apos;ll find
-              it under <Link to="/bookings" className="text-[#F4764F] underline-offset-4 hover:underline">Your reservations</Link>.
+              it under <Link to="/bookings" className="text-[#E8C9A0] underline-offset-4 hover:underline">Your reservations</Link>.
             </p>
             <div className="mt-5">
               <AddToCalendar booking={confirmed} />
@@ -260,13 +260,13 @@ export function BookingModal({ venue, onClose, onBooked }) {
                       data-testid={`booking-date-${iso}`}
                       className={`shrink-0 px-4 py-3 border transition-colors duration-300 min-w-[92px] text-left ${
                         active
-                          ? "border-[#F4764F] bg-[#141312]"
-                          : "border-[#3A3733] hover:border-[#8E8982]"
+                          ? "border-[#E8C9A0] bg-[#110C09]"
+                          : "border-[#3D3128] hover:border-[#8E8982]"
                       }`}
                     >
                       <div
                         className={`text-xs tracking-widest uppercase ${
-                          active ? "text-[#F4764F]" : "text-[#8E8982]"
+                          active ? "text-[#E8C9A0]" : "text-[#8E8982]"
                         }`}
                       >
                         {labelFor(d, today)}
@@ -308,10 +308,10 @@ export function BookingModal({ venue, onClose, onBooked }) {
                         data-testid={`booking-slot-${s.time}`}
                         className={`px-2 py-2.5 border font-sans text-sm tabular-nums tracking-wider transition-colors duration-200 ${
                           active
-                            ? "border-[#F4764F] text-[#F4764F] bg-[#141312]"
+                            ? "border-[#E8C9A0] text-[#E8C9A0] bg-[#110C09]"
                             : disabled
                               ? "border-[#2A2724] text-[#6B665F] cursor-not-allowed line-through"
-                              : "border-[#3A3733] text-[#F4F1EC] hover:border-[#8E8982]"
+                              : "border-[#3D3128] text-[#F4F1EC] hover:border-[#8E8982]"
                         }`}
                       >
                         {s.time}
@@ -333,7 +333,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 <Users strokeWidth={1.4} className="h-3 w-3" />
                 Party of
               </label>
-              <div className="inline-flex items-center border border-[#3A3733]">
+              <div className="inline-flex items-center border border-[#3D3128]">
                 <button
                   type="button"
                   onClick={() => setPartySize((p) => Math.max(1, p - 1))}
@@ -371,7 +371,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Celebrating a birthday. A quiet corner if possible."
                 data-testid="booking-note-input"
-                className="w-full bg-transparent border border-[#3A3733] p-3 text-sm text-[#F4F1EC] font-light focus:border-[#F4764F] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B665F]"
+                className="w-full bg-transparent border border-[#3D3128] p-3 text-sm text-[#F4F1EC] font-light focus:border-[#E8C9A0] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B665F]"
               />
             </div>
 

@@ -11,6 +11,7 @@ import { BrandLockup } from "@/components/BrandLockup";
 import { StatusIndicator, queueLabel } from "@/components/StatusIndicator";
 import { QRDisplay } from "@/components/QRDisplay";
 import { PayoutDetailsForm } from "@/components/PayoutDetailsForm";
+import { MenuEditor } from "@/components/MenuEditor";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS = ["Quiet", "Filling In", "At Capacity"];
@@ -716,6 +717,7 @@ const PHOTO_CATEGORIES = [
   { key: "food", label: "Food item" },
   { key: "recipe", label: "Recipe" },
   { key: "restaurant", label: "Restaurant" },
+  { key: "menu", label: "Menu page" },
 ];
 
 function VenuePhotosPanel({ venue, onSaved }) {
@@ -2008,6 +2010,14 @@ export default function StaffDashboard() {
         <div className="mt-12 animate-fade-up">
           <VenueProfileForm
             key={selectedVenue.id}
+            venue={selectedVenue}
+            onSaved={() => {
+              loadVenues();
+              loadData(selectedId);
+            }}
+          />
+          <MenuEditor
+            key={`menu-${selectedVenue.id}`}
             venue={selectedVenue}
             onSaved={() => {
               loadVenues();

@@ -6,7 +6,7 @@ export function BrandLockup({ className, size = "md", tone = "gold" }) {
   const s =
     size === "lg"
       ? { emblem: "h-24", word: "w-52", tag: "w-60", gap: "gap-3" }
-      : { emblem: "h-14", word: "w-36", tag: "w-[165px]", gap: "gap-2" };
+      : { emblem: "h-10", word: "w-24", tag: "w-[110px]", gap: "gap-1.5" };
   return (
     <div className={cn("inline-flex flex-col items-center", s.gap, className)}>
       <img src={`/logo${sfx}.png`} alt="" className={cn(s.emblem, "w-auto")} />

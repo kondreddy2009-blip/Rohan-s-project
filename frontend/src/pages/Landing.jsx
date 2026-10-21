@@ -22,7 +22,7 @@ const TIERS = [
 ];
 
 const btnPrimary =
-  "inline-flex items-center justify-center gap-2 rounded-full bg-[#F4764F] px-7 py-3.5 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors";
+  "inline-flex items-center justify-center gap-2 rounded-full bg-[#E8C9A0] px-7 py-3.5 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F3DAB8] transition-colors";
 const btnGhost =
   "inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-7 py-3.5 text-[15px] font-bold text-white hover:bg-white/5 transition-colors";
 const wrap = "mx-auto max-w-[1280px] px-5 sm:px-10 lg:px-16";
@@ -44,7 +44,7 @@ export default function Landing() {
   const featured = venues.slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-[#171513] text-[#F4F1EC]" data-testid="landing-page">
+    <div className="min-h-screen bg-[#130E0B] text-[#F4F1EC]" data-testid="landing-page">
       <header className="absolute inset-x-0 top-0 z-20">
         <div className={`${wrap} flex items-center justify-between py-4`}>
           <Link to="/" aria-label="Table home"><BrandLockup /></Link>
@@ -58,7 +58,7 @@ export default function Landing() {
             <Link
               to="/login"
               state={{ mode: "create" }}
-              className="rounded-full bg-white px-5 py-2.5 text-sm font-extrabold text-[#171513] hover:bg-white/90 transition-colors"
+              className="rounded-full bg-white px-5 py-2.5 text-sm font-extrabold text-[#130E0B] hover:bg-white/90 transition-colors"
             >
               Join free
             </Link>
@@ -69,9 +69,9 @@ export default function Landing() {
       {/* Hero */}
       <section className="relative min-h-[640px] sm:min-h-[720px] overflow-hidden">
         {hero && <img src={hero.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/60 to-[#171513]/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#130E0B] via-[#130E0B]/60 to-[#130E0B]/40" />
         <div className={`${wrap} relative flex min-h-[640px] sm:min-h-[720px] flex-col justify-end pb-16 sm:pb-24 pt-36`}>
-          <div className="text-xs font-extrabold tracking-[0.2em] uppercase text-[#E27D60]">Dine · Earn · Return</div>
+          <div className="text-xs font-extrabold tracking-[0.2em] uppercase text-[#F0D3AE]">Dine · Earn · Return</div>
           <h1 className="mt-4 max-w-3xl text-5xl sm:text-7xl font-extrabold tracking-[-0.045em] leading-[0.98]">
             One membership.<br />Every table.
           </h1>
@@ -102,9 +102,9 @@ export default function Landing() {
         <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-[-0.03em]">Loyalty that rewards your regular tables</h2>
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           {STEPS.map((s, i) => (
-            <div key={s.title} className="rounded-2xl bg-[#1F1D1B] p-7">
+            <div key={s.title} className="rounded-2xl bg-[#1B140F] p-7">
               <div className="flex items-center justify-between">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#3A2219] text-[#E27D60]">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#3A2A1B] text-[#F0D3AE]">
                   <s.icon strokeWidth={1.6} className="h-5 w-5" />
                 </span>
                 <span className="text-sm font-bold text-[#8E8982]">0{i + 1}</span>
@@ -125,7 +125,7 @@ export default function Landing() {
                 <div className="text-[11px] font-extrabold tracking-[0.18em] uppercase text-[#8E8982]">The network</div>
                 <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-[-0.03em]">Rooms on Table</h2>
               </div>
-              <Link to="/discover" className="text-sm font-bold text-[#E27D60] hover:text-[#F4764F] whitespace-nowrap">
+              <Link to="/discover" className="text-sm font-bold text-[#F0D3AE] hover:text-[#E8C9A0] whitespace-nowrap">
                 See all →
               </Link>
             </div>
@@ -148,7 +148,7 @@ export default function Landing() {
                 className={
                   i === TIERS.length - 1
                     ? "rounded-2xl p-6 bg-gradient-to-br from-[#CC6A4C] to-[#8E4132] text-[#1A0F0B]"
-                    : "rounded-2xl p-6 bg-[#1F1D1B]"
+                    : "rounded-2xl p-6 bg-[#1B140F]"
                 }
               >
                 <Sparkles strokeWidth={1.6} className="h-5 w-5 opacity-70" />
@@ -166,7 +166,7 @@ export default function Landing() {
       {/* CTA + restaurants */}
       <section className="border-t border-white/[0.06] py-20">
         <div className={`${wrap} grid grid-cols-1 md:grid-cols-2 gap-4`}>
-          <div className="rounded-2xl bg-[#1F1D1B] p-8 sm:p-10">
+          <div className="rounded-2xl bg-[#1B140F] p-8 sm:p-10">
             <h3 className="text-3xl font-extrabold tracking-[-0.03em]">Ready for your first table?</h3>
             <p className="mt-3 text-[#B8B2AA]">Free to join. Your points start the moment you check in.</p>
             <Link to="/login" state={{ mode: "create" }} className={`${btnPrimary} mt-6`}>Create your account</Link>

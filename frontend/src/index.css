@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700&display=swap");
 
+@import url("https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,15 +11,15 @@
    Table — palette + type system
    ------------------------------------------------------------------------- */
 :root {
-  --ritual-bg: #141312;
-  --ritual-surface: #1F1D1B;
-  --ritual-surface-2: #262422;
-  --ritual-border: #3A3733;
+  --ritual-bg: #110C09;
+  --ritual-surface: #1B140F;
+  --ritual-surface-2: #241C16;
+  --ritual-border: #3D3128;
   --ritual-text: #F4F1EC;
   --ritual-text-muted: #8E8982;
   --ritual-text-faint: #6B665F;
-  --ritual-accent: #F4764F;
-  --ritual-accent-hover: #F78963;
+  --ritual-accent: #E8C9A0;
+  --ritual-accent-hover: #F3DAB8;
 
   /* shadcn dark tokens re-tuned to Table (grey + orange) */
   --background: 40 6% 7%;
@@ -26,19 +28,19 @@
   --card-foreground: 36 27% 94%;
   --popover: 30 7% 12%;
   --popover-foreground: 36 27% 94%;
-  --primary: 14 89% 61%;
+  --primary: 34 55% 76%;
   --primary-foreground: 40 6% 7%;
   --secondary: 30 6% 14%;
   --secondary-foreground: 36 27% 94%;
   --muted: 30 6% 14%;
   --muted-foreground: 38 5% 54%;
-  --accent: 14 89% 61%;
+  --accent: 34 55% 76%;
   --accent-foreground: 40 6% 7%;
   --destructive: 0 62% 42%;
   --destructive-foreground: 36 27% 94%;
   --border: 30 5% 21%;
   --input: 30 6% 14%;
-  --ring: 14 89% 61%;
+  --ring: 34 55% 76%;
   --radius: 0.125rem;
 }
 
@@ -313,7 +315,7 @@ textarea:focus-visible,
 
 /* ---- Staff dashboard theme tokens (dark by default; html.staff-light flips them) ---- */
 :root {
-  --st-page: #141312;
+  --st-page: #110C09;
   --st-page-rgb: 20 19 18;
   --st-side: #121110;
   --st-card: #171614;

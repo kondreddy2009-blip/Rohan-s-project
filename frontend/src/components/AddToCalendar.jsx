@@ -2,7 +2,7 @@ import { CalendarPlus } from "lucide-react";
 import { downloadIcs, googleCalendarUrl } from "@/lib/calendar";
 
 const btn =
-  "inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:border-[#F4764F] hover:text-[#F4764F] transition-colors";
+  "inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:border-[#E8C9A0] hover:text-[#E8C9A0] transition-colors";
 
 export function AddToCalendar({ booking }) {
   return (

@@ -127,14 +127,14 @@ export function QRScanner({ onScan, onError }) {
     <div className="relative w-full max-w-sm mx-auto">
       <div
         ref={wrapperRef}
-        className="w-full aspect-square bg-black overflow-hidden border border-[#3A3733]"
+        className="w-full aspect-square bg-black overflow-hidden border border-[#3D3128]"
         data-testid="qr-scanner-viewport"
       />
       <div className="pointer-events-none absolute inset-6">
-        <div className="absolute top-0 left-0 h-6 w-6 border-t border-l border-[#F4764F]" />
-        <div className="absolute top-0 right-0 h-6 w-6 border-t border-r border-[#F4764F]" />
-        <div className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-[#F4764F]" />
-        <div className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-[#F4764F]" />
+        <div className="absolute top-0 left-0 h-6 w-6 border-t border-l border-[#E8C9A0]" />
+        <div className="absolute top-0 right-0 h-6 w-6 border-t border-r border-[#E8C9A0]" />
+        <div className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-[#E8C9A0]" />
+        <div className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-[#E8C9A0]" />
       </div>
       <div className="mt-3 overline text-center">
         {status === "starting" && "Preparing camera…"}

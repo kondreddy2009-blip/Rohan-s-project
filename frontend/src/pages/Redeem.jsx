@@ -93,16 +93,16 @@ export default function Redeem() {
 
       {/* Steps indicator */}
       <div className="mt-6 flex items-center gap-3 overline">
-        <span className={step === "venue" ? "text-[#F4764F]" : ""}>01 · Room</span>
+        <span className={step === "venue" ? "text-[#E8C9A0]" : ""}>01 · Room</span>
         <span className="text-[#6B665F]">/</span>
-        <span className={step === "perk" ? "text-[#F4764F]" : ""}>02 · Perk</span>
+        <span className={step === "perk" ? "text-[#E8C9A0]" : ""}>02 · Perk</span>
         <span className="text-[#6B665F]">/</span>
-        <span className={step === "confirm" || step === "done" ? "text-[#F4764F]" : ""}>03 · Confirm</span>
+        <span className={step === "confirm" || step === "done" ? "text-[#E8C9A0]" : ""}>03 · Confirm</span>
       </div>
 
       {/* Step 1 — Venue */}
       {step === "venue" && loaded && venues.length === 0 && (
-        <div className="mt-10 border border-[#3A3733] p-8 text-center animate-fade-up" data-testid="redeem-empty">
+        <div className="mt-10 border border-[#3D3128] p-8 text-center animate-fade-up" data-testid="redeem-empty">
           <div className="font-serif-display text-2xl">No points to spend yet.</div>
           <p className="mt-2 text-sm text-[#8E8982] font-light">
             Points are earned and redeemed at the same restaurant. Check in at a room to start earning there.
@@ -135,8 +135,8 @@ export default function Redeem() {
                   alt={v.name}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#141312] via-transparent to-transparent" />
-                <div className="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-[#F4764F] backdrop-blur-sm" data-testid={`redeem-venue-balance-${v.id}`}>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#110C09] via-transparent to-transparent" />
+                <div className="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-[#E8C9A0] backdrop-blur-sm" data-testid={`redeem-venue-balance-${v.id}`}>
                   {v.balance.toLocaleString("en-IN")} pts here
                 </div>
                 <div className="absolute inset-x-4 bottom-4">
@@ -154,13 +154,13 @@ export default function Redeem() {
         <div className="mt-10 animate-fade-up">
           <div className="overline mb-4">Selected room</div>
           <div className="font-serif-display text-3xl">{selectedVenue.name}</div>
-          <div className="mt-1 text-sm text-[#F4764F]" data-testid="redeem-venue-points">
+          <div className="mt-1 text-sm text-[#E8C9A0]" data-testid="redeem-venue-points">
             {balance.toLocaleString("en-IN")} points available here
           </div>
           <button
             onClick={() => setStep("venue")}
             data-testid="change-venue-button"
-            className="overline mt-1 hover:text-[#F4764F] transition-colors duration-300"
+            className="overline mt-1 hover:text-[#E8C9A0] transition-colors duration-300"
           >
             Change
           </button>
@@ -180,8 +180,8 @@ export default function Redeem() {
                   className={cn(
                     "w-full text-left p-5 sm:p-6 border transition-colors duration-300 flex items-center justify-between gap-6",
                     disabled
-                      ? "border-[#3A3733] opacity-40 cursor-not-allowed"
-                      : "border-[#3A3733] hover:border-[#F4764F]",
+                      ? "border-[#3D3128] opacity-40 cursor-not-allowed"
+                      : "border-[#3D3128] hover:border-[#E8C9A0]",
                   )}
                 >
                   <div>
@@ -203,7 +203,7 @@ export default function Redeem() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-serif-display text-3xl text-[#F4764F]">{p.cost}</div>
+                    <div className="font-serif-display text-3xl text-[#E8C9A0]">{p.cost}</div>
                     <div className="overline mt-0.5">Points</div>
                   </div>
                 </button>
@@ -216,7 +216,7 @@ export default function Redeem() {
       {/* Step 3 — Confirm */}
       {step === "confirm" && selectedPerk && selectedVenue && (
         <div className="mt-10 animate-fade-up">
-          <div className="p-6 sm:p-10 border border-[#F4764F]/30 bg-[#1F1D1B]">
+          <div className="p-6 sm:p-10 border border-[#E8C9A0]/30 bg-[#1B140F]">
             <div className="overline">Confirming</div>
             <h2 className="font-serif-display text-4xl mt-2">{selectedPerk.name}</h2>
             <div className="font-serif italic text-lg text-[#8E8982] mt-1">
@@ -226,7 +226,7 @@ export default function Redeem() {
             <div className="mt-8 grid grid-cols-3 gap-6 max-w-md">
               <div>
                 <div className="overline mb-1">Cost</div>
-                <div className="font-serif-display text-3xl text-[#F4764F]">{selectedPerk.cost}</div>
+                <div className="font-serif-display text-3xl text-[#E8C9A0]">{selectedPerk.cost}</div>
               </div>
               <div>
                 <div className="overline mb-1">Points here</div>
@@ -268,8 +268,8 @@ export default function Redeem() {
         <div className="mt-10 animate-fade">
           <div className="mx-auto max-w-lg text-center relative">
             <Sparkles count={26} />
-            <div className="relative mx-auto w-14 h-14 border border-[#F4764F] flex items-center justify-center">
-              <Check strokeWidth={1} className="h-7 w-7 text-[#F4764F]" />
+            <div className="relative mx-auto w-14 h-14 border border-[#E8C9A0] flex items-center justify-center">
+              <Check strokeWidth={1} className="h-7 w-7 text-[#E8C9A0]" />
             </div>
             <div className="overline-accent mt-6 relative">A table awaits</div>
             <h2 className="font-serif-display text-4xl mt-3 relative">
@@ -279,10 +279,10 @@ export default function Redeem() {
               Present this code on arrival. The room already knows you&apos;re coming.
             </p>
 
-            <div className="mt-10 border border-[#F4764F]/40 p-8">
+            <div className="mt-10 border border-[#E8C9A0]/40 p-8">
               <div className="overline mb-3">Reservation code</div>
               <div
-                className="font-mono text-4xl tracking-[0.3em] text-[#F4764F]"
+                className="font-mono text-4xl tracking-[0.3em] text-[#E8C9A0]"
                 data-testid="redemption-code"
               >
                 {redemption.code}

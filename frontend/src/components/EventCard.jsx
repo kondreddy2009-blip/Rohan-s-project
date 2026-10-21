@@ -1,4 +1,9 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { CalendarDays, Users, ArrowRight } from "lucide-react";
+import { api, formatApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 
@@ -21,6 +26,31 @@ export function EventCard({ event, userTier, pointsAway }) {
   const locked = requiredIdx > userIdx;
   const navigate = useNavigate();
   const openVenue = () => navigate(`/venues/${event.venue_id}`);
+  const { user } = useAuth();
+  const [going, setGoing] = useState(!!event.my_rsvp);
+  const [count, setCount] = useState(event.rsvp_count || 0);
+  const [busy, setBusy] = useState(false);
+  const seatsLeft = event.capacity ? Math.max(event.capacity - count, 0) : null;
+  const full = seatsLeft === 0 && !going;
+
+  const toggleRsvp = async (e) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/events/${event.id}/rsvp`);
+      setGoing(data.going);
+      setCount(data.rsvp_count);
+      toast.success(data.going ? `You're in for ${event.title}` : "RSVP cancelled");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail) || "Could not update RSVP");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div
@@ -28,7 +58,7 @@ export function EventCard({ event, userTier, pointsAway }) {
       tabIndex={0}
       onClick={openVenue}
       onKeyDown={(e) => e.key === "Enter" && openVenue()}
-      className="rounded-2xl bg-[#1F1D1B] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
+      className="rounded-2xl border border-white/10 bg-[#17110C] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
       data-testid={`event-card-${event.id}`}>
       <div className="relative aspect-[16/9] overflow-hidden">
         <img
@@ -42,36 +72,46 @@ export function EventCard({ event, userTier, pointsAway }) {
           <span
             className={
               "absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-[0.14em] uppercase " +
-              (locked ? "bg-black/55 text-[#B8B2AA]" : "bg-[#D8694A] text-[#1A0F0B]")
+              (locked ? "bg-black/55 text-[#B8B2AA]" : "bg-[#F07F5E] text-[#2A0F07]")
             }
           >
             {locked ? "Locked" : required}
           </span>
         )}
         <div className="absolute inset-x-4 bottom-3">
-          <div className="text-xs font-semibold text-white/80">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-white/90">
+            <CalendarDays strokeWidth={1.5} className="h-4 w-4 text-[#F0A58C]" />
             {formatEventWhen(event.date, event.time)}
           </div>
-          <h3 className="mt-0.5 text-lg font-bold text-white leading-tight">{event.title}</h3>
+          <h3 className="mt-1 font-['Cormorant_Garamond'] text-[30px] font-semibold text-white leading-tight">{event.title}</h3>
         </div>
       </div>
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-        <div className="text-xs text-[#8E8982]">
-          {event.capacity ? `${event.capacity} seats · ` : ""}
-          {required ? (locked ? `${required} only` : `${required} and above`) : "Open to all"}
+        <div className="flex items-center gap-2.5 text-[13px] text-[#B8AA98]">
+          <Users strokeWidth={1.5} className="h-4 w-4 shrink-0 text-[#F0A58C]" />
+          <span>{seatsLeft !== null ? (full ? "Full · " : `${seatsLeft} of ${event.capacity} seats left · `) : ""}
+          {required ? (locked ? `${required} only` : `${required} and above`) : "Open to all"}</span>
         </div>
         {locked ? (
-          <span className="rounded-full bg-[#2A2826] px-3.5 py-2 text-xs font-bold text-[#B8B2AA] whitespace-nowrap shrink-0">
+          <span className="rounded-full bg-[#271E17] px-3.5 py-2 text-xs font-bold text-[#B8B2AA] whitespace-nowrap shrink-0">
             {pointsAway > 0 ? `${pointsAway.toLocaleString("en-IN")} pts away` : `Requires ${required}`}
           </span>
         ) : (
-          <Link
-            to={`/venues/${event.venue_id}`}
+          <button
+            type="button"
+            onClick={toggleRsvp}
+            onKeyDown={(e) => e.stopPropagation()}
+            disabled={busy || full}
             data-testid={`event-rsvp-${event.id}`}
-            className="rounded-full bg-[#D8694A] px-4 py-2 text-xs font-extrabold text-[#1A0F0B] hover:bg-[#E27D60] transition-colors whitespace-nowrap shrink-0"
+            className={
+              "inline-flex items-center gap-2 rounded-full px-5 py-3 text-[13px] font-bold transition-colors whitespace-nowrap shrink-0 disabled:opacity-60 " +
+              (going
+                ? "bg-[#271E17] text-[#F0D3AE] hover:bg-[#33281F]"
+                : "bg-[#F07F5E] text-[#2A0F07] hover:bg-[#F59273]")
+            }
           >
-            RSVP
-          </Link>
+            {full ? "Full" : going ? "✓ You're going" : <>Reserve a seat <ArrowRight className="h-4 w-4" /></>}
+          </button>
         )}
       </div>
     </div>

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 const STATUS_STYLES = {
   Quiet: { dot: "bg-[#7A9B7A]", label: "Quiet" },
-  "Filling In": { dot: "bg-[#F4764F]", label: "Filling in" },
+  "Filling In": { dot: "bg-[#E8C9A0]", label: "Filling in" },
   "At Capacity": { dot: "bg-[#8E8982]", label: "At Capacity" },
 };
 

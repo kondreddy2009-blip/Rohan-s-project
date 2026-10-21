@@ -62,7 +62,7 @@ function ReviewForm({ venueId, mine, onSaved, onCancel }) {
   };
 
   return (
-    <form onSubmit={submit} className="mt-5 rounded-xl bg-[#262422] p-5" data-testid="review-form">
+    <form onSubmit={submit} className="mt-5 rounded-xl bg-[#241C16] p-5" data-testid="review-form">
       <div className="text-sm font-semibold text-[#B8B2AA]">{mine ? "Edit your review" : "How was your visit?"}</div>
       <div className="mt-2 flex gap-1" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -89,14 +89,14 @@ function ReviewForm({ venueId, mine, onSaved, onCancel }) {
         rows={3}
         placeholder="Tell others what you ordered and how it felt (optional)"
         data-testid="review-text"
-        className="mt-3 w-full resize-none rounded-xl bg-[#1F1D1B] p-4 text-[15px] text-white outline-none ring-1 ring-white/[0.06] focus:ring-[#D8694A] placeholder:text-[#6F6A64]"
+        className="mt-3 w-full resize-none rounded-xl bg-[#1B140F] p-4 text-[15px] text-white outline-none ring-1 ring-white/[0.06] focus:ring-[#E8C9A0] placeholder:text-[#6F6A64]"
       />
       <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"
           disabled={busy}
           data-testid="review-submit"
-          className="rounded-full bg-[#F4764F] px-6 py-2.5 text-sm font-extrabold text-[#1A0F0B] hover:bg-[#F78963] disabled:opacity-50 transition-colors"
+          className="rounded-full bg-[#E8C9A0] px-6 py-2.5 text-sm font-extrabold text-[#1A0F0B] hover:bg-[#F3DAB8] disabled:opacity-50 transition-colors"
         >
           {busy ? "Saving…" : mine ? "Update review" : "Post review"}
         </button>
@@ -167,7 +167,7 @@ export function ReviewsSection({ venueId, user, card, heading, onSummary }) {
             return (
               <div key={n} className="flex items-center gap-3 text-xs text-[#8E8982]">
                 <span className="w-3 tabular-nums">{n}</span>
-                <div className="h-1.5 flex-1 rounded-full bg-[#2A2826]">
+                <div className="h-1.5 flex-1 rounded-full bg-[#271E17]">
                   <div className="h-full rounded-full bg-[#E8A33D]" style={{ width: `${(c / summary.count) * 100}%` }} />
                 </div>
                 <span className="w-6 text-right tabular-nums">{c}</span>
@@ -179,7 +179,7 @@ export function ReviewsSection({ venueId, user, card, heading, onSummary }) {
 
       {!user ? (
         <p className="mt-5 text-sm text-[#8E8982]">
-          <Link to="/login" state={{ from: location }} className="font-bold text-[#E27D60] hover:text-[#F4764F]">Sign in</Link>{" "}
+          <Link to="/login" state={{ from: location }} className="font-bold text-[#F0D3AE] hover:text-[#E8C9A0]">Sign in</Link>{" "}
           to rate this restaurant after you've dined here.
         </p>
       ) : !can_review ? (
@@ -201,7 +201,7 @@ export function ReviewsSection({ venueId, user, card, heading, onSummary }) {
             <li key={r.id} className="py-4" data-testid={`review-${r.id}`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#3A2219] text-sm font-extrabold text-[#E27D60]">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#3A2A1B] text-sm font-extrabold text-[#F0D3AE]">
                     {(r.member_name || "M").trim()[0].toUpperCase()}
                   </span>
                   <div className="min-w-0">

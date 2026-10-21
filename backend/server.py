@@ -259,6 +259,10 @@ class RegisterIn(BaseModel):
     name: str = Field(min_length=1, max_length=80)
 
 
+class ProfileUpdateIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
 class LoginIn(BaseModel):
     email: EmailStr
     password: str
@@ -653,11 +657,34 @@ async def list_venues(daypart: Optional[str] = None):
 
 
 @api.get("/events")
-async def list_events():
+async def list_events(request: Request):
+    try:
+        viewer = await get_current_user(request)
+    except HTTPException:
+        viewer = None
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     events = await db.events.find({"date": {"$gte": today}}, {"_id": 0}).to_list(100)
     events.sort(key=lambda e: (e["date"], e["time"]))
     events = events[:12]
+    event_ids = [e["id"] for e in events]
+    counts = {
+        r["_id"]: r["n"]
+        async for r in db.event_rsvps.aggregate([
+            {"$match": {"event_id": {"$in": event_ids}}},
+            {"$group": {"_id": "$event_id", "n": {"$sum": 1}}},
+        ])
+    }
+    mine = set()
+    if viewer:
+        mine = {
+            r["event_id"]
+            async for r in db.event_rsvps.find(
+                {"event_id": {"$in": event_ids}, "member_id": viewer["id"]}, {"_id": 0, "event_id": 1}
+            )
+        }
+    for e in events:
+        e["rsvp_count"] = counts.get(e["id"], 0)
+        e["my_rsvp"] = e["id"] in mine
     venue_ids = list({e["venue_id"] for e in events})
     venues = await db.venues.find(
         {"id": {"$in": venue_ids}}, {"_id": 0, "id": 1, "name": 1, "neighborhood": 1, "image_url": 1}
@@ -670,6 +697,28 @@ async def list_events():
             e["venue_neighborhood"] = v.get("neighborhood")
             e["venue_image_url"] = e.get("image_url") or v.get("image_url")
     return events
+
+
+@api.post("/events/{event_id}/rsvp")
+async def toggle_rsvp(event_id: str, user: dict = Depends(get_current_user)):
+    """One-tap RSVP: reserves a seat, or cancels it if already reserved."""
+    event = await db.events.find_one({"id": event_id}, {"_id": 0})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    key = {"event_id": event_id, "member_id": user["id"]}
+    if await db.event_rsvps.find_one(key):
+        await db.event_rsvps.delete_one(key)
+        going = False
+    else:
+        required = event.get("tier_required")
+        if required and TIER_ORDER.index(user.get("tier", "Guest")) < TIER_ORDER.index(required):
+            raise HTTPException(status_code=403, detail=f"This event is for {required} members and above")
+        capacity = event.get("capacity")
+        if capacity and await db.event_rsvps.count_documents({"event_id": event_id}) >= capacity:
+            raise HTTPException(status_code=409, detail="This event is full")
+        await db.event_rsvps.insert_one({**key, "created_at": _now_iso()})
+        going = True
+    return {"going": going, "rsvp_count": await db.event_rsvps.count_documents({"event_id": event_id})}
 
 
 @api.get("/venues/{venue_id}")
@@ -909,6 +958,15 @@ async def my_redemptions(user: dict = Depends(get_current_user)):
 # ---------------------------------------------------------------------------
 # Member profile
 # ---------------------------------------------------------------------------
+@api.patch("/members/me")
+async def update_my_profile(payload: ProfileUpdateIn, user: dict = Depends(get_current_user)):
+    name = " ".join(payload.name.split())
+    if not name:
+        raise HTTPException(status_code=422, detail="Name cannot be empty")
+    await db.users.update_one({"id": user["id"]}, {"$set": {"name": name}})
+    return public_user({**user, "name": name})
+
+
 @api.get("/members/me/history")
 async def my_history(user: dict = Depends(get_current_user)):
     checkins = await db.checkins.find(
@@ -1007,7 +1065,7 @@ async def update_profile(
 # ---------------------------------------------------------------------------
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
-PHOTO_CATEGORIES = ("food", "recipe", "restaurant")
+PHOTO_CATEGORIES = ("food", "recipe", "restaurant", "menu")
 PHOTO_MAX_BYTES = 8 * 1024 * 1024
 PHOTO_MAX_PER_VENUE = 60
 # Sniffed from file bytes — never trust the client-supplied content type or filename.
@@ -1062,9 +1120,9 @@ async def upload_venue_photo(
 ):
     _assert_staff_can_manage(user, venue_id)
     if category not in PHOTO_CATEGORIES:
-        raise HTTPException(status_code=400, detail="Category must be food, recipe or restaurant")
+        raise HTTPException(status_code=400, detail="Category must be food, recipe, restaurant or menu")
     venue = await db.venues.find_one({"id": venue_id}, {"_id": 0, "photos": 1})
-    if not venue:
+    if venue is None:  # not `not venue`: a venue with no photos yet projects to an empty dict
         raise HTTPException(status_code=404, detail="Venue not found")
     if len(venue.get("photos") or []) >= PHOTO_MAX_PER_VENUE:
         raise HTTPException(status_code=400, detail=f"Photo limit reached ({PHOTO_MAX_PER_VENUE})")
@@ -1111,6 +1169,57 @@ async def delete_venue_photo(venue_id: str, photo_id: str, user: dict = Depends(
         if photo.get(key):
             (UPLOAD_DIR / venue_id / Path(photo[key]).name).unlink(missing_ok=True)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Venue menu — sections of dishes, edited by staff and shown on the venue page
+# ---------------------------------------------------------------------------
+class MenuItemIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: str = Field(default="", max_length=240)
+    price: float = Field(ge=0, le=100000)
+    veg: Optional[bool] = None  # True = vegetarian, False = non-vegetarian, None = not specified
+    photo_url: Optional[str] = Field(default=None, max_length=500)
+
+
+class MenuSectionIn(BaseModel):
+    name: str = Field(min_length=1, max_length=60)
+    items: List[MenuItemIn] = Field(default_factory=list, max_length=80)
+
+
+class MenuIn(BaseModel):
+    sections: List[MenuSectionIn] = Field(default_factory=list, max_length=20)
+
+
+def build_menu(payload: MenuIn) -> list:
+    return [
+        {
+            "id": str(uuid.uuid4()),
+            "name": sec.name.strip(),
+            "items": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": it.name.strip(),
+                    "description": it.description.strip(),
+                    "price": round(it.price, 2),
+                    "veg": it.veg,
+                    "photo_url": (it.photo_url or "").strip() or None,
+                }
+                for it in sec.items
+            ],
+        }
+        for sec in payload.sections
+    ]
+
+
+@api.put("/staff/venues/{venue_id}/menu")
+async def update_menu(venue_id: str, payload: MenuIn, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    menu = build_menu(payload)
+    result = await db.venues.update_one({"id": venue_id}, {"$set": {"menu": menu}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    return {"ok": True, "menu": menu}
 
 
 @api.patch("/staff/venues/{venue_id}/booking-deposit")
@@ -2246,12 +2355,18 @@ async def _reconcile_demo_ledger(member_id: str, target_balance: int) -> None:
     await db.users.update_one({"id": member_id}, {"$set": {"ritual_points_balance": total}})
 
 
+# Set SEED_DEMO_DATA=false once real restaurants are loaded (see import_restaurants.py): the six demo
+# restaurants, their events, staff logins and demo ledger are then removed/skipped on startup.
+SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "true").lower() != "false"
+
+
 async def seed_database():
-    # Venues — clear legacy entries that are no longer in SEED_VENUES (e.g. Nocturne pre-pivot)
-    seed_ids = [v["id"] for v in SEED_VENUES]
+    seed_venues = SEED_VENUES if SEED_DEMO_DATA else []
+    # Venues — clear legacy entries that are no longer in the seed list (e.g. Nocturne pre-pivot)
+    seed_ids = [v["id"] for v in seed_venues]
     # Venues that restaurants registered themselves (source="registered") must survive restarts.
     await db.venues.delete_many({"id": {"$nin": seed_ids}, "source": {"$ne": "registered"}})
-    for v in SEED_VENUES:
+    for v in seed_venues:
         existing = await db.venues.find_one({"id": v["id"]})
         doc = {
             **v,
@@ -2284,13 +2399,16 @@ async def seed_database():
             ]
             await db.venues.insert_one(doc)
 
-    # Events
-    await db.events.delete_many({})
-    for e in SEED_EVENTS:
-        await db.events.insert_one({**e, "id": str(uuid.uuid4()), "created_at": _now_iso()})
+    # Events — only the seeded ones are reset; events staff created are kept
+    # (events from before the "seeded" flag existed are matched by their demo venue)
+    await db.events.delete_many({"$or": [{"seeded": True}, {"venue_id": {"$in": [v["id"] for v in SEED_VENUES]}}]})
+    for e in (SEED_EVENTS if SEED_DEMO_DATA else []):
+        await db.events.insert_one({**e, "id": str(uuid.uuid4()), "created_at": _now_iso(), "seeded": True})
 
     # Users
     for u in SEED_USERS:
+        if not SEED_DEMO_DATA and u.get("staff_venue_id"):
+            continue  # demo staff logins point at demo restaurants
         email = u["email"].lower()
         existing = await db.users.find_one({"email": email})
         lifetime = u.get("lifetime_points", 0)
@@ -2315,7 +2433,7 @@ async def seed_database():
 
     # A small amount of ledger history for the admin/demo user so wallet isn't empty
     admin = await db.users.find_one({"email": ADMIN_EMAIL.lower()})
-    if admin:
+    if admin and SEED_DEMO_DATA:
         existing_ledger = await db.points_ledger.count_documents({"member_id": admin["id"]})
         if existing_ledger == 0:
             base = datetime.now(timezone.utc) - timedelta(days=20)
@@ -2344,7 +2462,7 @@ async def seed_database():
 
     # Demo accounts get a fixed stored balance on every start; make their ledger add up to it so
     # per-restaurant balances (which come from the ledger) match, and no venue sits below zero.
-    for u in SEED_USERS:
+    for u in (SEED_USERS if SEED_DEMO_DATA else []):
         if u.get("role") in ("member", "admin"):
             member = await db.users.find_one({"email": u["email"].lower()}, {"_id": 0, "id": 1})
             if member:

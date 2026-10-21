@@ -17,6 +17,7 @@ import Redeem from "@/pages/Redeem";
 import Profile from "@/pages/Profile";
 import Bookings from "@/pages/Bookings";
 import Info from "@/pages/Info";
+import Events from "@/pages/Events";
 
 // Heavy, role-specific pages are split out of the main bundle.
 const Scan = lazy(() => import("@/pages/Scan"));
@@ -25,8 +26,8 @@ const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 const INFO_SLUGS = ["about", "faq", "terms", "privacy", "refunds", "pricing", "shipping", "contact"];
 
 const PageFallback = () => (
-  <div className="flex min-h-[60vh] items-center justify-center bg-[#141312]" data-testid="page-loading">
-    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#F4764F]" />
+  <div className="flex min-h-[60vh] items-center justify-center bg-[#110C09]" data-testid="page-loading">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#E8C9A0]" />
   </div>
 );
 
@@ -41,11 +42,20 @@ function AppRoutes() {
         <Route key={slug} path={`/${slug}`} element={<Info slug={slug} />} />
       ))}
 
+      <Route path="/home" element={<Navigate to="/discover" replace />} />
       <Route
         path="/discover"
         element={
           <Layout>
             <Discover />
+          </Layout>
+        }
+      />
+      <Route
+        path="/events"
+        element={
+          <Layout>
+            <Events />
           </Layout>
         }
       />
@@ -145,8 +155,8 @@ function App() {
             position="top-center"
             toastOptions={{
               style: {
-                background: "#1F1D1B",
-                border: "1px solid #3A3733",
+                background: "#1B140F",
+                border: "1px solid #3D3128",
                 color: "#F4F1EC",
                 fontFamily: "Inter, sans-serif",
                 fontSize: "0.85rem",

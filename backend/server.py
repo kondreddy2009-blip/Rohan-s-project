@@ -8,6 +8,8 @@ import os
 import uuid
 import hmac
 import hashlib
+import base64
+import re
 import logging
 import bcrypt
 import jwt
@@ -17,6 +19,7 @@ from typing import List, Optional, Literal
 
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from cryptography.fernet import Fernet, InvalidToken
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 
@@ -37,6 +40,14 @@ ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_API_BASE = "https://api.razorpay.com/v1"
+
+# Sensitive payout fields (PAN, bank account number) are encrypted at rest.
+# Set PAYOUT_ENCRYPTION_KEY (a Fernet key) in production; falling back to a key
+# derived from JWT_SECRET means rotating JWT_SECRET would make stored values unreadable.
+_payout_key = os.environ.get("PAYOUT_ENCRYPTION_KEY") or base64.urlsafe_b64encode(
+    hashlib.sha256(JWT_SECRET.encode("utf-8")).digest()
+).decode("utf-8")
+payout_cipher = Fernet(_payout_key)
 
 app = FastAPI(title="Table API")
 api = APIRouter(prefix="/api")
@@ -291,6 +302,34 @@ class PublishIn(BaseModel):
     published: bool
 
 
+class RestaurantRegisterIn(BaseModel):
+    owner_name: str = Field(min_length=1, max_length=80)
+    email: EmailStr
+    password: str = Field(min_length=6)
+    restaurant_name: str = Field(min_length=1, max_length=80)
+    cuisine: Optional[str] = Field(default=None, max_length=60)
+    neighborhood: str = Field(min_length=1, max_length=60)
+
+
+class PayoutDetailsIn(BaseModel):
+    legal_name: str = Field(min_length=1, max_length=120)
+    business_type: Literal["proprietorship", "partnership", "llp", "private_limited", "public_limited", "other"]
+    pan: Optional[str] = Field(default=None, pattern=r"^[A-Za-z]{5}[0-9]{4}[A-Za-z]$")
+    gstin: Optional[str] = Field(default=None, pattern=r"^$|^[0-9A-Za-z]{15}$")
+    account_holder: str = Field(min_length=1, max_length=120)
+    account_number: Optional[str] = Field(default=None, pattern=r"^[0-9]{9,18}$")
+    ifsc: str = Field(pattern=r"^[A-Za-z]{4}0[A-Za-z0-9]{6}$")
+    bank_name: str = Field(min_length=1, max_length=80)
+    upi_id: Optional[str] = Field(default=None, max_length=80)
+    contact_email: EmailStr
+    contact_phone: str = Field(pattern=r"^[0-9]{10}$")
+
+
+class RazorpayLinkIn(BaseModel):
+    # Empty string unlinks the venue.
+    razorpay_account_id: str = Field(pattern=r"^$|^acc_[A-Za-z0-9]+$")
+
+
 class QrSlugIn(BaseModel):
     qr_slug: str = Field(min_length=3, max_length=40, pattern=r"^[a-z0-9-]+$")
 
@@ -506,6 +545,68 @@ async def register(payload: RegisterIn, response: Response):
     access = create_access_token(user["id"], email)
     refresh = create_refresh_token(user["id"])
     set_auth_cookies(response, access, refresh)
+    return public_user(user)
+
+
+def _slugify(raw: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-")[:30] or "venue"
+
+
+@api.post("/auth/register-restaurant")
+async def register_restaurant(payload: RestaurantRegisterIn, response: Response):
+    """Create a restaurant (unpublished draft) plus its staff login in one step."""
+    email = payload.email.lower().strip()
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="An account with this email already exists")
+
+    now = _now_iso()
+    base = _slugify(payload.restaurant_name)
+    suffix = uuid.uuid4().hex[:4]
+    venue_id = f"venue-{base}-{suffix}"
+    venue = {
+        "id": venue_id,
+        "source": "registered",
+        "name": payload.restaurant_name.strip(),
+        "type": "Restaurant",
+        "cuisine": (payload.cuisine or "").strip() or None,
+        "price_level": 2,
+        "neighborhood": payload.neighborhood.strip(),
+        "daypart": "both",
+        "status": "Quiet",
+        "capacity_percent": 25,
+        "queue_length": 0,
+        "wait_minutes": None,
+        "hours": "12:00 – 23:00",
+        "tagline": "A new table on Table.",
+        "description": "Tell members what makes your restaurant special.",
+        "image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "chef": None,
+        "vibes": [],
+        "seed_offerings": [],
+        "signature_offerings": [],
+        "regulars_order": [],
+        "featured": False,
+        "published": False,
+        "availability": "accepting",
+        "qr_slug": f"{base}-{suffix}",
+        "last_status_update": now,
+        "created_at": now,
+        "loyalty_points_per_checkin": 50,
+        "loyalty_points_per_booking": 30,
+        "loyalty_rewards": [],
+    }
+    user = {
+        "id": str(uuid.uuid4()),
+        "email": email,
+        "password_hash": hash_password(payload.password),
+        "name": payload.owner_name.strip(),
+        "role": "staff",
+        "staff_venue_id": venue_id,
+        "created_at": now,
+    }
+    await db.venues.insert_one(venue)
+    await db.users.insert_one(user)
+    set_auth_cookies(response, create_access_token(user["id"], email), create_refresh_token(user["id"]))
     return public_user(user)
 
 
@@ -881,6 +982,117 @@ async def update_publish(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Venue not found")
     return {"ok": True, "published": payload.published}
+
+
+# --- Payout details (Razorpay Route linked-account onboarding) --------------
+# Stored in their own collection, never on the venue document, because the
+# public /venues endpoints return venue documents wholesale.
+def _encrypt(value: str) -> str:
+    return payout_cipher.encrypt(value.encode("utf-8")).decode("utf-8")
+
+
+def public_payout(doc: Optional[dict]) -> dict:
+    if not doc:
+        return {"status": "not_submitted", "razorpay_account_id": None}
+    return {
+        "status": doc.get("status", "submitted"),
+        "razorpay_account_id": doc.get("razorpay_account_id"),
+        "legal_name": doc.get("legal_name"),
+        "business_type": doc.get("business_type"),
+        "pan_last4": doc.get("pan_last4"),
+        "gstin": doc.get("gstin"),
+        "account_holder": doc.get("account_holder"),
+        "account_last4": doc.get("account_last4"),
+        "ifsc": doc.get("ifsc"),
+        "bank_name": doc.get("bank_name"),
+        "upi_id": doc.get("upi_id"),
+        "contact_email": doc.get("contact_email"),
+        "contact_phone": doc.get("contact_phone"),
+        "submitted_at": doc.get("submitted_at"),
+        "updated_at": doc.get("updated_at"),
+    }
+
+
+@api.get("/staff/venues/{venue_id}/payout")
+async def get_payout(venue_id: str, user: dict = Depends(require_staff_or_admin)):
+    _assert_staff_can_manage(user, venue_id)
+    doc = await db.venue_payouts.find_one({"venue_id": venue_id}, {"_id": 0})
+    return public_payout(doc)
+
+
+@api.put("/staff/venues/{venue_id}/payout")
+async def save_payout(
+    venue_id: str, payload: PayoutDetailsIn, user: dict = Depends(require_staff_or_admin)
+):
+    _assert_staff_can_manage(user, venue_id)
+    if not await db.venues.find_one({"id": venue_id}, {"_id": 0, "id": 1}):
+        raise HTTPException(status_code=404, detail="Venue not found")
+
+    existing = await db.venue_payouts.find_one({"venue_id": venue_id}, {"_id": 0})
+    # PAN and account number are never sent back to the browser, so on edit they
+    # may be left blank to keep the stored value.
+    if not payload.pan and not (existing and existing.get("pan_enc")):
+        raise HTTPException(status_code=422, detail="PAN is required")
+    if not payload.account_number and not (existing and existing.get("account_number_enc")):
+        raise HTTPException(status_code=422, detail="Bank account number is required")
+
+    now = _now_iso()
+    doc = {
+        "venue_id": venue_id,
+        "legal_name": payload.legal_name.strip(),
+        "business_type": payload.business_type,
+        "gstin": (payload.gstin or "").upper() or None,
+        "account_holder": payload.account_holder.strip(),
+        "ifsc": payload.ifsc.upper(),
+        "bank_name": payload.bank_name.strip(),
+        "upi_id": (payload.upi_id or "").strip() or None,
+        "contact_email": payload.contact_email.lower(),
+        "contact_phone": payload.contact_phone,
+        "updated_at": now,
+    }
+    if payload.pan:
+        doc["pan_enc"] = _encrypt(payload.pan.upper())
+        doc["pan_last4"] = payload.pan[-4:].upper()
+    if payload.account_number:
+        doc["account_number_enc"] = _encrypt(payload.account_number)
+        doc["account_last4"] = payload.account_number[-4:]
+
+    if not existing:
+        doc["status"] = "submitted"
+        doc["submitted_at"] = now
+    else:
+        # Changing the legal/bank identity of an already-linked venue needs re-verification.
+        identity_changed = bool(payload.pan or payload.account_number) or any(
+            doc[k] != existing.get(k) for k in ("legal_name", "ifsc", "account_holder")
+        )
+        if existing.get("status") == "active" and identity_changed:
+            doc["status"] = "submitted"
+
+    await db.venue_payouts.update_one({"venue_id": venue_id}, {"$set": doc}, upsert=True)
+    saved = await db.venue_payouts.find_one({"venue_id": venue_id}, {"_id": 0})
+    return public_payout(saved)
+
+
+@api.patch("/staff/venues/{venue_id}/payout/razorpay-account")
+async def link_razorpay_account(
+    venue_id: str, payload: RazorpayLinkIn, user: dict = Depends(require_staff_or_admin)
+):
+    """Admin-only: record the Razorpay linked-account id (acc_...) once onboarding is done."""
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    doc = await db.venue_payouts.find_one({"venue_id": venue_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=400, detail="This venue has not submitted payout details yet")
+    acc = payload.razorpay_account_id.strip()
+    await db.venue_payouts.update_one(
+        {"venue_id": venue_id},
+        {"$set": {
+            "razorpay_account_id": acc or None,
+            "status": "active" if acc else "submitted",
+            "updated_at": _now_iso(),
+        }},
+    )
+    return public_payout(await db.venue_payouts.find_one({"venue_id": venue_id}, {"_id": 0}))
 
 
 @api.get("/staff/venues/{venue_id}/analytics")
@@ -1739,7 +1951,8 @@ SEED_USERS = [
 async def seed_database():
     # Venues — clear legacy entries that are no longer in SEED_VENUES (e.g. Nocturne pre-pivot)
     seed_ids = [v["id"] for v in SEED_VENUES]
-    await db.venues.delete_many({"id": {"$nin": seed_ids}})
+    # Venues that restaurants registered themselves (source="registered") must survive restarts.
+    await db.venues.delete_many({"id": {"$nin": seed_ids}, "source": {"$ne": "registered"}})
     for v in SEED_VENUES:
         existing = await db.venues.find_one({"id": v["id"]})
         doc = {
@@ -1834,6 +2047,7 @@ async def seed_database():
     # Indexes
     await db.users.create_index("email", unique=True)
     await db.venues.create_index("id", unique=True)
+    await db.venue_payouts.create_index("venue_id", unique=True)
     await db.events.create_index("venue_id")
     await db.checkins.create_index([("member_id", 1), ("timestamp", -1)])
     await db.points_ledger.create_index([("member_id", 1), ("timestamp", -1)])

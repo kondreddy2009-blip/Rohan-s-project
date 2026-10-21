@@ -3,13 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Minus, Plus, X, Trash2, LogOut, RefreshCw, LayoutGrid, Store, CalendarDays, Mail, Gift, Star,
-  QrCode, ChartNoAxesColumn, Users, Clock, Database, UtensilsCrossed, Armchair, Image as ImageIcon, Lock, MapPin, User, Info, MessageCircle, Sparkles, Search, Filter, ChevronRight, ChevronDown, CircleCheck, CreditCard, CalendarClock, Sun, Moon,
+  QrCode, ChartNoAxesColumn, Users, Clock, Database, UtensilsCrossed, Armchair, Image as ImageIcon, Lock, MapPin, User, Info, MessageCircle, Sparkles, Search, Filter, ChevronRight, ChevronDown, CircleCheck, CreditCard, CalendarClock, Sun, Moon, Landmark, Pencil,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { BrandLockup } from "@/components/BrandLockup";
 import { StatusIndicator, queueLabel } from "@/components/StatusIndicator";
 import { QRDisplay } from "@/components/QRDisplay";
+import { PayoutDetailsForm } from "@/components/PayoutDetailsForm";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS = ["Quiet", "Filling In", "At Capacity"];
@@ -37,6 +38,7 @@ const NAV_ITEMS = [
   { k: "loyalty", l: "Loyalty", icon: Star },
   { k: "events", l: "Events", icon: CalendarDays },
   { k: "qr", l: "QR Code", icon: QrCode },
+  { k: "payouts", l: "Payouts", icon: Landmark },
 ];
 
 const greeting = () => {
@@ -56,7 +58,7 @@ function Panel({ icon: Icon, title, children }) {
   );
 }
 
-const STAFF_TABS = ["overview", "profile", "bookings", "correspondence", "redemptions", "loyalty", "events", "qr"];
+const STAFF_TABS = ["overview", "profile", "bookings", "correspondence", "redemptions", "loyalty", "events", "qr", "payouts"];
 
 const BOOKING_STATUS_COLOR = {
   pending: "text-[color:var(--st-muted)]",
@@ -1047,8 +1049,9 @@ function QrSlugEditor({ venue, onSaved }) {
           type="button"
           onClick={() => setEditing(true)}
           data-testid="qr-slug-edit-button"
-          className="overline text-[color:var(--st-muted)] hover:text-[color:var(--st-text)] transition-colors duration-300 mt-3"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[color:var(--st-gold)] bg-[color:var(--st-gold)]/10 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.15em] text-[color:var(--st-gold)] hover:bg-[color:var(--st-gold)] hover:text-[#1A1409] transition-colors duration-300"
         >
+          <Pencil strokeWidth={2} className="h-4 w-4" />
           Edit address
         </button>
       </div>
@@ -1648,9 +1651,9 @@ export default function StaffDashboard() {
       <div className="mx-auto max-w-[90rem] px-5 sm:px-10 py-8 sm:py-14 sm:pl-[20.5rem]">
       <div className="flex items-start justify-between gap-x-6 gap-y-4 flex-wrap animate-fade-up">
         <div className="min-w-0 basis-full sm:basis-80 sm:flex-1">
-          {(tab === "events" || tab === "profile" || tab === "correspondence" || tab === "redemptions" || tab === "bookings" || tab === "qr") && (
+          {(tab === "events" || tab === "profile" || tab === "correspondence" || tab === "redemptions" || tab === "bookings" || tab === "qr" || tab === "payouts") && (
             <div className="overline mb-3">
-              {{ events: "Events", profile: "Venue profile", correspondence: "Correspondence", redemptions: "Redemptions", bookings: "Bookings", qr: "QR code" }[tab]}
+              {{ events: "Events", profile: "Venue profile", correspondence: "Correspondence", redemptions: "Redemptions", bookings: "Bookings", qr: "QR code", payouts: "Payouts" }[tab]}
             </div>
           )}
           <h1
@@ -1673,6 +1676,8 @@ export default function StaffDashboard() {
               ? "Redemptions"
               : tab === "qr"
               ? "Check-in QR code"
+              : tab === "payouts"
+              ? "Payout details"
               : `${greeting()}, ${selectedVenue.name}.`}
           </h1>
           <p className="mt-2 text-lg text-[color:var(--st-soft)]">
@@ -1686,6 +1691,8 @@ export default function StaffDashboard() {
               ? "Manage your table reservations and settings."
               : tab === "qr"
               ? "Display this at your venue so members can check in."
+              : tab === "payouts"
+              ? "Where Table sends booking deposits collected for your restaurant."
               : tab === "profile"
               ? "Keep your venue details up to date. This information appears to members on Table."
               : tab === "events"
@@ -1959,6 +1966,8 @@ export default function StaffDashboard() {
           <EventForm venueId={selectedId} onCreated={() => loadData(selectedId)} />
         </div>
       )}
+
+      {tab === "payouts" && <PayoutDetailsForm key={selectedId} venueId={selectedId} />}
 
       {tab === "qr" && (
         <div className="animate-fade-up">

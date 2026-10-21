@@ -20,8 +20,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/restaurant-login" element={<Login staff />} />
+      <Route path="/login" element={<Login key="member" />} />
+      <Route path="/restaurant-login" element={<Login key="restaurant" staff />} />
 
       <Route
         path="/discover"

@@ -48,6 +48,16 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const registerRestaurant = async (fields) => {
+    try {
+      const { data } = await api.post("/auth/register-restaurant", fields);
+      setUser(data);
+      return { ok: true, user: data };
+    } catch (e) {
+      return { ok: false, error: formatApiError(e.response?.data?.detail) || e.message };
+    }
+  };
+
   const logout = async () => {
     try {
       await api.post("/auth/logout");
@@ -58,7 +68,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, refresh, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, refresh, login, register, registerRestaurant, logout }}>
       {children}
     </AuthContext.Provider>
   );

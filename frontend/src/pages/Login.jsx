@@ -50,7 +50,7 @@ function PasswordInput({ value, onChange, testId, autoComplete, minLength }) {
 }
 
 export default function Login({ staff = false }) {
-  const { user, login, register, logout } = useAuth();
+  const { user, login, register, registerRestaurant, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState("signin"); // "signin" | "create"
@@ -58,6 +58,9 @@ export default function Login({ staff = false }) {
   const [email, setEmail] = useState(staff ? "" : "bhandariyashvee@gmail.com");
   const [password, setPassword] = useState(staff ? "" : "ritual2026");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [cuisine, setCuisine] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -112,10 +115,36 @@ export default function Login({ staff = false }) {
     }
   };
 
+  const doRegisterRestaurant = async () => {
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const res = await registerRestaurant({
+      owner_name: name,
+      email,
+      password,
+      restaurant_name: restaurantName,
+      cuisine,
+      neighborhood,
+    });
+    setBusy(false);
+    if (res.ok) {
+      toast.success(`Welcome to Table. Let's set up ${restaurantName}.`);
+      navigate("/staff/payouts", { replace: true });
+    } else {
+      setError(res.error);
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
-    if (mode === "signin" || staff) {
+    if (mode === "signin") {
       await doLogin(email, password);
+    } else if (staff) {
+      await doRegisterRestaurant();
     } else {
       await doRegister();
     }
@@ -147,21 +176,104 @@ export default function Login({ staff = false }) {
             <img src="/logo.png" alt="" className="h-[76px] w-auto" />
             <img src="/wordmark.png" alt="Table" className="h-6 w-auto" />
           </Link>
+          <div
+            role="tablist"
+            aria-label="Account type"
+            className="mt-6 grid grid-cols-2 gap-1 rounded-xl border border-white/10 bg-[#1A1917] p-1"
+          >
+            {[
+              { to: "/login", label: "Diner", icon: User, active: !staff, id: "audience-diner" },
+              { to: "/restaurant-login", label: "Restaurant", icon: Store, active: staff, id: "audience-restaurant" },
+            ].map((t) => (
+              <Link
+                key={t.to}
+                to={t.to}
+                role="tab"
+                aria-selected={t.active}
+                data-testid={t.id}
+                className={
+                  "flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold transition-colors " +
+                  (t.active ? "bg-[#F4764F] text-[#1A0F0B]" : "text-[#B8B2AA] hover:text-white")
+                }
+              >
+                <t.icon strokeWidth={1.8} className="h-4 w-4" />
+                {t.label}
+              </Link>
+            ))}
+          </div>
           <h1 className="mt-6 text-center text-4xl font-extrabold tracking-tight">
-            {staff ? "Restaurant sign in" : mode === "signin" ? "Welcome back" : "Create your account"}
+            {staff
+              ? mode === "signin"
+                ? "Restaurant sign in"
+                : "Register your restaurant"
+              : mode === "signin"
+              ? "Welcome back"
+              : "Create your account"}
           </h1>
           <p className="mt-2 mb-7 text-center text-[15px] text-[#8E8982]">
             {staff
-              ? "Manage bookings, loyalty and events for your venue."
+              ? mode === "signin"
+                ? "Manage bookings, loyalty and events for your venue."
+                : "Create your venue's account, then add payout details to start taking deposits."
               : mode === "signin"
               ? "Sign in to continue your dining journey."
               : "Join once. Your Table carries across every room."}
           </p>
 
           <form onSubmit={submit} className="space-y-5" data-testid="login-form">
-            {!staff && mode === "create" && (
+            {staff && mode === "create" && (
+              <>
+                <div>
+                  <label className={fieldLabel}>Restaurant name</label>
+                  <div className={fieldWrap}>
+                    <Store strokeWidth={1.6} className="h-5 w-5 text-[#B8B2AA] shrink-0" />
+                    <input
+                      type="text"
+                      required
+                      maxLength={80}
+                      value={restaurantName}
+                      onChange={(e) => setRestaurantName(e.target.value)}
+                      data-testid="register-restaurant-name-input"
+                      className={fieldInput}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className={fieldLabel}>Cuisine</label>
+                    <div className={fieldWrap}>
+                      <input
+                        type="text"
+                        maxLength={60}
+                        placeholder="e.g. Italian"
+                        value={cuisine}
+                        onChange={(e) => setCuisine(e.target.value)}
+                        data-testid="register-cuisine-input"
+                        className={fieldInput}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={fieldLabel}>Neighbourhood</label>
+                    <div className={fieldWrap}>
+                      <input
+                        type="text"
+                        required
+                        maxLength={60}
+                        value={neighborhood}
+                        onChange={(e) => setNeighborhood(e.target.value)}
+                        data-testid="register-neighborhood-input"
+                        className={fieldInput}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {mode === "create" && (
               <div>
-                <label className={fieldLabel}>Name</label>
+                <label className={fieldLabel}>{staff ? "Your name" : "Name"}</label>
                 <div className={fieldWrap}>
                   <User strokeWidth={1.6} className="h-5 w-5 text-[#B8B2AA] shrink-0" />
                   <input
@@ -204,7 +316,7 @@ export default function Login({ staff = false }) {
                 autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 minLength={6}
               />
-              {(staff || mode === "signin") && (
+              {mode === "signin" && (
                 <div className="mt-2 text-right">
                   <button
                     type="button"
@@ -217,7 +329,7 @@ export default function Login({ staff = false }) {
               )}
             </div>
 
-            {!staff && mode === "create" && (
+            {mode === "create" && (
               <div>
                 <label className={fieldLabel}>Confirm password</label>
                 <PasswordInput
@@ -246,35 +358,34 @@ export default function Login({ staff = false }) {
               className="flex w-full items-center justify-between rounded-xl bg-[#F4764F] px-6 py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F78963] transition-colors disabled:opacity-60"
             >
               <span className="flex-1 text-center">
-                {busy ? "One moment" : staff || mode === "signin" ? "Sign in" : "Create account"}
+                {busy
+                  ? "One moment"
+                  : mode === "signin"
+                  ? "Sign in"
+                  : staff
+                  ? "Register restaurant"
+                  : "Create account"}
               </span>
               <ArrowRight className="h-5 w-5" />
             </button>
           </form>
 
           <p className="mt-5 text-center text-sm text-[#B8B2AA]">
-            {staff ? (
+            {mode === "signin" ? (
               <>
-                Not a restaurant?{" "}
-                <Link to="/login" data-testid="switch-to-member-login" className="font-semibold text-[#F4764F] hover:underline">
-                  Member sign in
-                </Link>
-              </>
-            ) : mode === "signin" ? (
-              <>
-                New here?{" "}
+                {staff ? "New restaurant?" : "New here?"}{" "}
                 <button
                   type="button"
                   onClick={() => switchMode("create")}
                   data-testid="switch-to-create"
                   className="font-semibold text-[#F4764F] hover:underline"
                 >
-                  Create an account
+                  {staff ? "Register your restaurant" : "Create an account"}
                 </button>
               </>
             ) : (
               <>
-                Already a member?{" "}
+                {staff ? "Already registered?" : "Already a member?"}{" "}
                 <button
                   type="button"
                   onClick={() => switchMode("signin")}
@@ -287,16 +398,8 @@ export default function Login({ staff = false }) {
             )}
           </p>
 
-          {!staff && mode === "signin" && (
-            <p className="mt-3 text-center text-sm text-[#B8B2AA]">
-              Own a restaurant?{" "}
-              <Link to="/restaurant-login" data-testid="restaurant-login-link" className="font-semibold text-[#F4764F] hover:underline">
-                Restaurant login
-              </Link>
-            </p>
-          )}
+          {mode === "signin" && (
 
-          {(staff || mode === "signin") && (
             <>
               <div className="mt-7 flex items-center gap-4 text-xs text-[#B8B2AA]">
                 <span className="h-px flex-1 bg-white/10" />

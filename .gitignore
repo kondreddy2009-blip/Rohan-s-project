@@ -88,4 +88,4 @@ credentials.json
 .credentials
 
 # Partner photo uploads
-backend/uploads/
+uploads/

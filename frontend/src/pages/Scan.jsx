@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, Camera } from "lucide-react";
+import { Check, Camera, Upload } from "lucide-react";
 import { api } from "@/lib/api";
-import { QRScanner } from "@/components/QRScanner";
+import { QRScanner, decodeQrFromFile } from "@/components/QRScanner";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useAuth } from "@/lib/auth-context";
 
@@ -34,6 +34,8 @@ export default function Scan() {
   const [result, setResult] = useState(null);
   const [manualId, setManualId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     api.get("/venues").then((r) => setVenues(r.data));
@@ -70,10 +72,14 @@ export default function Scan() {
     };
   }, []);
 
-  const venueMap = useMemo(
-    () => Object.fromEntries(venues.map((v) => [v.id, v])),
-    [venues],
-  );
+  const venueMap = useMemo(() => {
+    const map = {};
+    for (const v of venues) {
+      map[v.id] = v;
+      if (v.qr_slug) map[v.qr_slug] = v;
+    }
+    return map;
+  }, [venues]);
 
   const doCheckin = useCallback(
     async (venueId) => {
@@ -84,7 +90,7 @@ export default function Scan() {
       }
       setBusy(true);
       try {
-        const { data } = await api.post(`/venues/${venueId}/checkin`, {});
+        const { data } = await api.post(`/venues/${venue.id}/checkin`, {});
         setResult({ ...data, venue });
         await refresh();
         setStep("success");
@@ -114,8 +120,23 @@ export default function Scan() {
     if (manualId) doCheckin(manualId);
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const text = await decodeQrFromFile(file);
+      handleScan(text);
+    } catch {
+      toast.error("Couldn't find a QR code in that photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
-    <div className="mx-auto max-w-2xl py-2" data-testid="scan-page">
+    <div className="mx-auto max-w-2xl px-5 sm:px-8 py-10 sm:py-14" data-testid="scan-page">
       <div className="overline">Live check-in</div>
       <h1 className="font-serif-display text-4xl sm:text-5xl mt-2 leading-tight">
         Scan the room&apos;s QR.
@@ -130,7 +151,7 @@ export default function Scan() {
             <QRScanner onScan={handleScan} onError={handleScanError} />
           ) : (
             <div className="max-w-sm mx-auto">
-              <div className="w-full aspect-square rounded-[28px] border border-[#262321] flex flex-col items-center justify-center relative">
+              <div className="w-full aspect-square border border-[#262321] flex flex-col items-center justify-center relative">
                 <Camera strokeWidth={0.8} className="h-16 w-16 text-[#CE6A4A]" />
                 <div className="overline mt-4 text-center px-6">
                   {cameraSupported ? "Camera ready" : "Camera not available in this environment"}
@@ -151,6 +172,24 @@ export default function Scan() {
                   Open camera
                 </button>
               )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                data-testid="scan-upload-input"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                data-testid="scan-upload-button"
+                className="btn-ghost w-full mt-3 inline-flex items-center justify-center gap-2"
+              >
+                <Upload strokeWidth={1.2} className="h-4 w-4" />
+                {uploading ? "Reading photo…" : "Upload a photo of the QR"}
+              </button>
             </div>
           )}
 
@@ -164,7 +203,7 @@ export default function Scan() {
                 value={manualId}
                 onChange={(e) => setManualId(e.target.value)}
                 data-testid="scan-manual-select"
-                className="flex-1 rounded-full bg-[#1B1917] border border-[#262321] py-3 px-3 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7]"
+                className="flex-1 bg-[#1B1917] border border-[#262321] py-3 px-3 focus:border-[#CE6A4A] outline-none font-light text-[#F2EDE7]"
               >
                 <option value="">Select a room…</option>
                 {venues.map((v) => (
@@ -188,7 +227,7 @@ export default function Scan() {
 
       {step === "success" && result && (
         <div className="mt-16 text-center animate-fade" data-testid="scan-success">
-          <div className="mx-auto w-16 h-16 rounded-full border border-[#CE6A4A] flex items-center justify-center">
+          <div className="mx-auto w-16 h-16 border border-[#CE6A4A] flex items-center justify-center">
             <Check strokeWidth={1} className="h-8 w-8 text-[#CE6A4A]" />
           </div>
           <div className="overline-accent mt-6">Welcomed</div>

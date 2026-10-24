@@ -43,7 +43,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
       data-testid="concierge-modal"
     >
       <div
-        className="relative w-full sm:max-w-lg rounded-[28px] bg-[#1B1917] border border-[#262321] p-8 sm:p-10 max-h-[90vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg bg-[#1B1917] border border-[#262321] p-8 sm:p-10 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -73,7 +73,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                   type="button"
                   onClick={() => setType(t.code)}
                   data-testid={`concierge-type-${t.code}`}
-                  className={`px-3 py-3 rounded-xl border text-xs tracking-wider uppercase transition-colors duration-300 ${
+                  className={`px-3 py-3 border text-xs tracking-wider uppercase transition-colors duration-300 ${
                     type === t.code
                       ? "border-[#CE6A4A] text-[#CE6A4A]"
                       : "border-[#262321] text-[#8F8781] hover:text-[#F2EDE7]"
@@ -128,7 +128,7 @@ export function ConciergeModal({ venue, onClose, onSent }) {
                     : "Anything the room should know."
               }
               data-testid="concierge-message-input"
-              className="w-full bg-transparent rounded-xl border border-[#262321] p-3 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
+              className="w-full bg-transparent border border-[#262321] p-3 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
             />
           </div>
 

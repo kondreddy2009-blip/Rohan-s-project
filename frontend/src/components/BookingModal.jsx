@@ -2,9 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { X, Users, CalendarDays, Clock3, CheckCircle2, Minus, Plus } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { Link } from "react-router-dom";
+import { AddToCalendar } from "@/components/AddToCalendar";
 
 function isoDate(d) {
   return d.toISOString().slice(0, 10);
+}
+
+let razorpayScriptPromise = null;
+function loadRazorpayScript() {
+  if (window.Razorpay) return Promise.resolve(true);
+  if (!razorpayScriptPromise) {
+    razorpayScriptPromise = new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
+  return razorpayScriptPromise;
 }
 
 function labelFor(d, today) {
@@ -15,6 +33,8 @@ function labelFor(d, today) {
 }
 
 export function BookingModal({ venue, onClose, onBooked }) {
+  const { user } = useAuth();
+  const depositAmount = venue.booking_deposit_amount || 0;
   const today = useMemo(() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
@@ -61,6 +81,48 @@ export function BookingModal({ venue, onClose, onBooked }) {
     };
   }, [venue.id, selectedDate, confirmed]);
 
+  const payAndConfirm = async (booking, razorpay) => {
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      toast.error("Could not load the payment window. Please try again.");
+      setBusy(false);
+      return;
+    }
+    const rzp = new window.Razorpay({
+      key: razorpay.key_id,
+      order_id: razorpay.order_id,
+      amount: razorpay.amount,
+      currency: razorpay.currency,
+      name: "Table",
+      description: `Reservation deposit — ${venue.name}`,
+      prefill: { name: user?.name, email: user?.email },
+      theme: { color: "#CE6A4A" },
+      handler: async (response) => {
+        try {
+          const { data } = await api.post(`/bookings/${booking.id}/verify-payment`, {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          setConfirmed(data);
+          onBooked?.(data);
+        } catch (e) {
+          toast.error(e.response?.data?.detail || "Payment could not be verified.");
+        } finally {
+          setBusy(false);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setBusy(false);
+          api.post(`/bookings/${booking.id}/cancel`).catch(() => {});
+          toast("Payment cancelled — the hold on that table was released.");
+        },
+      },
+    });
+    rzp.open();
+  };
+
   const submit = async () => {
     if (!selectedTime) {
       toast.error("Pick a time to reserve.");
@@ -75,11 +137,15 @@ export function BookingModal({ venue, onClose, onBooked }) {
         party_size: partySize,
         note: note.trim() || null,
       });
-      setConfirmed(data);
-      onBooked?.(data);
+      if (data.requires_payment) {
+        await payAndConfirm(data.booking, data.razorpay);
+      } else {
+        setConfirmed(data.booking);
+        onBooked?.(data.booking);
+        setBusy(false);
+      }
     } catch (e) {
       toast.error(e.response?.data?.detail || "Could not reserve — try another slot.");
-    } finally {
       setBusy(false);
     }
   };
@@ -91,7 +157,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
       data-testid="booking-modal"
     >
       <div
-        className="relative w-full sm:max-w-lg rounded-[28px] bg-[#1B1917] border border-[#262321] p-8 sm:p-10 max-h-[92vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg rounded-2xl bg-[#1B1917] border border-white/[0.08] p-8 sm:p-10 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -112,14 +178,22 @@ export function BookingModal({ venue, onClose, onBooked }) {
             <h2 className="font-serif-display text-3xl mt-3 leading-tight">
               {confirmed.venue_name} is expecting you.
             </h2>
-            <div className="mt-6 p-6 rounded-2xl border border-[#CE6A4A]/30 bg-[#0B0A0A]">
+            <div className="mt-6 p-6 border border-[#CE6A4A]/30 bg-[#0B0A0A]">
               <div className="overline mb-2">Reservation code</div>
               <div
-                className="font-mono tracking-[0.28em] text-[#CE6A4A] text-2xl"
+                className="font-sans tabular-nums tracking-[0.28em] text-[#CE6A4A] text-2xl"
                 data-testid="booking-code"
               >
                 {confirmed.code}
               </div>
+              {confirmed.payment_status === "paid" && (
+                <div
+                  className="mt-4 pt-4 border-t border-white/[0.05] text-sm text-[#8F8781] font-light"
+                  data-testid="booking-deposit-paid"
+                >
+                  ₹{confirmed.deposit_amount} deposit paid — adjusted against your final bill.
+                </div>
+              )}
               <div className="mt-5 grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <div className="overline mb-1">Date</div>
@@ -142,8 +216,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
             </div>
             <p className="mt-6 text-sm text-[#8F8781] font-light">
               Show this code at the host stand — the room will confirm it shortly. You&apos;ll find
-              it under <span className="text-[#CE6A4A]">Your reservations</span> in your profile.
+              it under <Link to="/bookings" className="text-[#CE6A4A] underline-offset-4 hover:underline">Your reservations</Link>.
             </p>
+            <div className="mt-5">
+              <AddToCalendar booking={confirmed} />
+            </div>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <button
                 type="button"
@@ -167,11 +244,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
             {/* Date picker */}
             <div className="mt-8">
-              <label className="overline block mb-3 inline-flex items-center gap-2">
+              <label className="overline flex mb-3 items-center gap-2">
                 <CalendarDays strokeWidth={1.4} className="h-3 w-3" />
                 Choose a night
               </label>
-              <div className="flex gap-2 overflow-x-auto pb-2" data-testid="booking-dates">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-testid="booking-dates">
                 {dateOptions.map((d) => {
                   const iso = isoDate(d);
                   const active = iso === selectedDate;
@@ -181,7 +258,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
                       type="button"
                       onClick={() => setSelectedDate(iso)}
                       data-testid={`booking-date-${iso}`}
-                      className={`shrink-0 px-4 py-3 rounded-xl border transition-colors duration-300 min-w-[92px] text-left ${
+                      className={`shrink-0 px-4 py-3 border transition-colors duration-300 min-w-[92px] text-left ${
                         active
                           ? "border-[#CE6A4A] bg-[#0B0A0A]"
                           : "border-[#262321] hover:border-[#8F8781]"
@@ -209,7 +286,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
             {/* Time slots */}
             <div className="mt-6">
-              <label className="overline block mb-3 inline-flex items-center gap-2">
+              <label className="overline flex mb-3 items-center gap-2">
                 <Clock3 strokeWidth={1.4} className="h-3 w-3" />
                 Pick a time
               </label>
@@ -229,15 +306,20 @@ export function BookingModal({ venue, onClose, onBooked }) {
                         disabled={disabled}
                         onClick={() => setSelectedTime(s.time)}
                         data-testid={`booking-slot-${s.time}`}
-                        className={`px-2 py-2.5 rounded-xl border font-mono text-sm tracking-wider transition-colors duration-200 ${
+                        className={`px-2 py-2.5 border font-sans text-sm tabular-nums tracking-wider transition-colors duration-200 ${
                           active
                             ? "border-[#CE6A4A] text-[#CE6A4A] bg-[#0B0A0A]"
                             : disabled
-                              ? "border-[#331420] text-[#6B6560] cursor-not-allowed line-through"
+                              ? "border-[#2A2724] text-[#6B6560] cursor-not-allowed line-through"
                               : "border-[#262321] text-[#F2EDE7] hover:border-[#8F8781]"
                         }`}
                       >
                         {s.time}
+                        {!disabled && s.remaining <= 2 && (
+                          <span className="mt-0.5 block text-[10px] normal-case tracking-normal text-[#E8A33D]">
+                            {s.remaining} left
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -247,11 +329,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
 
             {/* Party size */}
             <div className="mt-6">
-              <label className="overline block mb-3 inline-flex items-center gap-2">
+              <label className="overline flex mb-3 items-center gap-2">
                 <Users strokeWidth={1.4} className="h-3 w-3" />
                 Party of
               </label>
-              <div className="inline-flex items-center rounded-full border border-[#262321]">
+              <div className="inline-flex items-center border border-[#262321]">
                 <button
                   type="button"
                   onClick={() => setPartySize((p) => Math.max(1, p - 1))}
@@ -289,9 +371,22 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Celebrating a birthday. A quiet corner if possible."
                 data-testid="booking-note-input"
-                className="w-full bg-transparent rounded-xl border border-[#262321] p-3 text-sm text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
+                className="w-full bg-transparent border border-[#262321] p-3 text-sm text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"
               />
             </div>
+
+            {selectedTime && (
+              <p className="mt-6 text-sm text-[#F2EDE7]/85" data-testid="booking-summary">
+                {new Date(selectedDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                {" · "}{selectedTime}{" · Party of "}{partySize}
+              </p>
+            )}
+
+            {depositAmount > 0 && (
+              <p className="mt-6 text-sm text-[#8F8781] font-light" data-testid="booking-deposit-notice">
+                A ₹{depositAmount} deposit holds this table — it&apos;s adjusted against your final bill.
+              </p>
+            )}
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <button
@@ -301,7 +396,11 @@ export function BookingModal({ venue, onClose, onBooked }) {
                 data-testid="booking-submit"
                 className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {busy ? "Holding" : "Reserve the table"}
+                {busy
+                  ? "Holding"
+                  : depositAmount > 0
+                    ? `Reserve — pay ₹${depositAmount} deposit`
+                    : "Reserve the table"}
               </button>
               <button
                 type="button"

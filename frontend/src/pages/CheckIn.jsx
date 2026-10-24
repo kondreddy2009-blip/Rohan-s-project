@@ -61,7 +61,7 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-2 min-h-[60vh] flex flex-col" data-testid="checkin-page">
+    <div className="mx-auto max-w-2xl px-5 sm:px-8 py-10 sm:py-16 min-h-[80vh] flex flex-col" data-testid="checkin-page">
       <div className="overline">Check-in</div>
       <h1 className="font-serif-display text-4xl sm:text-5xl mt-2">{venue.name}</h1>
       <div className="overline mt-2">{venue.neighborhood} · {venue.type}</div>
@@ -69,11 +69,11 @@ export default function CheckIn() {
       <div className="mt-12 flex-1 flex flex-col justify-center">
         {step === "scan" && (
           <div className="animate-fade-up text-center">
-            <div className="mx-auto w-40 h-40 rounded-full border border-[#262321] flex items-center justify-center relative overflow-hidden">
+            <div className="mx-auto w-40 h-40 border border-[#262321] flex items-center justify-center relative overflow-hidden">
               <QrCode strokeWidth={0.8} className="h-24 w-24 text-[#CE6A4A]" />
               <div className="absolute inset-x-0 h-px bg-[#CE6A4A]/60 animate-fade-up" />
             </div>
-            <p className="mt-8 font-serif text-xl text-[#F2EDE7]/80 max-w-md mx-auto">
+            <p className="mt-8 font-serif text-xl text-[#F2EDE7]/80 italic max-w-md mx-auto">
               A quiet gesture. Confirm your arrival to begin.
             </p>
             <button
@@ -89,7 +89,7 @@ export default function CheckIn() {
 
         {step === "confirmed" && result && (
           <div className="animate-fade text-center">
-            <div className="mx-auto w-16 h-16 rounded-full border border-[#CE6A4A] flex items-center justify-center">
+            <div className="mx-auto w-16 h-16 border border-[#CE6A4A] flex items-center justify-center">
               <Check strokeWidth={1} className="h-8 w-8 text-[#CE6A4A]" />
             </div>
             <div className="overline-accent mt-6">Welcomed</div>

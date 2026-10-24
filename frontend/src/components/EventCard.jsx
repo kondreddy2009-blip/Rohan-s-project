@@ -1,81 +1,119 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { formatApiError } from "@/lib/api";
+import { CalendarDays, Users, ArrowRight } from "lucide-react";
+import { api, formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { formatEventWhen, partnerImage, useToggleRsvp } from "@/lib/partnersService";
-import { meetsTier, pointsToTier, tierLabel, tierRequirementPhrase } from "@/lib/tiers";
-import { cn } from "@/lib/utils";
 
-export function EventCard({ event, partner, className }) {
+const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
+
+function formatEventWhen(dateStr, time) {
+  const d = new Date(`${dateStr}T${time || "00:00"}`);
+  const day = d.toLocaleDateString("en-GB", { weekday: "short" });
+  const date = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const hour = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: d.getMinutes() ? "2-digit" : undefined,
+    hour12: true,
+  });
+  return `${day} ${date} · ${hour}`;
+}
+
+export function EventCard({ event, userTier, pointsAway }) {
+  const required = event.tier_required;
+  const userIdx = TIER_ORDER.indexOf(userTier || "Guest");
+  const requiredIdx = required ? TIER_ORDER.indexOf(required) : -1;
+  const locked = requiredIdx > userIdx;
+  const navigate = useNavigate();
+  const openVenue = () => navigate(`/venues/${event.venue_id}`);
   const { user } = useAuth();
-  const rsvp = useToggleRsvp();
-  const locked = !meetsTier(user?.tier, event.tier_required);
-  const seatsLeft = event.seats ? event.seats - event.rsvp_count : null;
-  const badge = locked ? "Locked" : event.tier_required ? tierLabel(event.tier_required) : "Open";
-  const meta = [event.seats && `${event.seats} seats`, tierRequirementPhrase(event.tier_required)]
-    .filter(Boolean)
-    .join(" · ");
+  const [going, setGoing] = useState(!!event.my_rsvp);
+  const [count, setCount] = useState(event.rsvp_count || 0);
+  const [busy, setBusy] = useState(false);
+  const seatsLeft = event.capacity ? Math.max(event.capacity - count, 0) : null;
+  const full = seatsLeft === 0 && !going;
 
-  const onRsvp = () =>
-    rsvp.mutate(event.id, {
-      onSuccess: (e) => toast.success(e.rsvped ? `You're on the list for ${event.title}.` : "RSVP cancelled."),
-      onError: (err) => toast.error(formatApiError(err.response?.data?.detail)),
-    });
-
-  let action;
-  if (locked) {
-    const away = pointsToTier(user?.lifetime_points, event.tier_required);
-    action = (
-      <span className="tbl-pill tbl-pill--muted" aria-disabled="true">
-        {away.toLocaleString("en-IN")} pts away
-      </span>
-    );
-  } else if (event.rsvped) {
-    action = (
-      <button type="button" onClick={onRsvp} disabled={rsvp.isPending} className="tbl-above tbl-pill tbl-pill--tint" aria-label={`Cancel RSVP for ${event.title}`}>
-        Going
-      </button>
-    );
-  } else if (seatsLeft !== null && seatsLeft <= 0) {
-    action = (
-      <button type="button" disabled className="tbl-pill">
-        Full
-      </button>
-    );
-  } else {
-    action = (
-      <button type="button" onClick={onRsvp} disabled={rsvp.isPending} className="tbl-above tbl-pill tbl-pill--accent px-4" data-testid={`rsvp-${event.id}`}>
-        RSVP
-      </button>
-    );
-  }
+  const toggleRsvp = async (e) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/events/${event.id}/rsvp`);
+      setGoing(data.going);
+      setCount(data.rsvp_count);
+      toast.success(data.going ? `You're in for ${event.title}` : "RSVP cancelled");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail) || "Could not update RSVP");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <article className={cn("tbl-card tbl-card--lift flex flex-col", className)} data-testid={`event-card-${event.id}`}>
-      <div className="relative h-[150px] bg-ritual-surface-2">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={openVenue}
+      onKeyDown={(e) => e.key === "Enter" && openVenue()}
+      className="rounded-2xl border border-white/10 bg-[#141312] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
+      data-testid={`event-card-${event.id}`}>
+      <div className="relative aspect-[16/9] overflow-hidden">
         <img
-          src={partnerImage(partner?.image_url)}
-          alt=""
+          src={event.venue_image_url}
+          alt={event.venue_name}
+          className="h-full w-full object-cover"
           loading="lazy"
-          className={cn("tbl-media", locked && "opacity-40 grayscale")}
         />
-        <div className="tbl-scrim" />
-        <span className="absolute right-3 top-3 tbl-pill tbl-pill--glass tbl-pill--sm" data-testid="event-tier-badge">
-          {badge}
-        </span>
-        <div className="absolute inset-x-4 bottom-3.5">
-          <div className="text-[12px] font-bold">{formatEventWhen(event)}</div>
-          <h3 className="mt-0.5 text-[16px] font-extrabold leading-tight tracking-[-0.01em]">
-            <Link to={`/restaurant/${partner?.slug}`} className="tbl-stretched">
-              {event.title}
-            </Link>
-          </h3>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+        {required && (
+          <span
+            className={
+              "absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-[0.14em] uppercase " +
+              (locked ? "bg-black/55 text-[#B8B2AA]" : "bg-[#F07F5E] text-[#2A0F07]")
+            }
+          >
+            {locked ? "Locked" : required}
+          </span>
+        )}
+        <div className="absolute inset-x-4 bottom-3">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-white/90">
+            <CalendarDays strokeWidth={1.5} className="h-4 w-4 text-[#F0A58C]" />
+            {formatEventWhen(event.date, event.time)}
+          </div>
+          <h3 className="mt-1 font-['Cormorant_Garamond'] text-[30px] font-semibold text-white leading-tight">{event.title}</h3>
         </div>
       </div>
-      <div className="tbl-footer-strip flex items-center justify-between gap-3 px-4 py-3">
-        <span className="text-[12px] leading-snug text-ritual-muted">{meta}</span>
-        {action}
+      <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+        <div className="flex items-center gap-2.5 text-[13px] text-[#B8AA98]">
+          <Users strokeWidth={1.5} className="h-4 w-4 shrink-0 text-[#F0A58C]" />
+          <span>{seatsLeft !== null ? (full ? "Full · " : `${seatsLeft} of ${event.capacity} seats left · `) : ""}
+          {required ? (locked ? `${required} only` : `${required} and above`) : "Open to all"}</span>
+        </div>
+        {locked ? (
+          <span className="rounded-full bg-[#23201E] px-3.5 py-2 text-xs font-bold text-[#B8B2AA] whitespace-nowrap shrink-0">
+            {pointsAway > 0 ? `${pointsAway.toLocaleString("en-IN")} pts away` : `Requires ${required}`}
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={toggleRsvp}
+            onKeyDown={(e) => e.stopPropagation()}
+            disabled={busy || full}
+            data-testid={`event-rsvp-${event.id}`}
+            className={
+              "inline-flex items-center gap-2 rounded-full px-5 py-3 text-[13px] font-bold transition-colors whitespace-nowrap shrink-0 disabled:opacity-60 " +
+              (going
+                ? "bg-[#23201E] text-[#EE9B79] hover:bg-[#2C2927]"
+                : "bg-[#F07F5E] text-[#2A0F07] hover:bg-[#F59273]")
+            }
+          >
+            {full ? "Full" : going ? "✓ You're going" : <>Reserve a seat <ArrowRight className="h-4 w-4" /></>}
+          </button>
+        )}
       </div>
-    </article>
+    </div>
   );
 }

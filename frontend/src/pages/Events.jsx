@@ -1,28 +1,71 @@
-import { useMemo, useState } from "react";
-import { Section } from "@/components/Section";
-import { FilterChips } from "@/components/FilterChips";
-import { EventsBlock } from "@/pages/Discover";
-import { PARTNER_FILTERS, isUpcoming, usePartners } from "@/lib/partnersService";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, CalendarDays } from "lucide-react";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { EventCard } from "@/components/EventCard";
+import { usePageTitle } from "@/lib/usePageTitle";
+import { cn } from "@/lib/utils";
+
+const serif = "font-['Cormorant_Garamond']";
+const TIER_THRESHOLDS = { Guest: 0, Regular: 500, Insider: 1500, "Inner Circle": 3000 };
 
 export default function Events() {
-  const { data: partners = [], isLoading } = usePartners();
-  const [filter, setFilter] = useState("all");
-  const match = (PARTNER_FILTERS.find((f) => f.key === filter) || PARTNER_FILTERS[0]).match;
+  usePageTitle("Events");
+  const { user } = useAuth();
+  const [events, setEvents] = useState(null);
+  const [wallet, setWallet] = useState(null);
 
-  const events = useMemo(() => {
-    const now = new Date();
-    return partners
-      .filter(match)
-      .flatMap((p) => p.events.filter((e) => isUpcoming(e, now)).map((e) => ({ event: e, partner: p })))
-      .sort((a, b) => `${a.event.date}${a.event.time}`.localeCompare(`${b.event.date}${b.event.time}`));
-  }, [partners, match]);
+  useEffect(() => {
+    api.get("/events").then(({ data }) => setEvents(data)).catch(() => setEvents([]));
+  }, []);
+
+  useEffect(() => {
+    if (user) api.get("/wallet").then(({ data }) => setWallet(data)).catch(() => {});
+  }, [user]);
+
+  const tier = wallet?.tier || user?.tier || "Guest";
+  const lifetime = wallet?.lifetime_points ?? user?.lifetime_points ?? 0;
+  const pointsAway = (required) => Math.max(0, (TIER_THRESHOLDS[required] ?? 0) - lifetime);
 
   return (
-    <Section withNav data-testid="events-page">
-      <div className="flex justify-end mb-6">
-        <FilterChips value={filter} onChange={setFilter} />
+    <div className="relative px-5 sm:px-10 lg:px-16 pb-14" data-testid="events-page">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_85%_0%,rgba(232,162,127,0.16),transparent_60%)]"
+      />
+      <div className="relative mx-auto max-w-[1280px]">
+        <div className="pt-4">
+          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#E8A27F]">
+            Special experiences <span className="h-px w-12 bg-[#E8A27F]/60" />
+          </div>
+          <h1 className={cn(serif, "mt-4 flex items-center gap-4 text-5xl sm:text-6xl font-semibold text-[#F2EDE7]")}>
+            Events <CalendarDays strokeWidth={1.3} className="h-10 w-10 text-[#E8A27F]" />
+          </h1>
+          <p className="mt-2 text-lg text-[#B8AA98]">What your tier opens, across every partner.</p>
+        </div>
+
+        <div className="mt-10">
+          {events === null ? (
+            <div className="py-16 text-center text-sm text-[#8F8781]">Loading…</div>
+          ) : events.length === 0 ? (
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#141312]/90 px-6 py-14 text-center" data-testid="events-empty">
+              <CalendarDays strokeWidth={1.2} className="h-14 w-14 text-[#E8A27F]" />
+              <div className={cn(serif, "mt-5 text-4xl font-semibold text-[#F2EDE7]")}>No events right now</div>
+              <p className="mt-2 text-[16px] text-[#B8AA98]">New dining experiences are announced here. Meanwhile, find a table.</p>
+              <Link to="/discover" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#F07F5E] px-7 py-3.5 text-[15px] font-semibold text-[#2A0F07] transition-colors hover:bg-[#F59273]">
+                Explore restaurants <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {events.map((e) => (
+                <EventCard key={e.id} event={e} userTier={tier} pointsAway={pointsAway(e.tier_required)} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      {isLoading ? <div className="tbl-panel h-[220px]" aria-busy="true" /> : <EventsBlock events={events} heading="h1" />}
-    </Section>
+    </div>
   );
 }

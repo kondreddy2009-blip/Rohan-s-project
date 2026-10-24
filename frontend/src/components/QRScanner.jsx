@@ -2,6 +2,31 @@ import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 /**
+ * Decode a QR code from an image file (e.g. a photo of a printed code, or a
+ * screenshot). Used as the upload fallback when a camera isn't available.
+ * Returns the decoded text, or throws if no code is found.
+ */
+export async function decodeQrFromFile(file) {
+  const elementId = "qr-file-decode-" + Math.random().toString(36).slice(2);
+  const el = document.createElement("div");
+  el.id = elementId;
+  el.style.display = "none";
+  document.body.appendChild(el);
+  const scanner = new Html5Qrcode(elementId, { verbose: false });
+  try {
+    const decoded = await scanner.scanFile(file, false);
+    return decoded;
+  } finally {
+    try {
+      scanner.clear();
+    } catch {
+      /* ignore */
+    }
+    el.remove();
+  }
+}
+
+/**
  * Live camera QR scanner.
  *
  * Gracefully handles environments without camera access (preview iframes,

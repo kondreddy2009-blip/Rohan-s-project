@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { assetUrl } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { Heart, Star } from "lucide-react";
 
@@ -25,7 +26,7 @@ export function FillingFastCard({ venue }) {
     >
       <div className="relative aspect-[3/2] overflow-hidden">
         <img
-          src={venue.image_url}
+          src={assetUrl(venue.image_url)}
           alt={venue.name}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           loading="lazy"

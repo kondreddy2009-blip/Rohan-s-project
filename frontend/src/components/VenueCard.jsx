@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { assetUrl } from "@/lib/api";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,7 @@ export function VenueCard({ venue, index = 0 }) {
     >
       <div className="relative aspect-[4/5] overflow-hidden">
         <img
-          src={venue.image_url}
+          src={assetUrl(venue.image_url)}
           alt={venue.name}
           className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
           loading="lazy"

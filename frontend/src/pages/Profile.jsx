@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { api, formatApiError } from "@/lib/api";
+import { api, formatApiError, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { User, Crown, CalendarDays, BarChart3, Star, Compass, ArrowRight, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -366,7 +366,7 @@ export default function Profile() {
         <section className="relative overflow-hidden rounded-2xl bg-[#1A1917] border border-white/[0.04] p-6 sm:p-7 min-h-[270px] flex flex-col">
           {coverImage && (
             <>
-              <img src={coverImage} alt="" className="absolute right-0 top-0 h-3/5 w-3/5 object-cover" />
+              <img src={assetUrl(coverImage)} alt="" className="absolute right-0 top-0 h-3/5 w-3/5 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#1A1917] via-[#1A1917]/80 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1A1917] via-transparent to-transparent" />
             </>

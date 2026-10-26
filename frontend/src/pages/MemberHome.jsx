@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, MapPin, UtensilsCrossed, Star, Flame, Heart, CalendarDays,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { usePageTitle } from "@/lib/usePageTitle";
 import { fillingFastStatus } from "@/components/FillingFastCard";
@@ -76,7 +76,7 @@ function VenueTile({ venue }) {
       data-testid={`home-venue-${venue.id}`}
     >
       <div className="relative aspect-[16/10] overflow-hidden">
-        <img src={venue.image_url} alt={venue.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+        <img src={assetUrl(venue.image_url)} alt={venue.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
         {venue.featured ? (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2EDE7] px-3.5 py-1.5 text-[13px] font-semibold text-[#1B1917]">
@@ -143,7 +143,7 @@ function EventTile({ event }) {
       data-testid={`home-event-${event.id}`}
     >
       {event.venue_image_url && (
-        <img src={event.venue_image_url} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-700 group-hover:scale-105" />
+        <img src={assetUrl(event.venue_image_url)} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-700 group-hover:scale-105" />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-[#0E0D0C]/80 via-[#0E0D0C]/40 to-[#0E0D0C]/20" />
       <div className="relative grid h-[76px] w-[76px] shrink-0 place-items-center rounded-2xl bg-[#F6E3DA] text-center leading-none text-[#1B1917]">
@@ -211,7 +211,7 @@ export default function MemberHome() {
     <div className="relative overflow-hidden bg-[#0E0D0C] text-[#F4EBDD]" data-testid="member-home">
       {backdrop && (
         <div className="pointer-events-none absolute right-0 top-0 hidden h-[520px] w-[60%] md:block">
-          <img src={backdrop} alt="" className="h-full w-full object-cover opacity-30" />
+          <img src={assetUrl(backdrop)} alt="" className="h-full w-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0E0D0C] via-[#0E0D0C]/55 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0E0D0C]" />
         </div>

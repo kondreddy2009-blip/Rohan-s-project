@@ -1595,32 +1595,28 @@ async def update_concierge_message(
 SLOT_CAPACITY_PER_TIME = 6  # seats-worth of parties per 30-min slot
 
 
+HOURS_RANGE_RE = re.compile(r"(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})")
+
+
 def _generate_slots(hours: str) -> list:
-    """Parse '18:00 – 23:00' or '18:00 – 01:00' into 30-min slots.
-    Last slot is 30 min before close so a party has time to sit.
+    """Parse '18:00 – 23:00', '18:00 – 01:00' or split service like
+    '12:00 – 15:00 buffet, 19:00 – 23:00 à la carte' into 30-min slots.
+    Labels around the ranges are ignored. Last slot of each range is
+    30 min before close so a party has time to sit.
     """
-    if not hours:
-        return []
-    try:
-        normalized = hours.replace("—", "-").replace("–", "-")
-        parts = [p.strip() for p in normalized.split("-")]
-        if len(parts) != 2:
-            return []
-        sh, sm = map(int, parts[0].split(":"))
-        eh, em = map(int, parts[1].split(":"))
+    slots = []
+    for sh, sm, eh, em in HOURS_RANGE_RE.findall(hours or ""):
+        sh, sm, eh, em = int(sh), int(sm), int(eh), int(em)
         if eh < sh:  # crosses midnight, e.g. 18:00–01:00
             eh += 24
         cur = sh * 60 + sm
         end_min = eh * 60 + em
-        slots = []
         while cur + 30 <= end_min:
             h = (cur // 60) % 24
             m = cur % 60
             slots.append(f"{h:02d}:{m:02d}")
             cur += 30
-        return slots
-    except Exception:
-        return []
+    return slots
 
 
 def _generate_booking_code() -> str:

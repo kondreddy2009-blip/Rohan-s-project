@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, QrCode, Sparkles, Gift, Utensils } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { BrandLockup } from "@/components/BrandLockup";
 import { FillingFastCard } from "@/components/FillingFastCard";
@@ -68,7 +68,7 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="relative min-h-[640px] sm:min-h-[720px] overflow-hidden">
-        {hero && <img src={hero.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+        {hero && <img src={assetUrl(hero.image_url)} alt="" className="absolute inset-0 h-full w-full object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-[#121110] via-[#121110]/60 to-[#121110]/40" />
         <div className={`${wrap} relative flex min-h-[640px] sm:min-h-[720px] flex-col justify-end pb-16 sm:pb-24 pt-36`}>
           <div className="text-xs font-extrabold tracking-[0.2em] uppercase text-[#EE9B79]">Dine · Earn · Return</div>

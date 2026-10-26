@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CalendarDays, Users, ArrowRight } from "lucide-react";
-import { api, formatApiError } from "@/lib/api";
+import { api, formatApiError, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -62,7 +62,7 @@ export function EventCard({ event, userTier, pointsAway }) {
       data-testid={`event-card-${event.id}`}>
       <div className="relative aspect-[16/9] overflow-hidden">
         <img
-          src={event.venue_image_url}
+          src={assetUrl(event.venue_image_url)}
           alt={event.venue_name}
           className="h-full w-full object-cover"
           loading="lazy"

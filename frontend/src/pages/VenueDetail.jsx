@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Calendar, Clock, MapPin, MessageSquare, ChefHat, CalendarCheck, Users, Gift, Sparkles, Leaf, ChevronRight, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { queueLabel } from "@/components/StatusIndicator";
 import { fillingFastStatus } from "@/components/FillingFastCard";
@@ -152,7 +152,7 @@ export default function VenueDetail() {
     <div className="mx-auto max-w-[1100px] px-3 sm:px-6 pb-8 space-y-4" data-testid="venue-detail-page">
       {/* Hero */}
       <section className="relative h-[420px] overflow-hidden rounded-2xl">
-        <img src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={assetUrl(venue.image_url)} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/25" />
         <div
           className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold"

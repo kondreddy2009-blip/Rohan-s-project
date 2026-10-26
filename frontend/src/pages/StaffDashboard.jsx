@@ -677,7 +677,7 @@ function VenueProfileForm({ venue, onSaved }) {
           />
           {form.image_url && (
             <img
-              src={form.image_url}
+              src={assetUrl(form.image_url)}
               alt=""
               className="mt-3 h-32 w-full max-w-sm rounded-xl object-cover border border-[color:var(--st-border)]"
             />
@@ -1934,7 +1934,7 @@ export default function StaffDashboard() {
         <div className="space-y-6 animate-fade-up">
           <div className="relative overflow-hidden rounded-2xl border border-[color:var(--st-border)] bg-[#171614] text-[#F2EDE7] min-h-[15rem] [&_.overline]:text-[#D9D2C6]">
             {selectedVenue.image_url && (
-              <img src={selectedVenue.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={assetUrl(selectedVenue.image_url)} alt="" className="absolute inset-0 h-full w-full object-cover" />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
             <div className="relative z-10 p-4 pb-0 lg:p-0 lg:absolute lg:top-4 lg:right-4">

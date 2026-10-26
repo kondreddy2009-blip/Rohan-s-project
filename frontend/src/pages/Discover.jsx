@@ -4,7 +4,7 @@ import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, CalendarDays,
   MapPin, UtensilsCrossed, Star, Flame, Crown,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { FillingFastCard, fillingFastStatus } from "@/components/FillingFastCard";
 import { EventCard } from "@/components/EventCard";
@@ -139,7 +139,7 @@ function Hero({ venues }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#1B1917]" data-testid={`featured-${venue.id}`}>
       <div className="relative min-h-[420px] sm:min-h-[478px]">
-        <img key={venue.id} src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
+        <img key={venue.id} src={assetUrl(venue.image_url)} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
         <span className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur-sm px-4 py-2 text-sm font-semibold">
           <span className={cn("h-2 w-2 rounded-full", dot)} />
@@ -286,7 +286,7 @@ function Tonight({ venues }) {
           return (
             <li key={v.id} className={cn(i > 0 && "border-t border-white/[0.08]")}>
               <Link to={`/venues/${v.id}`} className="flex items-center gap-4 py-3">
-                <img src={v.image_url} alt="" className="h-12 w-[84px] shrink-0 rounded-lg object-cover ring-1 ring-[#CE6A4A]/30" loading="lazy" />
+                <img src={assetUrl(v.image_url)} alt="" className="h-12 w-[84px] shrink-0 rounded-lg object-cover ring-1 ring-[#CE6A4A]/30" loading="lazy" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-[15px] font-semibold">
                     <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
@@ -423,7 +423,7 @@ export default function Discover() {
         {/* Ambient backdrop */}
         {heroVenues[0]?.image_url && (
           <div className="pointer-events-none absolute inset-y-0 right-0 w-[62%] hidden md:block">
-            <img src={heroVenues[0].image_url} alt="" className="h-[520px] w-full object-cover opacity-25" />
+            <img src={assetUrl(heroVenues[0].image_url)} alt="" className="h-[520px] w-full object-cover opacity-25" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0E0D0C] via-[#0E0D0C]/60 to-[#0E0D0C]/30" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0E0D0C]/20 to-[#0E0D0C]" style={{ top: 0, height: 560 }} />
           </div>

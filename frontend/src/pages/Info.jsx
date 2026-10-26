@@ -175,7 +175,7 @@ export default function Info({ slug }) {
   if (!page) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen bg-[#110C09] text-[#F4F1EC] flex flex-col" data-testid={`info-${slug}`}>
+    <div className="min-h-screen bg-[#0B0A0A] text-[#F2EDE7] flex flex-col" data-testid={`info-${slug}`}>
       <header className="mx-auto w-full max-w-3xl px-5 py-4">
         <Link to="/" aria-label="Table home"><BrandLockup /></Link>
       </header>
@@ -183,7 +183,7 @@ export default function Info({ slug }) {
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-[-0.03em]">{page.title}</h1>
         <p className="mt-3 text-lg text-[#B8B2AA]">{page.intro}</p>
         {["terms", "privacy", "refunds"].includes(slug) && (
-          <p className="mt-2 text-sm text-[#8E8982]">Last updated {UPDATED}</p>
+          <p className="mt-2 text-sm text-[#8F8781]">Last updated {UPDATED}</p>
         )}
         <div className="mt-10 space-y-8">
           {page.sections.map((s) => (
@@ -196,7 +196,7 @@ export default function Info({ slug }) {
                 <ul className="mt-3 space-y-2.5">
                   {s.list.map((t) => (
                     <li key={t} className="flex gap-3 leading-relaxed text-[#B8B2AA]">
-                      <span aria-hidden className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#F0D3AE]" />
+                      <span aria-hidden className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#EE9B79]" />
                       <span>{t}</span>
                     </li>
                   ))}
@@ -208,10 +208,10 @@ export default function Info({ slug }) {
             <section data-testid="contact-details" className="rounded-2xl border border-white/[0.08] bg-[#1C1B19] p-6">
               <h2 className="text-xl font-extrabold tracking-tight">Business details</h2>
               <dl className="mt-4 space-y-3 text-[#B8B2AA]">
-                {LEGAL_NAME && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Registered name</dt><dd className="mt-1">{LEGAL_NAME}</dd></div>}
-                {BUSINESS_ADDRESS && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Address</dt><dd className="mt-1">{BUSINESS_ADDRESS}</dd></div>}
-                {SUPPORT_PHONE && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Phone</dt><dd className="mt-1"><a href={`tel:${SUPPORT_PHONE}`} className="hover:text-white">{SUPPORT_PHONE}</a></dd></div>}
-                {SUPPORT_EMAIL && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8E8982]">Email</dt><dd className="mt-1"><a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold text-[#F0D3AE] hover:text-[#E8C9A0]">{SUPPORT_EMAIL}</a></dd></div>}
+                {LEGAL_NAME && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8F8781]">Registered name</dt><dd className="mt-1">{LEGAL_NAME}</dd></div>}
+                {BUSINESS_ADDRESS && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8F8781]">Address</dt><dd className="mt-1">{BUSINESS_ADDRESS}</dd></div>}
+                {SUPPORT_PHONE && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8F8781]">Phone</dt><dd className="mt-1"><a href={`tel:${SUPPORT_PHONE}`} className="hover:text-white">{SUPPORT_PHONE}</a></dd></div>}
+                {SUPPORT_EMAIL && <div><dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8F8781]">Email</dt><dd className="mt-1"><a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold text-[#EE9B79] hover:text-[#CE6A4A]">{SUPPORT_EMAIL}</a></dd></div>}
               </dl>
             </section>
           )}

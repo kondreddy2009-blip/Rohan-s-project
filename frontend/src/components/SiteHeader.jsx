@@ -5,7 +5,7 @@ import { BrandLockup } from "@/components/BrandLockup";
 import { cn } from "@/lib/utils";
 
 export const CORAL_BTN = "bg-[#F07F5E] text-[#2A0F07] hover:bg-[#F59273]";
-const pillBase = "rounded-full border border-white/10 bg-[#17110C]/90 backdrop-blur-sm";
+const pillBase = "rounded-full border border-white/10 bg-[#141312]/90 backdrop-blur-sm";
 
 const NAV = [
   { label: "Discover", to: "/discover", icon: Compass, testId: "nav-discover" },
@@ -43,7 +43,7 @@ export function SiteHeader({ points }) {
             onClick={() => navigate(-1)}
             aria-label="Back"
             data-testid="venue-back-button"
-            className={cn(pillBase, "grid h-10 w-10 place-items-center text-[#E8C9A0] hover:text-white")}
+            className={cn(pillBase, "grid h-10 w-10 place-items-center text-[#CE6A4A] hover:text-white")}
           >
             <ChevronLeft strokeWidth={1.8} className="h-5 w-5" />
           </button>
@@ -68,7 +68,7 @@ export function SiteHeader({ points }) {
             }}
             className={cn(
               "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-3 text-[14px] font-medium transition-colors",
-              isNavActive(to, location) ? "bg-[#2A2118] text-white" : "text-[#B8AA98] hover:text-white",
+              isNavActive(to, location) ? "bg-[#262321] text-white" : "text-[#B8AA98] hover:text-white",
             )}
           >
             <Icon strokeWidth={1.5} className="h-5 w-5" />
@@ -83,9 +83,9 @@ export function SiteHeader({ points }) {
           <>
             <Link
               to="/wallet"
-              className={cn(pillBase, "hidden sm:inline-flex items-center gap-2 border-[#E8C9A0]/30 px-4 py-2.5 text-sm font-semibold text-white")}
+              className={cn(pillBase, "hidden sm:inline-flex items-center gap-2 border-[#CE6A4A]/30 px-4 py-2.5 text-sm font-semibold text-white")}
             >
-              <Star className="h-4 w-4 fill-[#E8C9A0] text-[#E8C9A0]" />
+              <Star className="h-4 w-4 fill-[#CE6A4A] text-[#CE6A4A]" />
               {pts.toLocaleString("en-IN")} pts
             </Link>
             <Link

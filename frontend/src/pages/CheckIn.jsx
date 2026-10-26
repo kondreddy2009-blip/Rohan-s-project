@@ -69,11 +69,11 @@ export default function CheckIn() {
       <div className="mt-12 flex-1 flex flex-col justify-center">
         {step === "scan" && (
           <div className="animate-fade-up text-center">
-            <div className="mx-auto w-40 h-40 border border-[#3D3128] flex items-center justify-center relative overflow-hidden">
-              <QrCode strokeWidth={0.8} className="h-24 w-24 text-[#E8C9A0]" />
-              <div className="absolute inset-x-0 h-px bg-[#E8C9A0]/60 animate-fade-up" />
+            <div className="mx-auto w-40 h-40 border border-[#262321] flex items-center justify-center relative overflow-hidden">
+              <QrCode strokeWidth={0.8} className="h-24 w-24 text-[#CE6A4A]" />
+              <div className="absolute inset-x-0 h-px bg-[#CE6A4A]/60 animate-fade-up" />
             </div>
-            <p className="mt-8 font-serif text-xl text-[#F4F1EC]/80 italic max-w-md mx-auto">
+            <p className="mt-8 font-serif text-xl text-[#F2EDE7]/80 italic max-w-md mx-auto">
               A quiet gesture. Confirm your arrival to begin.
             </p>
             <button
@@ -89,8 +89,8 @@ export default function CheckIn() {
 
         {step === "confirmed" && result && (
           <div className="animate-fade text-center">
-            <div className="mx-auto w-16 h-16 border border-[#E8C9A0] flex items-center justify-center">
-              <Check strokeWidth={1} className="h-8 w-8 text-[#E8C9A0]" />
+            <div className="mx-auto w-16 h-16 border border-[#CE6A4A] flex items-center justify-center">
+              <Check strokeWidth={1} className="h-8 w-8 text-[#CE6A4A]" />
             </div>
             <div className="overline-accent mt-6">Welcomed</div>
             <h2 className="font-serif-display text-4xl mt-3">
@@ -102,11 +102,11 @@ export default function CheckIn() {
                 <AnimatedNumber
                   value={result.points_earned}
                   prefix="+"
-                  className="font-serif-display text-7xl text-[#E8C9A0] tabular-nums block"
+                  className="font-serif-display text-7xl text-[#CE6A4A] tabular-nums block"
                 />
               </div>
               <div className="overline mt-4">
-                Balance · <span className="text-[#F4F1EC]"><AnimatedNumber value={result.balance} /></span>
+                Balance · <span className="text-[#F2EDE7]"><AnimatedNumber value={result.balance} /></span>
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function CheckIn() {
             <h2 className="font-serif-display text-3xl mt-2 leading-tight">
               What did you have this evening?
             </h2>
-            <p className="text-[#8E8982] font-light mt-3">
+            <p className="text-[#8F8781] font-light mt-3">
               This will help other members find the things worth returning for.
             </p>
 
@@ -130,7 +130,7 @@ export default function CheckIn() {
                 onChange={(e) => setItem(e.target.value)}
                 placeholder="A dish, a pour, a pastry…"
                 data-testid="feedback-item-input"
-                className="w-full bg-transparent border-b border-[#3D3128] py-3 text-[#F4F1EC] font-light focus:border-[#E8C9A0] outline-none transition-colors duration-300 placeholder:text-[#6B665F]"
+                className="w-full bg-transparent border-b border-[#262321] py-3 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 placeholder:text-[#6B6560]"
               />
             </div>
 
@@ -141,7 +141,7 @@ export default function CheckIn() {
                   type="button"
                   onClick={() => setWouldReturn(true)}
                   data-testid="feedback-yes"
-                  className={`btn-ghost ${wouldReturn === true ? "border-[#E8C9A0] text-[#E8C9A0]" : ""}`}
+                  className={`btn-ghost ${wouldReturn === true ? "border-[#CE6A4A] text-[#CE6A4A]" : ""}`}
                 >
                   Yes, gladly
                 </button>
@@ -149,7 +149,7 @@ export default function CheckIn() {
                   type="button"
                   onClick={() => setWouldReturn(false)}
                   data-testid="feedback-no"
-                  className={`btn-ghost ${wouldReturn === false ? "border-[#E8C9A0] text-[#E8C9A0]" : ""}`}
+                  className={`btn-ghost ${wouldReturn === false ? "border-[#CE6A4A] text-[#CE6A4A]" : ""}`}
                 >
                   Not quite
                 </button>
@@ -168,7 +168,7 @@ export default function CheckIn() {
               <button
                 onClick={() => setStep("done")}
                 data-testid="feedback-skip"
-                className="overline text-[#8E8982] hover:text-[#F4F1EC] transition-colors duration-300"
+                className="overline text-[#8F8781] hover:text-[#F2EDE7] transition-colors duration-300"
               >
                 Skip
               </button>

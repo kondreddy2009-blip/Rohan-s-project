@@ -91,7 +91,7 @@ export function PhotoGallery({ photos: all = [], heading, card }) {
                 data-testid={`gallery-tab-${t.key}`}
                 className={cn(
                   "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  tab === t.key ? "bg-[#F5F5F3] text-[#130E0B]" : "bg-[#271E17] text-[#B8B2AA] hover:text-white",
+                  tab === t.key ? "bg-[#F5F5F3] text-[#121110]" : "bg-[#23201E] text-[#B8B2AA] hover:text-white",
                 )}
               >
                 {t.label} <span className="opacity-60">{t.n}</span>
@@ -108,7 +108,7 @@ export function PhotoGallery({ photos: all = [], heading, card }) {
             onClick={() => setOpen(i)}
             aria-label={`Open photo${p.caption ? `: ${p.caption}` : ""}`}
             className={cn(
-              "group relative overflow-hidden rounded-xl bg-[#241C16] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C9A0]",
+              "group relative overflow-hidden rounded-xl bg-[#1F1D1B] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#CE6A4A]",
               i === 0 && shown.length >= 3 ? "col-span-2 row-span-2 aspect-square sm:aspect-auto" : "aspect-square",
             )}
           >

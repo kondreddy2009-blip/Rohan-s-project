@@ -4,7 +4,7 @@ import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, CalendarDays,
   MapPin, UtensilsCrossed, Star, Flame, Crown,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { FillingFastCard, fillingFastStatus } from "@/components/FillingFastCard";
 import { EventCard } from "@/components/EventCard";
@@ -42,18 +42,18 @@ function waitRank(v) {
 }
 
 const serif = "font-['Cormorant_Garamond']";
-const pillBase = "rounded-full border border-white/10 bg-[#17110C]/90 backdrop-blur-sm";
+const pillBase = "rounded-full border border-white/10 bg-[#141312]/90 backdrop-blur-sm";
 
-const panel = "w-full text-[#F4F1EC] px-5 sm:px-10 lg:px-16 py-8 sm:py-10";
+const panel = "w-full text-[#F2EDE7] px-5 sm:px-10 lg:px-16 py-8 sm:py-10";
 const inner = "mx-auto max-w-[1280px]";
 
 const selectCls =
-  "rounded-full border border-white/10 bg-[#17110C]/90 backdrop-blur-sm pl-11 pr-10 py-3.5 text-[14px] font-medium text-[#D8CBB9] outline-none focus:border-[#E8C9A0]/60 hover:text-white appearance-none cursor-pointer";
+  "rounded-full border border-white/10 bg-[#141312]/90 backdrop-blur-sm pl-11 pr-10 py-3.5 text-[14px] font-medium text-[#D8CBB9] outline-none focus:border-[#CE6A4A]/60 hover:text-white appearance-none cursor-pointer";
 
 function SelectPill({ className, icon: Icon, children, ...props }) {
   return (
     <div className={cn("relative", className)}>
-      {Icon && <Icon strokeWidth={1.6} className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#E8C9A0]" />}
+      {Icon && <Icon strokeWidth={1.6} className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#CE6A4A]" />}
       <select {...props} className={selectCls}>{children}</select>
       <ChevronDown strokeWidth={2} className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#B8AA98]" />
     </div>
@@ -64,7 +64,7 @@ function SearchBar({ query, setQuery, cuisine, setCuisine, cuisines, hood, setHo
   return (
     <div className="relative z-10 mt-8 space-y-4" data-testid="discover-search">
       <div className={cn(pillBase, "flex items-center gap-4 px-6 py-1.5 max-w-[930px] border-white/15")}>
-        <Search strokeWidth={1.6} className="h-5 w-5 shrink-0 text-[#E8C9A0]" />
+        <Search strokeWidth={1.6} className="h-5 w-5 shrink-0 text-[#CE6A4A]" />
         <input
           type="search"
           value={query}
@@ -75,13 +75,13 @@ function SearchBar({ query, setQuery, cuisine, setCuisine, cuisines, hood, setHo
           className="min-w-0 flex-1 bg-transparent py-4 text-[16px] text-white outline-none placeholder:text-[#8E8271]"
         />
         {query && (
-          <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="text-[#8E8982] hover:text-white">
+          <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="text-[#8F8781] hover:text-white">
             <X className="h-4 w-4" />
           </button>
         )}
         <span className="hidden sm:block h-8 w-px bg-white/15" />
         <span className="hidden sm:flex items-center gap-2 whitespace-nowrap text-[13px] text-[#D8CBB9]">
-          <MapPin strokeWidth={1.6} className="h-4 w-4 text-[#E8C9A0]" /> Current location
+          <MapPin strokeWidth={1.6} className="h-4 w-4 text-[#CE6A4A]" /> Current location
           <ChevronDown className="ml-2 h-4 w-4" />
         </span>
       </div>
@@ -107,7 +107,7 @@ function SearchBar({ query, setQuery, cuisine, setCuisine, cuisines, hood, setHo
                 "flex items-center gap-1.5 rounded-full border px-5 py-3.5 text-[14px] font-semibold transition-colors",
                 filter === f.key
                   ? "border-[#F5F5F3] bg-[#F5F5F3] text-[#171513]"
-                  : "border-white/10 bg-[#17110C]/90 text-[#D8CBB9] hover:text-white",
+                  : "border-white/10 bg-[#141312]/90 text-[#D8CBB9] hover:text-white",
               )}
             >
               {f.label}
@@ -119,7 +119,7 @@ function SearchBar({ query, setQuery, cuisine, setCuisine, cuisines, hood, setHo
           {SORTS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
         </SelectPill>
         {activeCount > 0 && (
-          <button type="button" onClick={onClear} data-testid="clear-filters" className="px-2 py-2 text-[13px] font-bold text-[#F0D3AE] hover:text-white">
+          <button type="button" onClick={onClear} data-testid="clear-filters" className="px-2 py-2 text-[13px] font-bold text-[#EE9B79] hover:text-white">
             Clear all
           </button>
         )}
@@ -137,9 +137,9 @@ function Hero({ venues }) {
   const arrow = "absolute top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 transition-colors";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#1B140F]" data-testid={`featured-${venue.id}`}>
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#1B1917]" data-testid={`featured-${venue.id}`}>
       <div className="relative min-h-[420px] sm:min-h-[478px]">
-        <img key={venue.id} src={venue.image_url} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
+        <img key={venue.id} src={assetUrl(venue.image_url)} alt={venue.name} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
         <span className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur-sm px-4 py-2 text-sm font-semibold">
           <span className={cn("h-2 w-2 rounded-full", dot)} />
@@ -156,7 +156,7 @@ function Hero({ venues }) {
           </>
         )}
         <div className="absolute inset-y-0 left-[88px] flex max-w-[46%] flex-col justify-center">
-          <div className="text-[12px] font-bold tracking-[0.2em] uppercase text-[#E8C9A0]">Featured tonight</div>
+          <div className="text-[12px] font-bold tracking-[0.2em] uppercase text-[#CE6A4A]">Featured tonight</div>
           <h2 className="mt-3 text-5xl font-extrabold tracking-tight leading-none">{venue.name}</h2>
           <div className="mt-3 text-[18px] text-white/90">
             {[venue.cuisine, venue.neighborhood].filter(Boolean).join(" · ")}
@@ -164,7 +164,7 @@ function Hero({ venues }) {
           {venue.tagline && <p className="mt-5 max-w-[320px] text-[15px] leading-relaxed text-white/80">{venue.tagline}</p>}
           <Link
             to={`/venues/${venue.id}`}
-            className="mt-7 inline-flex w-fit items-center gap-3 rounded-full bg-[#F7D9AE] px-7 py-3.5 text-[15px] font-bold text-[#1A0F0B] hover:bg-[#FBE4C2] transition-colors"
+            className="mt-7 inline-flex w-fit items-center gap-3 rounded-full bg-[#F2EDE7] px-7 py-3.5 text-[15px] font-bold text-[#0B0A0A] hover:bg-[#F6E3DA] transition-colors"
           >
             View details <ArrowRight className="h-4 w-4" />
           </Link>
@@ -227,16 +227,16 @@ function TierCard({ wallet }) {
               <br />
               {partners} partner{partners === 1 ? "" : "s"}
             </div>
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#1A0F0B]/85">
-              <Crown className="h-6 w-6 text-[#F0D3AE]" />
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#0B0A0A]/85">
+              <Crown className="h-6 w-6 text-[#EE9B79]" />
             </span>
           </div>
         </div>
         <div className="mt-2 flex items-center gap-4">
           <div className="h-2 flex-1 rounded-full bg-black/35">
-            <div className="h-full rounded-full bg-[#F0D3AE]" style={{ width: `${wallet?.progress_percent ?? 0}%` }} />
+            <div className="h-full rounded-full bg-[#EE9B79]" style={{ width: `${wallet?.progress_percent ?? 0}%` }} />
           </div>
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#1A0F0B]/85">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#0B0A0A]/85">
             <ChevronRight className="h-5 w-5" />
           </span>
         </div>
@@ -262,7 +262,7 @@ function JoinCard() {
       <Link
         to="/login"
         state={{ mode: "create" }}
-        className="mt-4 inline-block rounded-full bg-[#1A0F0B] px-6 py-3 text-sm font-extrabold text-white hover:bg-black transition-colors"
+        className="mt-4 inline-block rounded-full bg-[#0B0A0A] px-6 py-3 text-sm font-extrabold text-white hover:bg-black transition-colors"
       >
         Join free
       </Link>
@@ -272,10 +272,10 @@ function JoinCard() {
 
 function Tonight({ venues }) {
   return (
-    <div className="flex-1 rounded-3xl border border-white/10 bg-[#17110C]/90 p-6" data-testid="tonight-list">
+    <div className="flex-1 rounded-3xl border border-white/10 bg-[#141312]/90 p-6" data-testid="tonight-list">
       <div className="flex items-center justify-between">
         <h3 className="text-[20px] font-bold">Tonight across the network</h3>
-        <Link to="/events" className="flex items-center gap-1.5 text-[13px] font-semibold text-[#F0D3AE] hover:text-white">
+        <Link to="/events" className="flex items-center gap-1.5 text-[13px] font-semibold text-[#EE9B79] hover:text-white">
           View all <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
@@ -286,7 +286,7 @@ function Tonight({ venues }) {
           return (
             <li key={v.id} className={cn(i > 0 && "border-t border-white/[0.08]")}>
               <Link to={`/venues/${v.id}`} className="flex items-center gap-4 py-3">
-                <img src={v.image_url} alt="" className="h-12 w-[84px] shrink-0 rounded-lg object-cover ring-1 ring-[#E8C9A0]/30" loading="lazy" />
+                <img src={assetUrl(v.image_url)} alt="" className="h-12 w-[84px] shrink-0 rounded-lg object-cover ring-1 ring-[#CE6A4A]/30" loading="lazy" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-[15px] font-semibold">
                     <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
@@ -299,7 +299,7 @@ function Tonight({ venues }) {
                 <span
                   className={cn(
                     "whitespace-nowrap rounded-full px-5 py-2.5 text-[13px] font-semibold",
-                    full ? "border border-white/10 text-[#F0A58C]" : "bg-[#3A2A1B] text-[#F0D3AE]",
+                    full ? "border border-white/10 text-[#F0A58C]" : "bg-[#33302D] text-[#EE9B79]",
                   )}
                 >
                   {label}
@@ -418,17 +418,17 @@ export default function Discover() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0A07] text-[#F4F1EC]" data-testid="discover-page">
+    <div className="min-h-screen bg-[#0E0D0C] text-[#F2EDE7]" data-testid="discover-page">
       <section className={cn(panel, "relative overflow-hidden")}>
         {/* Ambient backdrop */}
         {heroVenues[0]?.image_url && (
           <div className="pointer-events-none absolute inset-y-0 right-0 w-[62%] hidden md:block">
-            <img src={heroVenues[0].image_url} alt="" className="h-[520px] w-full object-cover opacity-25" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A07] via-[#0F0A07]/60 to-[#0F0A07]/30" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F0A07]/20 to-[#0F0A07]" style={{ top: 0, height: 560 }} />
+            <img src={assetUrl(heroVenues[0].image_url)} alt="" className="h-[520px] w-full object-cover opacity-25" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0E0D0C] via-[#0E0D0C]/60 to-[#0E0D0C]/30" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0E0D0C]/20 to-[#0E0D0C]" style={{ top: 0, height: 560 }} />
           </div>
         )}
-        <span className="pointer-events-none absolute right-16 top-44 hidden lg:block -rotate-6 font-['Mrs_Saint_Delafield'] text-[64px] leading-[0.85] text-[#E8C9A0]/90">
+        <span className="pointer-events-none absolute right-16 top-44 hidden lg:block -rotate-6 font-['Mrs_Saint_Delafield'] text-[64px] leading-[0.85] text-[#CE6A4A]/90">
           Good<br />&nbsp;Food<br />&nbsp;&nbsp;Better<br />&nbsp;&nbsp;&nbsp;Company
         </span>
         <div className={inner}>
@@ -469,12 +469,12 @@ export default function Discover() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="mt-16 text-center" data-testid="no-results">
-              <div className="text-sm text-[#8E8982]">No restaurants match your search.</div>
+              <div className="text-sm text-[#8F8781]">No restaurants match your search.</div>
               {(searching || filter !== "all") && (
                 <button
                   type="button"
                   onClick={() => { clearAll(); setFilter("all"); }}
-                  className="mt-4 rounded-full bg-[#271E17] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#34281F]"
+                  className="mt-4 rounded-full bg-[#23201E] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#34281F]"
                 >
                   Reset filters
                 </button>
@@ -482,7 +482,7 @@ export default function Discover() {
             </div>
           ) : searching ? (
             <div data-testid="search-results" className="relative z-10">
-              <div className="mt-8 text-sm font-semibold text-[#8E8982]">
+              <div className="mt-8 text-sm font-semibold text-[#8F8781]">
                 {filtered.length} restaurant{filtered.length === 1 ? "" : "s"}
               </div>
               <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -518,7 +518,7 @@ export default function Discover() {
                 <button
                   type="button"
                   onClick={() => setSort("wait")}
-                  className="flex items-center gap-2 rounded-full border border-[#E8A27F]/60 px-6 py-3 text-sm font-semibold text-[#F0D3AE] hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 rounded-full border border-[#E8A27F]/60 px-6 py-3 text-sm font-semibold text-[#EE9B79] hover:bg-white/[0.04]"
                 >
                   View all <ArrowRight className="h-4 w-4" />
                 </button>
@@ -528,7 +528,7 @@ export default function Discover() {
                     type="button"
                     aria-label={l}
                     onClick={() => scrollFast(i ? 1 : -1)}
-                    className="grid h-12 w-12 place-items-center rounded-full border border-[#E8A27F]/60 text-[#F0D3AE] hover:bg-white/[0.04]"
+                    className="grid h-12 w-12 place-items-center rounded-full border border-[#E8A27F]/60 text-[#EE9B79] hover:bg-white/[0.04]"
                   >
                     {i ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
                   </button>
@@ -557,7 +557,7 @@ export default function Discover() {
                   </div>
                   <Link
                     to="/events"
-                    className="flex items-center gap-2 rounded-full border border-[#E8A27F]/60 px-6 py-3 text-sm font-semibold text-[#F0D3AE] hover:bg-white/[0.04]"
+                    className="flex items-center gap-2 rounded-full border border-[#E8A27F]/60 px-6 py-3 text-sm font-semibold text-[#EE9B79] hover:bg-white/[0.04]"
                   >
                     View all events <ArrowRight className="h-4 w-4" />
                   </Link>

@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLES = {
-  Quiet: { dot: "bg-[#7A9B7A]", label: "Quiet" },
-  "Filling In": { dot: "bg-[#E8C9A0]", label: "Filling in" },
-  "At Capacity": { dot: "bg-[#8E8982]", label: "At Capacity" },
+  Quiet: { dot: "bg-[#79A17F]", label: "Quiet" },
+  "Filling In": { dot: "bg-[#D69A3F]", label: "Filling in" },
+  "At Capacity": { dot: "bg-[#C77F73]", label: "At Capacity" },
 };
 
 const AVAILABILITY_STYLES = {
   fully_booked: { dot: "bg-[#C08B70]", label: "Fully booked" },
-  closed: { dot: "bg-[#6B665F]", label: "Closed for the night" },
+  closed: { dot: "bg-[#6B6560]", label: "Closed for the night" },
 };
 
 export function queueLabel(queueLength) {
@@ -39,10 +39,10 @@ export function StatusIndicator({
         className={cn("h-1.5 w-1.5 rounded-full status-dot-pulse", cfg.dot)}
       />
       {showLabel && (
-        <span className="overline text-[#8E8982]">{cfg.label}</span>
+        <span className="overline text-[#8F8781]">{cfg.label}</span>
       )}
       {showLabel && !availabilityCfg && queue && (
-        <span className="overline text-[#6B665F]" data-testid={testId ? `${testId}-queue` : undefined}>
+        <span className="overline text-[#6B6560]" data-testid={testId ? `${testId}-queue` : undefined}>
           · {queue}
           {wait ? ` · ${wait}` : ""}
         </span>

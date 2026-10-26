@@ -299,7 +299,7 @@ export function PayoutDetailsForm({ venueId }) {
             type="submit"
             disabled={busy}
             data-testid="payout-save"
-            className="rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-10 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+            className="rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-10 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition"
           >
             {busy ? "Saving" : saved ? "Update details" : "Submit details"}
           </button>
@@ -329,7 +329,7 @@ export function PayoutDetailsForm({ venueId }) {
               onClick={saveLink}
               disabled={linkBusy || !saved}
               data-testid="payout-razorpay-account-save"
-              className="rounded-xl border border-[color:var(--st-gold)] px-8 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[color:var(--st-gold)] hover:bg-[color:var(--st-gold)] hover:text-[#1A1308] disabled:opacity-50 transition"
+              className="rounded-xl border border-[color:var(--st-gold)] px-8 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[color:var(--st-gold)] hover:bg-[color:var(--st-gold)] hover:text-[#0B0A0A] disabled:opacity-50 transition"
             >
               {linkBusy ? "Saving" : "Save link"}
             </button>

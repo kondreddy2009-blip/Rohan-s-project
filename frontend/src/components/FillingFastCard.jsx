@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { assetUrl } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { Heart, Star } from "lucide-react";
 
 export function fillingFastStatus(venue) {
   if (venue.availability === "fully_booked" || venue.status === "At Capacity") {
-    return { label: "Full", dot: "bg-[#F0D3AE]" };
+    return { label: "Full", dot: "bg-[#EE9B79]" };
   }
   if (venue.wait_minutes && venue.wait_minutes > 0) {
     return { label: `${venue.wait_minutes} min`, dot: "bg-[#E8A33D]" };
@@ -20,12 +21,12 @@ export function FillingFastCard({ venue }) {
   return (
     <Link
       to={`/venues/${venue.id}`}
-      className="group block overflow-hidden rounded-2xl border border-white/10 bg-[#17110C]"
+      className="group block overflow-hidden rounded-2xl border border-white/10 bg-[#141312]"
       data-testid={`filling-fast-${venue.id}`}
     >
       <div className="relative aspect-[3/2] overflow-hidden">
         <img
-          src={venue.image_url}
+          src={assetUrl(venue.image_url)}
           alt={venue.name}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           loading="lazy"

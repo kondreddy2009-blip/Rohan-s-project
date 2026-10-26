@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
 const serif = "font-['Cormorant_Garamond']";
-const card = "rounded-3xl border border-white/10 bg-[#17110C]/90";
+const card = "rounded-3xl border border-white/10 bg-[#141312]/90";
 
 const PERKS = [
   { cost: 250, name: "Priority Seating" },
@@ -40,11 +40,11 @@ function LedgerRow({ item }) {
       data-testid={`ledger-${item.id}`}
     >
       <div className="flex items-center gap-4 min-w-0">
-        <div className="h-8 w-8 flex-shrink-0 border border-[#3D3128] flex items-center justify-center">
+        <div className="h-8 w-8 flex-shrink-0 border border-[#262321] flex items-center justify-center">
           {isEarn ? (
-            <ArrowUpRight strokeWidth={1.2} className="h-3.5 w-3.5 text-[#E8C9A0]" />
+            <ArrowUpRight strokeWidth={1.2} className="h-3.5 w-3.5 text-[#CE6A4A]" />
           ) : (
-            <ArrowDownLeft strokeWidth={1.2} className="h-3.5 w-3.5 text-[#F4F1EC]" />
+            <ArrowDownLeft strokeWidth={1.2} className="h-3.5 w-3.5 text-[#F2EDE7]" />
           )}
         </div>
         <div className="min-w-0">
@@ -60,7 +60,7 @@ function LedgerRow({ item }) {
       </div>
       <div
         className={`font-serif-display text-2xl tabular-nums ${
-          isEarn ? "text-[#E8C9A0]" : "text-[#F4F1EC]"
+          isEarn ? "text-[#CE6A4A]" : "text-[#F2EDE7]"
         }`}
       >
         {isEarn ? "+" : ""}
@@ -117,8 +117,8 @@ export default function Wallet() {
         <div className="flex items-start justify-between gap-4 pt-4">
           <div>
             <Eyebrow>Table Wallet</Eyebrow>
-            <h1 className={cn(serif, "mt-4 text-5xl sm:text-6xl font-semibold tracking-[-0.01em] text-[#F4F1EC]")}>
-              Your rewards, <span className="text-[#E8C9A0]">at a glance</span>
+            <h1 className={cn(serif, "mt-4 text-5xl sm:text-6xl font-semibold tracking-[-0.01em] text-[#F2EDE7]")}>
+              Your rewards, <span className="text-[#CE6A4A]">at a glance</span>
             </h1>
             <p className="mt-2 text-lg text-[#B8AA98]">Points earned across your dining experiences.</p>
           </div>
@@ -129,30 +129,30 @@ export default function Wallet() {
           {/* Left column */}
           <div className="space-y-10">
             <section
-              className={cn(card, "relative overflow-hidden p-8 sm:p-10 bg-[radial-gradient(ellipse_at_80%_20%,rgba(232,201,160,0.10),transparent_55%)]")}
+              className={cn(card, "relative overflow-hidden p-8 sm:p-10 bg-[radial-gradient(ellipse_at_80%_20%,rgba(206,106,74,0.10),transparent_55%)]")}
               data-testid="wallet-balance-section"
             >
               <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#B8AA98]">Available points</div>
               <div data-testid="wallet-balance" className="mt-3">
                 <AnimatedNumber
                   value={wallet.balance}
-                  className={cn(serif, "block text-8xl sm:text-9xl font-semibold leading-none tabular-nums text-[#F8EBD6]")}
+                  className={cn(serif, "block text-8xl sm:text-9xl font-semibold leading-none tabular-nums text-[#F6E3DA]")}
                 />
               </div>
-              <p className="mt-3 text-xl text-[#F4F1EC]">
+              <p className="mt-3 text-xl text-[#F2EDE7]">
                 {top ? `Ready to redeem at ${top.venue_name}` : "Check in at a restaurant to start earning"}
               </p>
               <div className="mt-5 h-2 w-full max-w-md overflow-hidden rounded-full bg-white/10" aria-hidden>
-                <div className="h-full rounded-full bg-gradient-to-r from-[#E8C9A0] to-[#F0A878]" style={{ width: `${progress}%` }} />
+                <div className="h-full rounded-full bg-gradient-to-r from-[#CE6A4A] to-[#F0A878]" style={{ width: `${progress}%` }} />
               </div>
               {nextPerk && (
                 <p className="mt-3 text-sm text-[#B8AA98]">
                   {nextPerk.cost - topBalance} more{top ? ` at ${top.venue_name}` : ""} to unlock{" "}
-                  <span className="text-[#E8C9A0]">{nextPerk.name}</span>
+                  <span className="text-[#CE6A4A]">{nextPerk.name}</span>
                 </p>
               )}
 
-              <div className="pointer-events-none absolute right-8 top-10 hidden h-44 w-72 rotate-[-8deg] rounded-2xl border border-[#E8C9A0]/30 bg-gradient-to-br from-[#2A2118] to-[#0F0A07] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:grid place-items-center">
+              <div className="pointer-events-none absolute right-8 top-10 hidden h-44 w-72 rotate-[-8deg] rounded-2xl border border-[#CE6A4A]/30 bg-gradient-to-br from-[#262321] to-[#0E0D0C] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:grid place-items-center">
                 <div className="flex flex-col items-center gap-2">
                   <img src="/logo.png" alt="" className="h-14 w-auto" />
                   <img src="/wordmark.png" alt="" className="w-28 h-auto" />
@@ -166,7 +166,7 @@ export default function Wallet() {
                   { v: wallet.tier, l: "Tier" },
                 ].map((m, i) => (
                   <div key={m.l} className={i === 0 ? "pr-4" : "px-4"}>
-                    <div className={cn(serif, "text-2xl font-semibold text-[#F4F1EC]")}>{m.v}</div>
+                    <div className={cn(serif, "text-2xl font-semibold text-[#F2EDE7]")}>{m.v}</div>
                     <div className="mt-0.5 text-sm text-[#B8AA98]">{m.l}</div>
                   </div>
                 ))}
@@ -174,7 +174,7 @@ export default function Wallet() {
             </section>
 
             <section data-testid="wallet-venue-balances">
-              <h2 className={cn(serif, "text-4xl font-semibold text-[#F4F1EC]")}>Points by restaurant</h2>
+              <h2 className={cn(serif, "text-4xl font-semibold text-[#F2EDE7]")}>Points by restaurant</h2>
               <p className="mt-1 text-[15px] text-[#B8AA98]">
                 Your points balance at each partner venue. Points can only be redeemed where you earned them.
               </p>
@@ -183,14 +183,14 @@ export default function Wallet() {
                   {wallet.venues.map((v) => (
                     <div
                       key={v.venue_id}
-                      className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-[#17110C]/90 p-3 pr-5"
+                      className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-[#141312]/90 p-3 pr-5"
                       data-testid={`wallet-venue-${v.venue_id}`}
                     >
                       {v.image_url && (
                         <img src={assetUrl(v.image_url)} alt="" className="h-[84px] w-[84px] shrink-0 rounded-xl object-cover" loading="lazy" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className={cn(serif, "truncate text-2xl font-semibold text-[#F4F1EC]")}>{v.venue_name}</div>
+                        <div className={cn(serif, "truncate text-2xl font-semibold text-[#F2EDE7]")}>{v.venue_name}</div>
                         {v.neighborhood && (
                           <div className="mt-1 flex items-center gap-1.5 truncate text-sm text-[#B8AA98]">
                             <MapPin className="h-3.5 w-3.5 text-[#E8A27F]" />
@@ -198,18 +198,18 @@ export default function Wallet() {
                           </div>
                         )}
                       </div>
-                      <div className="text-2xl tabular-nums text-[#F4F1EC]">
+                      <div className="text-2xl tabular-nums text-[#F2EDE7]">
                         <span className="font-semibold">{v.balance.toLocaleString("en-IN")}</span>{" "}
                         <span className="text-lg text-[#B8AA98]">pts</span>
                       </div>
                       <Link
                         to={`/redeem?venue=${v.venue_id}`}
                         data-testid={`wallet-redeem-${v.venue_id}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-[#E8C9A0]/60 px-5 py-2.5 text-sm font-semibold text-[#F0D3AE] transition-colors hover:border-[#E8C9A0] hover:text-white"
+                        className="inline-flex items-center gap-2 rounded-full border border-[#CE6A4A]/60 px-5 py-2.5 text-sm font-semibold text-[#EE9B79] transition-colors hover:border-[#CE6A4A] hover:text-white"
                       >
                         Redeem here <ArrowRight className="h-4 w-4" />
                       </Link>
-                      <ChevronRight className="hidden h-4 w-4 text-[#8E8982] sm:block" />
+                      <ChevronRight className="hidden h-4 w-4 text-[#8F8781] sm:block" />
                     </div>
                   ))}
                 </div>
@@ -244,14 +244,14 @@ export default function Wallet() {
             </div>
 
             <div className={cn(card, "p-7")}>
-              <h2 className={cn(serif, "text-3xl font-semibold text-[#F4F1EC]")}>How points work</h2>
+              <h2 className={cn(serif, "text-3xl font-semibold text-[#F2EDE7]")}>How points work</h2>
               <p className="mt-1 text-[15px] text-[#B8AA98]">Simple, seamless, and exclusive.</p>
               <ol className="mt-5">
                 {STEPS.map((st, i) => (
                   <li key={st.t} className={cn("flex items-center gap-4 py-4", i > 0 && "border-t border-white/10")}>
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#E8C9A0]/70 text-[#F0D3AE]">{i + 1}</span>
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#CE6A4A]/70 text-[#EE9B79]">{i + 1}</span>
                     <div>
-                      <div className="font-medium text-[#F4F1EC]">{st.t}</div>
+                      <div className="font-medium text-[#F2EDE7]">{st.t}</div>
                       <div className="text-sm text-[#B8AA98]">{st.d}</div>
                     </div>
                   </li>
@@ -264,17 +264,17 @@ export default function Wallet() {
         {/* Redemptions */}
         {redemptions.filter((r) => !r.redeemed).length > 0 && (
           <section className="mt-12">
-            <h2 className={cn(serif, "text-4xl font-semibold text-[#F4F1EC]")}>Held in reserve</h2>
+            <h2 className={cn(serif, "text-4xl font-semibold text-[#F2EDE7]")}>Held in reserve</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {redemptions.filter((r) => !r.redeemed).slice(0, 3).map((r) => (
-                <div key={r.id} className="rounded-2xl border border-[#E8C9A0]/30 bg-[#1B140F] p-5" data-testid={`redemption-${r.id}`}>
+                <div key={r.id} className="rounded-2xl border border-[#CE6A4A]/30 bg-[#1B1917] p-5" data-testid={`redemption-${r.id}`}>
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E8A27F]">{r.venue_name}</div>
-                      <div className={cn(serif, "mt-1 text-2xl font-semibold text-[#F4F1EC]")}>{r.perk_name}</div>
+                      <div className={cn(serif, "mt-1 text-2xl font-semibold text-[#F2EDE7]")}>{r.perk_name}</div>
                       <div className="mt-1 text-sm text-[#B8AA98]">{r.perk_description}</div>
                     </div>
-                    <div className="font-mono text-xs tracking-widest text-[#E8C9A0] whitespace-nowrap">{r.code}</div>
+                    <div className="font-mono text-xs tracking-widest text-[#CE6A4A] whitespace-nowrap">{r.code}</div>
                   </div>
                 </div>
               ))}
@@ -284,7 +284,7 @@ export default function Wallet() {
 
         {/* Ledger */}
         <section className="mt-12">
-          <h2 className={cn(serif, "text-4xl font-semibold text-[#F4F1EC]")}>Ledger</h2>
+          <h2 className={cn(serif, "text-4xl font-semibold text-[#F2EDE7]")}>Ledger</h2>
           <div className="mt-3 max-w-3xl">
             {wallet.ledger.length === 0 ? (
               <div className="py-8 text-[#B8AA98]">Your ledger will fill as you visit the rooms.</div>

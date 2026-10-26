@@ -1,17 +1,18 @@
 import { Link } from "react-router-dom";
+import { assetUrl } from "@/lib/api";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 const VIBE_COLORS = {
-  "Chef's Pick": "bg-[#E8C9A0]/12 text-[#E8C9A0] border-[#E8C9A0]/40",
-  "Insider Access": "bg-[#E8C9A0]/12 text-[#E8C9A0] border-[#E8C9A0]/40",
-  "Date Night": "bg-[#F0D3AE]/15 text-[#E29B87] border-[#F0D3AE]/40",
-  Buzzing: "bg-[#F0D3AE]/15 text-[#E29B87] border-[#F0D3AE]/40",
+  "Chef's Pick": "bg-[#CE6A4A]/12 text-[#CE6A4A] border-[#CE6A4A]/40",
+  "Insider Access": "bg-[#CE6A4A]/12 text-[#CE6A4A] border-[#CE6A4A]/40",
+  "Date Night": "bg-[#EE9B79]/15 text-[#E29B87] border-[#EE9B79]/40",
+  Buzzing: "bg-[#EE9B79]/15 text-[#E29B87] border-[#EE9B79]/40",
   "Just Opened": "bg-[#E27D8B]/15 text-[#E2A0B6] border-[#E27D8B]/40",
   "Solo-Friendly": "bg-[#89A88C]/15 text-[#A6C4A9] border-[#89A88C]/40",
   "Neighborhood Favorite": "bg-[#89A88C]/15 text-[#A6C4A9] border-[#89A88C]/40",
-  "Group-Friendly": "bg-[#E2B47D]/15 text-[#E2C79B] border-[#E2B47D]/40",
+  "Group-Friendly": "bg-[#E8A06E]/15 text-[#E2C79B] border-[#E8A06E]/40",
 };
 
 export function VibePill({ vibe, className = "" }) {
@@ -42,12 +43,12 @@ export function VenueCard({ venue, index = 0 }) {
     >
       <div className="relative aspect-[4/5] overflow-hidden">
         <img
-          src={venue.image_url}
+          src={assetUrl(venue.image_url)}
           alt={venue.name}
           className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#110C09] via-[#110C09]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0A0A] via-[#0B0A0A]/20 to-transparent" />
 
         {/* Top-left status */}
         <div className="absolute left-5 top-5">
@@ -72,13 +73,13 @@ export function VenueCard({ venue, index = 0 }) {
             <span>{venue.neighborhood}</span>
             {venue.cuisine && (
               <>
-                <span className="text-[#6B665F]">·</span>
+                <span className="text-[#6B6560]">·</span>
                 <span>{venue.cuisine}</span>
               </>
             )}
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-serif-display text-3xl leading-tight text-[#F4F1EC]">
+            <h3 className="font-serif-display text-3xl leading-tight text-[#F2EDE7]">
               {venue.name}
             </h3>
           </div>
@@ -89,14 +90,14 @@ export function VenueCard({ venue, index = 0 }) {
         <div className="px-5 py-4 hairline-t flex items-center justify-between gap-4">
           <div className="min-w-0">
             <div className="overline mb-1">What regulars order</div>
-            <div className="text-sm text-[#F4F1EC]/85 font-light truncate">
+            <div className="text-sm text-[#F2EDE7]/85 font-light truncate">
               {topOffering}
             </div>
           </div>
           {venue.chef && (
             <div className="text-right shrink-0">
               <div className="overline mb-1">Chef</div>
-              <div className="text-sm text-[#F4F1EC]/85 font-serif italic whitespace-nowrap">
+              <div className="text-sm text-[#F2EDE7]/85 font-serif italic whitespace-nowrap">
                 {venue.chef.split(" ")[0]}
               </div>
             </div>

@@ -79,3 +79,9 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
+
+/** The one admin check for UI gating. The server enforces the same rule. */
+export function useIsAdmin() {
+  const { user } = useAuth();
+  return !!user && user.role === "admin";
+}

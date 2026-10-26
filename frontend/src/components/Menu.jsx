@@ -42,7 +42,7 @@ export function MenuSection({ menu = [], photos = [], card, heading }) {
               type="button"
               onClick={() => setOpen(i)}
               aria-label={`Open menu page ${i + 1}`}
-              className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-[#241C16] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C9A0]"
+              className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-[#1F1D1B] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#CE6A4A]"
             >
               <img
                 src={assetUrl(p.thumb_url || p.url)}
@@ -63,9 +63,9 @@ export function MenuSection({ menu = [], photos = [], card, heading }) {
           className="mt-4 flex flex-col items-center rounded-xl border border-dashed border-white/15 px-6 py-12 text-center"
           data-testid="menu-placeholder"
         >
-          <UtensilsCrossed strokeWidth={1.4} className="h-8 w-8 text-[#F0D3AE]" />
+          <UtensilsCrossed strokeWidth={1.4} className="h-8 w-8 text-[#EE9B79]" />
           <div className="mt-3 font-bold">Menu coming soon</div>
-          <p className="mt-1 max-w-xs text-sm text-[#8E8982]">Photos of this restaurant&apos;s menu will appear here.</p>
+          <p className="mt-1 max-w-xs text-sm text-[#8F8781]">Photos of this restaurant&apos;s menu will appear here.</p>
         </div>
       )}
 
@@ -83,7 +83,7 @@ export function MenuSection({ menu = [], photos = [], card, heading }) {
               onClick={() => setActive(s.id)}
               className={cn(
                 "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                active === s.id ? "bg-[#F5F5F3] text-[#130E0B]" : "bg-[#271E17] text-[#B8B2AA] hover:text-white",
+                active === s.id ? "bg-[#F5F5F3] text-[#121110]" : "bg-[#23201E] text-[#B8B2AA] hover:text-white",
               )}
             >
               {s.name}
@@ -94,14 +94,14 @@ export function MenuSection({ menu = [], photos = [], card, heading }) {
       <div className={cn("space-y-8", sections.length > 0 && "mt-6")}>
         {shown.map((sec) => (
           <div key={sec.id} data-testid={`menu-section-${sec.id}`}>
-            <h3 className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#F0D3AE]">{sec.name}</h3>
+            <h3 className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#EE9B79]">{sec.name}</h3>
             <ul className="mt-3 divide-y divide-white/[0.08]">
               {sec.items.map((it) => (
                 <li key={it.id} className="flex items-start gap-3 py-3.5">
                   <VegMark veg={it.veg} />
                   <div className="min-w-0 flex-1">
                     <div className="font-bold">{it.name}</div>
-                    {it.description && <p className="mt-0.5 text-sm leading-relaxed text-[#8E8982]">{it.description}</p>}
+                    {it.description && <p className="mt-0.5 text-sm leading-relaxed text-[#8F8781]">{it.description}</p>}
                   </div>
                   {it.photo_url && (
                     <img src={assetUrl(it.photo_url)} alt={it.name} loading="lazy" className="h-16 w-16 shrink-0 rounded-lg object-cover" />

@@ -26,8 +26,8 @@ const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 const INFO_SLUGS = ["about", "faq", "terms", "privacy", "refunds", "pricing", "shipping", "contact"];
 
 const PageFallback = () => (
-  <div className="flex min-h-[60vh] items-center justify-center bg-[#110C09]" data-testid="page-loading">
-    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#E8C9A0]" />
+  <div className="flex min-h-[60vh] items-center justify-center bg-[#0B0A0A]" data-testid="page-loading">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#CE6A4A]" />
   </div>
 );
 
@@ -155,10 +155,10 @@ function App() {
             position="top-center"
             toastOptions={{
               style: {
-                background: "#1B140F",
-                border: "1px solid #3D3128",
-                color: "#F4F1EC",
-                fontFamily: "Inter, sans-serif",
+                background: "#1B1917",
+                border: "1px solid #262321",
+                color: "#F2EDE7",
+                fontFamily: "Schibsted Grotesk, sans-serif",
                 fontSize: "0.85rem",
                 letterSpacing: "0.02em",
                 borderRadius: "2px",

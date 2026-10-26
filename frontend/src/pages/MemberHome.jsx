@@ -3,14 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, MapPin, UtensilsCrossed, Star, Flame, Heart, CalendarDays,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { usePageTitle } from "@/lib/usePageTitle";
 import { fillingFastStatus } from "@/components/FillingFastCard";
 import { cn } from "@/lib/utils";
 
 const serif = "font-['Cormorant_Garamond']";
-const pill = "rounded-full border border-white/10 bg-[#17110C]/90 backdrop-blur-sm";
+const pill = "rounded-full border border-white/10 bg-[#141312]/90 backdrop-blur-sm";
 
 const isWalkIn = (v) =>
   v.availability !== "fully_booked" && v.status !== "At Capacity" && !(v.wait_minutes > 0);
@@ -24,10 +24,10 @@ const TABS = [
 function Select({ icon: Icon, children, ...props }) {
   return (
     <div className="relative">
-      <Icon strokeWidth={1.6} className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#E8C9A0]" />
+      <Icon strokeWidth={1.6} className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#CE6A4A]" />
       <select
         {...props}
-        className={cn(pill, "appearance-none cursor-pointer py-3 pl-11 pr-10 text-[14px] text-[#D8CBB9] outline-none hover:text-white focus:border-[#E8C9A0]/60")}
+        className={cn(pill, "appearance-none cursor-pointer py-3 pl-11 pr-10 text-[14px] text-[#D8CBB9] outline-none hover:text-white focus:border-[#CE6A4A]/60")}
       >
         {children}
       </select>
@@ -47,7 +47,7 @@ function SectionHead({ icon, title, subtitle, to, onPrev, onNext }) {
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        <Link to={to} className={cn(pill, "border-[#E8C9A0]/30 px-6 py-2.5 text-[13px] font-medium text-[#F0D3AE] hover:text-white")}>
+        <Link to={to} className={cn(pill, "border-[#CE6A4A]/30 px-6 py-2.5 text-[13px] font-medium text-[#EE9B79] hover:text-white")}>
           View all
         </Link>
         {[[-1, ChevronLeft, onPrev, "Previous"], [1, ChevronRight, onNext, "Next"]].map(([d, Icon, fn, label]) => (
@@ -56,7 +56,7 @@ function SectionHead({ icon, title, subtitle, to, onPrev, onNext }) {
             type="button"
             aria-label={label}
             onClick={fn}
-            className={cn(pill, "grid h-11 w-11 place-items-center border-[#E8C9A0]/30 text-[#F0D3AE] hover:text-white")}
+            className={cn(pill, "grid h-11 w-11 place-items-center border-[#CE6A4A]/30 text-[#EE9B79] hover:text-white")}
           >
             <Icon className="h-4 w-4" />
           </button>
@@ -72,14 +72,14 @@ function VenueTile({ venue }) {
   return (
     <Link
       to={`/venues/${venue.id}`}
-      className="group block overflow-hidden rounded-2xl border border-white/10 bg-[#17110C]"
+      className="group block overflow-hidden rounded-2xl border border-white/10 bg-[#141312]"
       data-testid={`home-venue-${venue.id}`}
     >
       <div className="relative aspect-[16/10] overflow-hidden">
-        <img src={venue.image_url} alt={venue.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+        <img src={assetUrl(venue.image_url)} alt={venue.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
         {venue.featured ? (
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#F7D9AE] px-3.5 py-1.5 text-[13px] font-semibold text-[#2A1A0B]">
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2EDE7] px-3.5 py-1.5 text-[13px] font-semibold text-[#1B1917]">
             <Star className="h-3.5 w-3.5 fill-current" /> Trending
           </span>
         ) : (
@@ -119,7 +119,7 @@ function VenueTile({ venue }) {
           <span className="font-medium">{"₹".repeat(venue.price_level || 3)}</span>
           {venue.neighborhood && (
             <span className="flex min-w-0 items-center gap-1.5">
-              <MapPin strokeWidth={1.6} className="h-4 w-4 shrink-0 text-[#E8C9A0]" />
+              <MapPin strokeWidth={1.6} className="h-4 w-4 shrink-0 text-[#CE6A4A]" />
               <span className="truncate">{venue.neighborhood}</span>
             </span>
           )}
@@ -139,14 +139,14 @@ function EventTile({ event }) {
   return (
     <Link
       to={`/venues/${event.venue_id}`}
-      className="group relative flex h-[132px] items-center gap-5 overflow-hidden rounded-2xl border border-white/10 bg-[#17110C] px-4"
+      className="group relative flex h-[132px] items-center gap-5 overflow-hidden rounded-2xl border border-white/10 bg-[#141312] px-4"
       data-testid={`home-event-${event.id}`}
     >
       {event.venue_image_url && (
-        <img src={event.venue_image_url} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-700 group-hover:scale-105" />
+        <img src={assetUrl(event.venue_image_url)} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-700 group-hover:scale-105" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A07]/80 via-[#0F0A07]/40 to-[#0F0A07]/20" />
-      <div className="relative grid h-[76px] w-[76px] shrink-0 place-items-center rounded-2xl bg-[#FBE3C4] text-center leading-none text-[#2A1A0B]">
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0E0D0C]/80 via-[#0E0D0C]/40 to-[#0E0D0C]/20" />
+      <div className="relative grid h-[76px] w-[76px] shrink-0 place-items-center rounded-2xl bg-[#F6E3DA] text-center leading-none text-[#1B1917]">
         <div>
           <div className={cn(serif, "text-[34px] font-semibold")}>{d.getDate()}</div>
           <div className="mt-1 text-[12px] font-semibold uppercase tracking-wide">
@@ -208,15 +208,15 @@ export default function MemberHome() {
   const hide = "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
   return (
-    <div className="relative overflow-hidden bg-[#0F0A07] text-[#F4EBDD]" data-testid="member-home">
+    <div className="relative overflow-hidden bg-[#0E0D0C] text-[#F4EBDD]" data-testid="member-home">
       {backdrop && (
         <div className="pointer-events-none absolute right-0 top-0 hidden h-[520px] w-[60%] md:block">
-          <img src={backdrop} alt="" className="h-full w-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A07] via-[#0F0A07]/55 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0F0A07]" />
+          <img src={assetUrl(backdrop)} alt="" className="h-full w-full object-cover opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0E0D0C] via-[#0E0D0C]/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0E0D0C]" />
         </div>
       )}
-      <span className="pointer-events-none absolute right-16 top-6 hidden -rotate-6 font-['Mrs_Saint_Delafield'] text-[60px] leading-[0.85] text-[#E8C9A0]/90 lg:block">
+      <span className="pointer-events-none absolute right-16 top-6 hidden -rotate-6 font-['Mrs_Saint_Delafield'] text-[60px] leading-[0.85] text-[#CE6A4A]/90 lg:block">
         Good<br />&nbsp;Food<br />&nbsp;&nbsp;Better<br />&nbsp;&nbsp;&nbsp;Company
       </span>
 
@@ -233,7 +233,7 @@ export default function MemberHome() {
         </p>
 
         <form onSubmit={onSearch} className={cn(pill, "mt-8 flex max-w-[880px] items-center gap-4 border-white/15 px-6 py-1")}>
-          <Search strokeWidth={1.6} className="h-5 w-5 shrink-0 text-[#E8C9A0]" />
+          <Search strokeWidth={1.6} className="h-5 w-5 shrink-0 text-[#CE6A4A]" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -244,7 +244,7 @@ export default function MemberHome() {
           />
           <span className="hidden h-8 w-px bg-white/15 sm:block" />
           <span className="hidden items-center gap-2 whitespace-nowrap text-[13px] text-[#D8CBB9] sm:flex">
-            <MapPin strokeWidth={1.6} className="h-4 w-4 text-[#E8C9A0]" /> Current location <ChevronDown className="ml-2 h-4 w-4" />
+            <MapPin strokeWidth={1.6} className="h-4 w-4 text-[#CE6A4A]" /> Current location <ChevronDown className="ml-2 h-4 w-4" />
           </span>
         </form>
 
@@ -267,7 +267,7 @@ export default function MemberHome() {
                 onClick={() => setTab(t.key)}
                 className={cn(
                   pill, "flex items-center gap-1.5 px-5 py-3 text-[14px] font-medium transition-colors",
-                  tab === t.key ? "border-[#F7D9AE] bg-[#F7D9AE] text-[#2A1A0B]" : "text-[#D8CBB9] hover:text-white",
+                  tab === t.key ? "border-[#F2EDE7] bg-[#F2EDE7] text-[#1B1917]" : "text-[#D8CBB9] hover:text-white",
                 )}
               >
                 {t.label}

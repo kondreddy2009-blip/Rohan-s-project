@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CalendarDays, Users, ArrowRight } from "lucide-react";
-import { api, formatApiError } from "@/lib/api";
+import { api, formatApiError, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
@@ -58,11 +58,11 @@ export function EventCard({ event, userTier, pointsAway }) {
       tabIndex={0}
       onClick={openVenue}
       onKeyDown={(e) => e.key === "Enter" && openVenue()}
-      className="rounded-2xl border border-white/10 bg-[#17110C] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
+      className="rounded-2xl border border-white/10 bg-[#141312] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-0.5"
       data-testid={`event-card-${event.id}`}>
       <div className="relative aspect-[16/9] overflow-hidden">
         <img
-          src={event.venue_image_url}
+          src={assetUrl(event.venue_image_url)}
           alt={event.venue_name}
           className="h-full w-full object-cover"
           loading="lazy"
@@ -93,7 +93,7 @@ export function EventCard({ event, userTier, pointsAway }) {
           {required ? (locked ? `${required} only` : `${required} and above`) : "Open to all"}</span>
         </div>
         {locked ? (
-          <span className="rounded-full bg-[#271E17] px-3.5 py-2 text-xs font-bold text-[#B8B2AA] whitespace-nowrap shrink-0">
+          <span className="rounded-full bg-[#23201E] px-3.5 py-2 text-xs font-bold text-[#B8B2AA] whitespace-nowrap shrink-0">
             {pointsAway > 0 ? `${pointsAway.toLocaleString("en-IN")} pts away` : `Requires ${required}`}
           </span>
         ) : (
@@ -106,7 +106,7 @@ export function EventCard({ event, userTier, pointsAway }) {
             className={
               "inline-flex items-center gap-2 rounded-full px-5 py-3 text-[13px] font-bold transition-colors whitespace-nowrap shrink-0 disabled:opacity-60 " +
               (going
-                ? "bg-[#271E17] text-[#F0D3AE] hover:bg-[#33281F]"
+                ? "bg-[#23201E] text-[#EE9B79] hover:bg-[#2C2927]"
                 : "bg-[#F07F5E] text-[#2A0F07] hover:bg-[#F59273]")
             }
           >

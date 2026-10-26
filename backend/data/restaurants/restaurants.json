@@ -1,0 +1,64 @@
+{
+  "restaurants": [
+    {
+      "name": "Mekong",
+      "slug": "mekong",
+      "cuisine": "Pan-Asian",
+      "price_level": 3,
+      "neighborhood": "Avasa, Hitech City",
+      "hours": "12:00 – 15:00, 19:00 – 23:00",
+      "tagline": "Pan-Asian plates at Avasa, Hitech City.",
+      "description": "Pan-Asian dining in a warm, wood-panelled room at Avasa in Hitech City. Open for lunch and dinner.",
+      "vibes": [],
+      "featured": false,
+      "cover_photo": "photos/mekong/cover.jpg",
+      "photos": [],
+      "menu": []
+    },
+    {
+      "name": "Mekong",
+      "slug": "mekong-begumpet",
+      "cuisine": "Pan-Asian",
+      "price_level": 3,
+      "neighborhood": "Marigold Hotel, Begumpet",
+      "hours": "12:00 – 15:00, 19:00 – 23:00",
+      "tagline": "Pan-Asian plates at Marigold Hotel, Begumpet.",
+      "description": "Pan-Asian dining under a rippled ceiling and birdcage lanterns at Marigold Hotel in Begumpet. Open for lunch and dinner.",
+      "vibes": [],
+      "featured": false,
+      "cover_photo": "photos/mekong-begumpet/cover.jpg",
+      "photos": [],
+      "menu": []
+    },
+    {
+      "name": "Noya",
+      "slug": "noya",
+      "cuisine": "Modern Indian",
+      "price_level": 3,
+      "neighborhood": "Avasa, Hitech City",
+      "hours": "18:00 – 23:00",
+      "tagline": "Modern Indian dining at Avasa, Hitech City.",
+      "description": "Modern Indian food at Avasa in Hitech City, with a garden terrace and bar under lit pillars. Open for dinner.",
+      "vibes": [],
+      "featured": false,
+      "cover_photo": "photos/noya/cover.jpg",
+      "photos": [],
+      "menu": []
+    },
+    {
+      "name": "Once Upon a Time",
+      "slug": "once-upon-a-time",
+      "cuisine": "Modern Indian",
+      "price_level": 3,
+      "neighborhood": "Green Park Hotel, Begumpet",
+      "hours": "12:00 – 15:00 buffet, 19:00 – 23:00 à la carte",
+      "tagline": "Modern Indian at Green Park Hotel, Begumpet.",
+      "description": "Modern Indian food at Green Park Hotel in Begumpet, with tufted banquettes and hexagon screens. A buffet at lunch and à la carte at dinner.",
+      "vibes": [],
+      "featured": false,
+      "cover_photo": "photos/once-upon-a-time/cover.jpg",
+      "photos": [],
+      "menu": []
+    }
+  ]
+}

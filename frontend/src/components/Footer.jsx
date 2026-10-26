@@ -38,12 +38,12 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] bg-[#110C09] text-[#8E8982]" data-testid="site-footer">
+    <footer className="border-t border-white/[0.06] bg-[#0B0A0A] text-[#8F8781]" data-testid="site-footer">
       <div className="mx-auto max-w-[1280px] px-5 sm:px-10 lg:px-16 py-12">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#F4F1EC]/70">{col.title}</div>
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#F2EDE7]/70">{col.title}</div>
               <ul className="mt-4 space-y-2.5 text-sm">
                 {col.links.map((l) => (
                   <li key={l.to}>

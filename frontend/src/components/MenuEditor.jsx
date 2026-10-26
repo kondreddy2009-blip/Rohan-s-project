@@ -99,7 +99,7 @@ export function MenuEditor({ venue, onSaved }) {
         <button type="button" onClick={() => setSections((ss) => [...ss, blankSection()])} data-testid="menu-add-section" className="inline-flex items-center gap-1.5 rounded-xl border border-[color:var(--st-border)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--st-text)] hover:border-[color:var(--st-gold)] transition-colors">
           <Plus className="h-4 w-4" /> Add section
         </button>
-        <button type="button" disabled={busy} onClick={save} data-testid="menu-save-button" className="rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-8 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition">
+        <button type="button" disabled={busy} onClick={save} data-testid="menu-save-button" className="rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-8 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition">
           {busy ? "Saving" : "Save menu"}
         </button>
       </div>

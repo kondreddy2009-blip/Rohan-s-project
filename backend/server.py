@@ -218,6 +218,12 @@ async def require_staff_or_admin(user: dict = Depends(get_current_user)) -> dict
     return user
 
 
+async def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
@@ -283,6 +289,12 @@ class RestaurantRegisterIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
     restaurant_name: str = Field(min_length=1, max_length=80)
+    cuisine: Optional[str] = Field(default=None, max_length=60)
+    neighborhood: str = Field(min_length=1, max_length=60)
+
+
+class AdminVenueIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
     cuisine: Optional[str] = Field(default=None, max_length=60)
     neighborhood: str = Field(min_length=1, max_length=60)
 
@@ -536,25 +548,19 @@ def _slugify(raw: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-")[:30] or "venue"
 
 
-@api.post("/auth/register-restaurant")
-async def register_restaurant(payload: RestaurantRegisterIn, response: Response):
-    """Create a restaurant (unpublished draft) plus its staff login in one step."""
-    email = payload.email.lower().strip()
-    if await db.users.find_one({"email": email}):
-        raise HTTPException(status_code=400, detail="An account with this email already exists")
-
+def _draft_venue(name: str, cuisine: Optional[str], neighborhood: str, source: str) -> dict:
+    """An unpublished restaurant with placeholder copy, ready to fill in from the staff dashboard."""
     now = _now_iso()
-    base = _slugify(payload.restaurant_name)
+    base = _slugify(name)
     suffix = uuid.uuid4().hex[:4]
-    venue_id = f"venue-{base}-{suffix}"
-    venue = {
-        "id": venue_id,
-        "source": "registered",
-        "name": payload.restaurant_name.strip(),
+    return {
+        "id": f"venue-{base}-{suffix}",
+        "source": source,
+        "name": name.strip(),
         "type": "Restaurant",
-        "cuisine": (payload.cuisine or "").strip() or None,
+        "cuisine": (cuisine or "").strip() or None,
         "price_level": 2,
-        "neighborhood": payload.neighborhood.strip(),
+        "neighborhood": neighborhood.strip(),
         "daypart": "both",
         "status": "Quiet",
         "capacity_percent": 25,
@@ -579,6 +585,18 @@ async def register_restaurant(payload: RestaurantRegisterIn, response: Response)
         "loyalty_points_per_booking": 30,
         "loyalty_rewards": [],
     }
+
+
+@api.post("/auth/register-restaurant")
+async def register_restaurant(payload: RestaurantRegisterIn, response: Response):
+    """Create a restaurant (unpublished draft) plus its staff login in one step."""
+    email = payload.email.lower().strip()
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="An account with this email already exists")
+
+    venue = _draft_venue(payload.restaurant_name, payload.cuisine, payload.neighborhood, "registered")
+    venue_id = venue["id"]
+    now = venue["created_at"]
     user = {
         "id": str(uuid.uuid4()),
         "email": email,
@@ -976,6 +994,27 @@ async def staff_venues(user: dict = Depends(require_staff_or_admin)):
         vid = user.get("staff_venue_id")
         venues = await db.venues.find({"id": vid}, {"_id": 0, "seed_offerings": 0}).to_list(10)
     return venues
+
+
+@api.post("/admin/venues", status_code=201)
+async def admin_create_venue(payload: AdminVenueIn, user: dict = Depends(require_admin)):
+    """Add a restaurant as an unpublished draft; details are filled in from the staff dashboard."""
+    venue = _draft_venue(payload.name, payload.cuisine, payload.neighborhood, "admin")
+    await db.venues.insert_one(venue)
+    venue.pop("_id", None)
+    venue.pop("seed_offerings", None)
+    return venue
+
+
+@api.delete("/admin/venues/{venue_id}")
+async def admin_delete_venue(venue_id: str, user: dict = Depends(require_admin)):
+    result = await db.venues.delete_one({"id": venue_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Venue not found")
+    # Check-ins, ledger and bookings keep their copied venue_name for history.
+    await db.events.delete_many({"venue_id": venue_id})
+    await db.users.update_many({"staff_venue_id": venue_id}, {"$set": {"staff_venue_id": None}})
+    return {"ok": True}
 
 
 def _assert_staff_can_manage(user: dict, venue_id: str) -> None:
@@ -1535,32 +1574,28 @@ async def update_concierge_message(
 SLOT_CAPACITY_PER_TIME = 6  # seats-worth of parties per 30-min slot
 
 
+HOURS_RANGE_RE = re.compile(r"(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})")
+
+
 def _generate_slots(hours: str) -> list:
-    """Parse '18:00 – 23:00' or '18:00 – 01:00' into 30-min slots.
-    Last slot is 30 min before close so a party has time to sit.
+    """Parse '18:00 – 23:00', '18:00 – 01:00' or split service like
+    '12:00 – 15:00 buffet, 19:00 – 23:00 à la carte' into 30-min slots.
+    Labels around the ranges are ignored. Last slot of each range is
+    30 min before close so a party has time to sit.
     """
-    if not hours:
-        return []
-    try:
-        normalized = hours.replace("—", "-").replace("–", "-")
-        parts = [p.strip() for p in normalized.split("-")]
-        if len(parts) != 2:
-            return []
-        sh, sm = map(int, parts[0].split(":"))
-        eh, em = map(int, parts[1].split(":"))
+    slots = []
+    for sh, sm, eh, em in HOURS_RANGE_RE.findall(hours or ""):
+        sh, sm, eh, em = int(sh), int(sm), int(eh), int(em)
         if eh < sh:  # crosses midnight, e.g. 18:00–01:00
             eh += 24
         cur = sh * 60 + sm
         end_min = eh * 60 + em
-        slots = []
         while cur + 30 <= end_min:
             h = (cur // 60) % 24
             m = cur % 60
             slots.append(f"{h:02d}:{m:02d}")
             cur += 30
-        return slots
-    except Exception:
-        return []
+    return slots
 
 
 def _generate_booking_code() -> str:
@@ -2344,8 +2379,8 @@ async def seed_database():
     seed_venues = SEED_VENUES if SEED_DEMO_DATA else []
     # Venues — clear legacy entries that are no longer in the seed list (e.g. Nocturne pre-pivot)
     seed_ids = [v["id"] for v in seed_venues]
-    # Venues that restaurants registered themselves (source="registered") must survive restarts.
-    await db.venues.delete_many({"id": {"$nin": seed_ids}, "source": {"$ne": "registered"}})
+    # Venues restaurants registered themselves or an admin added must survive restarts.
+    await db.venues.delete_many({"id": {"$nin": seed_ids}, "source": {"$nin": ["registered", "admin"]}})
     for v in seed_venues:
         existing = await db.venues.find_one({"id": v["id"]})
         doc = {

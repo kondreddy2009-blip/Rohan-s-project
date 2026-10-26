@@ -39,7 +39,7 @@ export default function Events() {
           <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#E8A27F]">
             Special experiences <span className="h-px w-12 bg-[#E8A27F]/60" />
           </div>
-          <h1 className={cn(serif, "mt-4 flex items-center gap-4 text-5xl sm:text-6xl font-semibold text-[#F4F1EC]")}>
+          <h1 className={cn(serif, "mt-4 flex items-center gap-4 text-5xl sm:text-6xl font-semibold text-[#F2EDE7]")}>
             Events <CalendarDays strokeWidth={1.3} className="h-10 w-10 text-[#E8A27F]" />
           </h1>
           <p className="mt-2 text-lg text-[#B8AA98]">What your tier opens, across every partner.</p>
@@ -47,11 +47,11 @@ export default function Events() {
 
         <div className="mt-10">
           {events === null ? (
-            <div className="py-16 text-center text-sm text-[#8E8982]">Loading…</div>
+            <div className="py-16 text-center text-sm text-[#8F8781]">Loading…</div>
           ) : events.length === 0 ? (
-            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#17110C]/90 px-6 py-14 text-center" data-testid="events-empty">
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#141312]/90 px-6 py-14 text-center" data-testid="events-empty">
               <CalendarDays strokeWidth={1.2} className="h-14 w-14 text-[#E8A27F]" />
-              <div className={cn(serif, "mt-5 text-4xl font-semibold text-[#F4F1EC]")}>No events right now</div>
+              <div className={cn(serif, "mt-5 text-4xl font-semibold text-[#F2EDE7]")}>No events right now</div>
               <p className="mt-2 text-[16px] text-[#B8AA98]">New dining experiences are announced here. Meanwhile, find a table.</p>
               <Link to="/discover" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#F07F5E] px-7 py-3.5 text-[15px] font-semibold text-[#2A0F07] transition-colors hover:bg-[#F59273]">
                 Explore restaurants <ArrowRight className="h-4 w-4" />

@@ -21,8 +21,8 @@ function NavItem({ to, icon: Icon, label, testId, staff }) {
               ? "text-[color:var(--st-gold)]"
               : "text-[color:var(--st-muted)] hover:text-[color:var(--st-text)]"
             : isActive
-              ? "text-[#E8C9A0]"
-              : "text-[#8E8982] hover:text-white",
+              ? "text-[#CE6A4A]"
+              : "text-[#8F8781] hover:text-white",
         );
       }}
       end
@@ -64,7 +64,7 @@ export function Layout({ children }) {
         isMember && "md:pb-0",
         isStaffContext
           ? "bg-[color:var(--st-page)] text-[color:var(--st-text)]"
-          : "bg-[#110C09] text-[#F4F1EC]",
+          : "bg-[#0B0A0A] text-[#F2EDE7]",
       )}
     >
       {/* Header: one shared header for members and visitors; staff keep their own */}
@@ -109,7 +109,7 @@ export function Layout({ children }) {
       {/* Bottom nav for members */}
       {user && !isStaffContext && (
         <nav
-          className="fixed bottom-0 inset-x-0 z-40 border-t border-white/[0.06] backdrop-blur-xl bg-[#110C09]/95 md:hidden"
+          className="fixed bottom-0 inset-x-0 z-40 border-t border-white/[0.06] backdrop-blur-xl bg-[#0B0A0A]/95 md:hidden"
           data-testid="bottom-nav"
         >
           <div className="mx-auto max-w-6xl grid grid-cols-5">

@@ -7,7 +7,10 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 assert BASE_URL, "REACT_APP_BACKEND_URL must be set"
 API = f"{BASE_URL}/api"
 
-ADMIN = {"email": "bhandariyashvee@gmail.com", "password": "ritual2026"}
+ADMIN = {
+    "email": os.environ.get("ADMIN_EMAIL", "bhandariyashvee@gmail.com"),
+    "password": os.environ.get("ADMIN_PASSWORD", "ritual2026"),
+}
 ALEX = {"email": "alex@ritual.app", "password": "ritual2026"}
 MILA = {"email": "mila@ritual.app", "password": "ritual2026"}
 # staff.lumen is now mapped to venue-ikigai per seed; staff.verre → venue-verre
@@ -521,3 +524,36 @@ class TestBookings:
         si = _session(STAFF_IKIGAI)
         rp = si.patch(f"{API}/staff/bookings/{bid}", json={"status": "declined"}, timeout=10)
         assert rp.status_code == 403
+
+
+# --- Admin restaurant management ---
+class TestAdminVenues:
+    def test_create_requires_admin(self):
+        s = _session(ALEX)
+        r = s.post(f"{API}/admin/venues", json={"name": "TEST_Nope", "neighborhood": "Fort"}, timeout=10)
+        assert r.status_code == 403
+
+    def test_create_then_delete(self):
+        s = _session(ADMIN)
+        r = s.post(f"{API}/admin/venues", json={
+            "name": "TEST_Admin Bistro", "cuisine": "Bistro", "neighborhood": "Bandra",
+        }, timeout=10)
+        assert r.status_code == 201, r.text
+        v = r.json()
+        assert v["source"] == "admin"
+        assert v["published"] is False
+        assert v["name"] == "TEST_Admin Bistro"
+        # Admins manage it from the staff dashboard like any other venue
+        ids = [x["id"] for x in s.get(f"{API}/staff/venues", timeout=10).json()]
+        assert v["id"] in ids
+
+        r = s.delete(f"{API}/admin/venues/{v['id']}", timeout=10)
+        assert r.status_code == 200
+        ids = [x["id"] for x in s.get(f"{API}/staff/venues", timeout=10).json()]
+        assert v["id"] not in ids
+        assert s.delete(f"{API}/admin/venues/{v['id']}", timeout=10).status_code == 404
+
+    def test_delete_requires_admin(self):
+        s = _session(STAFF_VERRE)
+        r = s.delete(f"{API}/admin/venues/venue-verre", timeout=10)
+        assert r.status_code == 403

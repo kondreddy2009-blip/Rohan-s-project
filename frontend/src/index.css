@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700&display=swap");
 
 @import url("https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&display=swap");
@@ -11,37 +11,41 @@
    Table — palette + type system
    ------------------------------------------------------------------------- */
 :root {
-  --ritual-bg: #110C09;
-  --ritual-surface: #1B140F;
-  --ritual-surface-2: #241C16;
-  --ritual-border: #3D3128;
-  --ritual-text: #F4F1EC;
-  --ritual-text-muted: #8E8982;
-  --ritual-text-faint: #6B665F;
-  --ritual-accent: #E8C9A0;
-  --ritual-accent-hover: #F3DAB8;
+  --ritual-bg: #0B0A0A;
+  --ritual-surface: #1B1917;
+  --ritual-surface-2: #1F1D1B;
+  --ritual-border: #262321;
+  --ritual-text: #F2EDE7;
+  --ritual-text-muted: #8F8781;
+  --ritual-text-faint: #6B6560;
+  --ritual-accent: #CE6A4A;
+  --ritual-accent-hover: #E8A06E;
+  /* Status dots — same values the app already used inline */
+  --ritual-status-quiet: #79A17F;
+  --ritual-status-filling: #D69A3F;
+  --ritual-status-full: #C77F73;
 
-  /* shadcn dark tokens re-tuned to Table (grey + orange) */
-  --background: 40 6% 7%;
-  --foreground: 36 27% 94%;
-  --card: 30 7% 12%;
-  --card-foreground: 36 27% 94%;
-  --popover: 30 7% 12%;
-  --popover-foreground: 36 27% 94%;
-  --primary: 34 55% 76%;
-  --primary-foreground: 40 6% 7%;
-  --secondary: 30 6% 14%;
-  --secondary-foreground: 36 27% 94%;
-  --muted: 30 6% 14%;
-  --muted-foreground: 38 5% 54%;
-  --accent: 34 55% 76%;
-  --accent-foreground: 40 6% 7%;
+  /* shadcn dark tokens re-tuned to Table (warm charcoal + terracotta) */
+  --background: 30 5% 4%;
+  --foreground: 36 24% 92%;
+  --card: 30 6% 10%;
+  --card-foreground: 36 24% 92%;
+  --popover: 30 6% 10%;
+  --popover-foreground: 36 24% 92%;
+  --primary: 15 55% 55%;
+  --primary-foreground: 30 5% 4%;
+  --secondary: 20 6% 12%;
+  --secondary-foreground: 36 24% 92%;
+  --muted: 20 6% 12%;
+  --muted-foreground: 27 6% 54%;
+  --accent: 15 55% 55%;
+  --accent-foreground: 30 5% 4%;
   --destructive: 0 62% 42%;
-  --destructive-foreground: 36 27% 94%;
-  --border: 30 5% 21%;
-  --input: 30 6% 14%;
-  --ring: 34 55% 76%;
-  --radius: 0.125rem;
+  --destructive-foreground: 36 24% 92%;
+  --border: 20 6% 14%;
+  --input: 20 6% 12%;
+  --ring: 15 55% 55%;
+  --radius: 1.25rem;
 }
 
 * {
@@ -58,7 +62,7 @@ body,
 
 body {
   margin: 0;
-  font-family: "Inter", "Manrope", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  font-family: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -81,21 +85,21 @@ body::after {
    Editorial type helpers
    ------------------------------------------------------------------------- */
 .font-serif-display {
-  font-family: "Inter", sans-serif;
+  font-family: "Schibsted Grotesk", sans-serif;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
 .font-serif {
-  font-family: "Inter", sans-serif;
+  font-family: "Schibsted Grotesk", sans-serif;
 }
 
 .font-sans {
-  font-family: "Inter", sans-serif;
+  font-family: "Schibsted Grotesk", sans-serif;
 }
 
 .overline {
-  font-family: "Inter", sans-serif;
+  font-family: "Schibsted Grotesk", sans-serif;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.22em;
@@ -105,7 +109,7 @@ body::after {
 }
 
 .overline-accent {
-  font-family: "Inter", sans-serif;
+  font-family: "Schibsted Grotesk", sans-serif;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.22em;
@@ -315,23 +319,23 @@ textarea:focus-visible,
 
 /* ---- Staff dashboard theme tokens (dark by default; html.staff-light flips them) ---- */
 :root {
-  --st-page: #110C09;
-  --st-page-rgb: 20 19 18;
+  --st-page: #0B0A0A;
+  --st-page-rgb: 11 10 10;
   --st-side: #121110;
   --st-card: #171614;
   --st-card-rgb: 23 22 20;
   --st-inner: #1c1a18;
   --st-field2: #1f1d1b;
   --st-border: #2a2724;
-  --st-text: #f4f1ec;
+  --st-text: #f2ede7;
   --st-soft: #cfc9c0;
   --st-muted: #a39d94;
   --st-faint: #7c766e;
-  --st-gold: #d9b06a;
-  --st-gold-rgb: 217 176 106;
-  --st-gold2: #b8904f;
+  --st-gold: #ce6a4a;
+  --st-gold-rgb: 206 106 74;
+  --st-gold2: #b5573a;
   --st-hover: #35312d;
-  --st-sel: #3a2f1f;
+  --st-sel: #3a2420;
   --st-warn: #e0a15a;
   --st-ok: #7a9b7a;
   --st-dep-from: #141c17;
@@ -357,11 +361,11 @@ html.staff-light {
   --st-soft: #4a443b;
   --st-muted: #6b6458;
   --st-faint: #968e80;
-  --st-gold: #9a6f1f;
-  --st-gold-rgb: 154 111 31;
-  --st-gold2: #8a6118;
+  --st-gold: #b5573a;
+  --st-gold-rgb: 181 87 58;
+  --st-gold2: #9c4a31;
   --st-hover: #ebe4d6;
-  --st-sel: #f6ebd2;
+  --st-sel: #f6e3da;
   --st-warn: #b86b14;
   --st-ok: #4f7f55;
   --st-dep-from: #eef6f0;

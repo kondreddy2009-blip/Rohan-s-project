@@ -1,36 +1,40 @@
 {
   "theme": "dark",
-  "design_philosophy": "Ritual is an ultra-premium, cross-venue loyalty platform. It must feel like an exclusive members' club or airline elite-status program, drawing heavily from editorial, fashion-magazine aesthetics (think Kinfolk or a NYT editorial spread). Reject food delivery or standard nightlife app cliches. Design should be expensive, restrained, and considered.",
+  "design_philosophy": "Table is a cross-venue restaurant loyalty app. It should feel like a warm, modern mobile product — a single dark charcoal canvas, one confident grotesk typeface, terracotta accent, and fully rounded pill/card surfaces throughout. Reject sharp-cornered editorial-magazine styling in favor of a friendly, tactile app aesthetic.",
   "colors": {
-    "background": "#0F0F0F",
-    "surface": "#161616",
-    "surface_elevated": "#1E1E1E",
-    "text_primary": "#F4F4EE",
-    "text_secondary": "#8E8E8E",
-    "accent_primary": "#C2A36B",
-    "accent_hover": "#D1B37D",
-    "border": "#2A2A2A"
+    "background": "#0B0A0A",
+    "surface": "#1B1917",
+    "surface_elevated": "#1F1D1B",
+    "text_primary": "#F2EDE7",
+    "text_secondary": "#8F8781",
+    "text_faint": "#6B6560",
+    "accent_primary": "#CE6A4A",
+    "accent_hover": "#E8A06E",
+    "border": "#262321",
+    "status_quiet": "#79A17F",
+    "status_filling": "#D69A3F",
+    "status_full": "#C77F73"
   },
   "typography": {
-    "heading_font": "Cormorant Garamond, Playfair Display, serif",
-    "body_font": "Manrope, Helvetica Neue, sans-serif",
-    "h1": "text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-[#F4F4EE]",
-    "h2": "text-2xl sm:text-3xl lg:text-4xl font-normal text-[#F4F4EE]",
-    "h3": "text-xl sm:text-2xl font-normal text-[#F4F4EE]",
-    "body": "text-base leading-relaxed text-[#8E8E8E] font-light",
-    "labels_and_overline": "text-xs font-semibold tracking-[0.2em] uppercase text-[#8E8E8E]"
+    "heading_font": "Schibsted Grotesk, sans-serif",
+    "body_font": "Schibsted Grotesk, sans-serif",
+    "h1": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F2EDE7]",
+    "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold text-[#F2EDE7]",
+    "h3": "text-xl sm:text-2xl font-bold text-[#F2EDE7]",
+    "body": "text-base leading-relaxed text-[#8F8781] font-normal",
+    "labels_and_overline": "text-xs font-semibold tracking-[0.02em] text-[#8F8781]"
   },
   "layout_and_spacing": {
     "spacing_scale": "Generous. Use p-8, p-12, or py-24 for section breathing room.",
-    "cards": "Invitations, not listings. Large imagery, minimal text overlay, subtle gradients (from-black/80 to-transparent). Avoid hard borders.",
+    "cards": "Rounded surfaces (16-28px radius), dark surface fill, large imagery, minimal text overlay, subtle gradients (from-black/80 to-transparent). Avoid hard corners.",
     "grids": "Asymmetric grids. Avoid default equal columns. Mix large dominant hero cells with supporting smaller ones.",
     "general": "No more than one primary action per screen. Generous negative space."
   },
   "components": {
-    "button_primary": "bg-[#C2A36B] text-[#0F0F0F] hover:bg-[#D1B37D] px-8 py-3 rounded-none transition-colors duration-300 font-medium tracking-wide text-sm",
-    "button_secondary": "border border-[#2A2A2A] text-[#F4F4EE] hover:bg-[#1E1E1E] px-8 py-3 rounded-none transition-colors duration-300 tracking-wide text-sm",
-    "navigation": "Glassmorphism header (backdrop-blur-xl bg-[#0F0F0F]/60) with subtle bottom border (border-white/5). Never use a fully transparent header over content.",
-    "icons": "Thin-line icons only (use lucide-react with strokeWidth={1} or {1.5}). No filled or cartoon icons."
+    "button_primary": "bg-[#CE6A4A] text-[#0B0A0A] hover:bg-[#E8A06E] px-7 py-3.5 rounded-full transition-colors duration-300 font-extrabold text-sm",
+    "button_secondary": "bg-[#1F1D1B] text-[#F2EDE7] hover:bg-[#262321] px-7 py-3.5 rounded-full transition-colors duration-300 font-bold text-sm",
+    "navigation": "Glassmorphism header (backdrop-blur-xl bg-[#0B0A0A]/70) with subtle bottom border (border-white/5). Never use a fully transparent header over content.",
+    "icons": "Thin-line icons only (use lucide-react with strokeWidth={1.2} to {1.75}). No filled or cartoon icons."
   },
   "motion": {
     "transitions": "Subtle fade/slide transitions, duration-500 to duration-700, ease-out. No bouncy or playful animations.",

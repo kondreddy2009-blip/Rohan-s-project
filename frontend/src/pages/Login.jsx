@@ -17,7 +17,7 @@ const STAFF_DEMO_ACCOUNTS = [
 ];
 
 const fieldWrap =
-  "flex items-center gap-3 rounded-xl border border-white/10 bg-[#1A1917] px-4 focus-within:border-[#E8C9A0]/70 transition-colors";
+  "flex items-center gap-3 rounded-xl border border-white/10 bg-[#1A1917] px-4 focus-within:border-[#CE6A4A]/70 transition-colors";
 const fieldInput = "w-full bg-transparent py-4 text-[15px] text-white outline-none placeholder:text-[#6F6A64]";
 const fieldLabel = "mb-2 block text-sm font-semibold text-white";
 
@@ -151,7 +151,7 @@ export default function Login({ staff = false }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#121110] text-[#F4F1EC] grid grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
+    <div className="min-h-screen bg-[#121110] text-[#F2EDE7] grid grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
       <div className="hidden lg:block relative">
         <img
           src="https://images.unsplash.com/photo-1560053608-13721e0d69e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHw0fHxtb29keSUyMGZpbmUlMjBkaW5pbmclMjByZXN0YXVyYW50fGVufDB8fHx8MTc4NTc3ODIxNXww&ixlib=rb-4.1.0&q=85"
@@ -165,13 +165,13 @@ export default function Login({ staff = false }) {
             <br />
             <span className="font-semibold">a story at every table.</span>
           </h2>
-          <div className="mt-6 h-0.5 w-14 bg-[#E8C9A0]" />
+          <div className="mt-6 h-0.5 w-14 bg-[#CE6A4A]" />
           <div className="mt-5 text-xs tracking-[0.3em] text-white/70">DINE · EARN · RETURN</div>
         </div>
       </div>
 
       <div className="flex items-center justify-center px-4 sm:px-10 py-10">
-        <div className="w-full max-w-[620px] rounded-3xl border border-white/[0.07] bg-[#130E0B] px-6 sm:px-10 py-9 animate-fade-up">
+        <div className="w-full max-w-[620px] rounded-3xl border border-white/[0.07] bg-[#121110] px-6 sm:px-10 py-9 animate-fade-up">
           <Link to="/" data-testid="login-brand-link" className="flex flex-col items-center gap-2">
             <img src="/logo.png" alt="" className="h-[76px] w-auto" />
             <img src="/wordmark.png" alt="Table" className="h-6 w-auto" />
@@ -193,7 +193,7 @@ export default function Login({ staff = false }) {
                 data-testid={t.id}
                 className={
                   "flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold transition-colors " +
-                  (t.active ? "bg-[#E8C9A0] text-[#1A0F0B]" : "text-[#B8B2AA] hover:text-white")
+                  (t.active ? "bg-[#CE6A4A] text-[#0B0A0A]" : "text-[#B8B2AA] hover:text-white")
                 }
               >
                 <t.icon strokeWidth={1.8} className="h-4 w-4" />
@@ -210,7 +210,7 @@ export default function Login({ staff = false }) {
               ? "Welcome back"
               : "Create your account"}
           </h1>
-          <p className="mt-2 mb-7 text-center text-[15px] text-[#8E8982]">
+          <p className="mt-2 mb-7 text-center text-[15px] text-[#8F8781]">
             {staff
               ? mode === "signin"
                 ? "Manage bookings, loyalty and events for your venue."
@@ -321,7 +321,7 @@ export default function Login({ staff = false }) {
                   <button
                     type="button"
                     onClick={() => toast.info("Password reset isn't available yet.")}
-                    className="text-xs font-semibold text-[#E8C9A0] hover:underline"
+                    className="text-xs font-semibold text-[#CE6A4A] hover:underline"
                   >
                     Forgot password?
                   </button>
@@ -345,7 +345,7 @@ export default function Login({ staff = false }) {
             {error && (
               <div
                 data-testid="login-error"
-                className="rounded-lg border-l-2 border-[#E8A33D] bg-[#2A2118] px-3 py-2 text-sm text-[#E8A33D]"
+                className="rounded-lg border-l-2 border-[#E8A33D] bg-[#262321] px-3 py-2 text-sm text-[#E8A33D]"
               >
                 {error}
               </div>
@@ -355,7 +355,7 @@ export default function Login({ staff = false }) {
               type="submit"
               disabled={busy}
               data-testid="login-submit-button"
-              className="flex w-full items-center justify-between rounded-xl bg-[#E8C9A0] px-6 py-4 text-[15px] font-extrabold text-[#1A0F0B] hover:bg-[#F3DAB8] transition-colors disabled:opacity-60"
+              className="flex w-full items-center justify-between rounded-xl bg-[#CE6A4A] px-6 py-4 text-[15px] font-extrabold text-[#0B0A0A] hover:bg-[#E8A06E] transition-colors disabled:opacity-60"
             >
               <span className="flex-1 text-center">
                 {busy
@@ -378,7 +378,7 @@ export default function Login({ staff = false }) {
                   type="button"
                   onClick={() => switchMode("create")}
                   data-testid="switch-to-create"
-                  className="font-semibold text-[#E8C9A0] hover:underline"
+                  className="font-semibold text-[#CE6A4A] hover:underline"
                 >
                   {staff ? "Register your restaurant" : "Create an account"}
                 </button>
@@ -390,7 +390,7 @@ export default function Login({ staff = false }) {
                   type="button"
                   onClick={() => switchMode("signin")}
                   data-testid="switch-to-signin"
-                  className="font-semibold text-[#E8C9A0] hover:underline"
+                  className="font-semibold text-[#CE6A4A] hover:underline"
                 >
                   Sign in
                 </button>
@@ -418,16 +418,16 @@ export default function Login({ staff = false }) {
                     }}
                     disabled={busy}
                     data-testid={`demo-login-${a.email}`}
-                    className="flex w-full items-center gap-4 rounded-xl border border-white/10 bg-[#130E0B] px-4 py-3.5 text-left hover:border-[#E8C9A0]/50 transition-colors disabled:opacity-60"
+                    className="flex w-full items-center gap-4 rounded-xl border border-white/10 bg-[#121110] px-4 py-3.5 text-left hover:border-[#CE6A4A]/50 transition-colors disabled:opacity-60"
                   >
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#241C16]">
-                      <a.icon strokeWidth={1.8} className="h-5 w-5 text-[#E8C9A0]" />
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#1F1D1B]">
+                      <a.icon strokeWidth={1.8} className="h-5 w-5 text-[#CE6A4A]" />
                     </span>
                     <span className="flex-1 min-w-0">
-                      <span className={"block text-[15px] font-semibold " + (a.accent ? "text-[#E8C9A0]" : "text-white")}>
+                      <span className={"block text-[15px] font-semibold " + (a.accent ? "text-[#CE6A4A]" : "text-white")}>
                         {a.label}
                       </span>
-                      <span className="block text-sm text-[#8E8982] truncate">{a.email}</span>
+                      <span className="block text-sm text-[#8F8781] truncate">{a.email}</span>
                     </span>
                     <ChevronRight className="h-5 w-5 text-white" />
                   </button>
@@ -441,7 +441,7 @@ export default function Login({ staff = false }) {
                   staff ? doLogin("staff.lumen@ritual.app", "ritual2026") : doLogin("mila@ritual.app", "ritual2026")
                 }
                 data-testid={staff ? "temp-bypass-staff-login" : "temp-bypass-login"}
-                className="mt-5 w-full text-center text-xs text-[#8E8982] hover:text-white transition-colors disabled:opacity-50"
+                className="mt-5 w-full text-center text-xs text-[#8F8781] hover:text-white transition-colors disabled:opacity-50"
               >
                 {staff ? "Skip login as staff (temporary)" : "Skip login (temporary)"}
               </button>

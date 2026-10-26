@@ -244,7 +244,7 @@ function BookingDepositControl({ venueId, amount, onSaved }) {
           onClick={save}
           disabled={busy}
           data-testid="booking-deposit-save"
-          className="rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-8 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+          className="rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-8 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition"
         >
           {busy ? "Saving" : "Save"}
         </button>
@@ -411,7 +411,7 @@ function LastUpdated({ timestamp }) {
   return (
     <div
       data-testid="last-updated"
-      className="inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur px-4 py-2 text-xs font-semibold text-[#F4F1EC]"
+      className="inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur px-4 py-2 text-xs font-semibold text-[#F2EDE7]"
     >
       {label}
       {stale && " · Check the floor"}
@@ -520,7 +520,7 @@ function PublishCard({ venue, onSaved }) {
           "rounded-xl px-6 py-3 text-xs font-semibold tracking-[0.18em] uppercase transition disabled:opacity-50",
           venue.published
             ? "border border-[color:var(--st-gold)] text-[color:var(--st-text)] hover:bg-[rgb(var(--st-gold-rgb)/0.1)]"
-            : "bg-gradient-to-r from-[#D9B06A] to-[#B8904F] text-[#1A1308] hover:brightness-110",
+            : "bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] text-[#0B0A0A] hover:brightness-110",
         )}
       >
         {busy ? "One moment" : venue.published ? "Unpublish" : "Publish"}
@@ -618,7 +618,7 @@ function VenueProfileForm({ venue, onSaved }) {
                   className={cn(
                     "rounded-xl border py-3.5 font-medium transition-colors duration-300",
                     Number(form.price_level) === lvl
-                      ? "border-[color:var(--st-gold)] bg-gradient-to-r from-[#D9B06A] to-[#B8904F] text-[#1A1308]"
+                      ? "border-[color:var(--st-gold)] bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] text-[#0B0A0A]"
                       : "border-[color:var(--st-border)] bg-[color:var(--st-card)] text-[color:var(--st-text)] hover:border-[color:var(--st-muted)]",
                   )}
                 >
@@ -677,7 +677,7 @@ function VenueProfileForm({ venue, onSaved }) {
           />
           {form.image_url && (
             <img
-              src={form.image_url}
+              src={assetUrl(form.image_url)}
               alt=""
               className="mt-3 h-32 w-full max-w-sm rounded-xl object-cover border border-[color:var(--st-border)]"
             />
@@ -704,7 +704,7 @@ function VenueProfileForm({ venue, onSaved }) {
           type="submit"
           disabled={busy}
           data-testid="profile-save-button"
-          className="rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-10 py-4 text-xs font-semibold tracking-[0.18em] uppercase text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+          className="rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-10 py-4 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition"
         >
           {busy ? "Saving" : "Save changes"}
         </button>
@@ -818,7 +818,7 @@ function VenuePhotosPanel({ venue, onSaved }) {
           disabled={busy}
           onClick={() => fileRef.current?.click()}
           data-testid="upload-photo-button"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-8 py-3.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-8 py-3.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition"
         >
           <Upload strokeWidth={1.75} className="h-4 w-4" />
           {busy ? "Uploading" : "Upload photo"}
@@ -992,7 +992,7 @@ function EventForm({ venueId, onCreated }) {
           type="submit"
           disabled={busy}
           data-testid="event-submit-button"
-          className="rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-12 py-4 font-semibold text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+          className="rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-12 py-4 font-semibold text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition"
         >
           {busy ? "Posting" : "Post event"}
         </button>
@@ -1428,7 +1428,7 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
           <button
             type="submit"
             data-testid="loyalty-reward-add-button"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-6 py-3.5 font-semibold text-[#1A1308] hover:brightness-110 transition"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-6 py-3.5 font-semibold text-[#0B0A0A] hover:brightness-110 transition"
           >
             <Plus strokeWidth={2} className="h-4 w-4" />
             Add reward
@@ -1441,7 +1441,7 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
         onClick={save}
         disabled={busy}
         data-testid="loyalty-save-button"
-        className="rounded-xl bg-gradient-to-r from-[#D9B06A] to-[#B8904F] px-10 py-4 font-semibold text-[#1A1308] hover:brightness-110 disabled:opacity-50 transition"
+        className="rounded-xl bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] px-10 py-4 font-semibold text-[#0B0A0A] hover:brightness-110 disabled:opacity-50 transition"
       >
         {busy ? "Saving" : "Save changes"}
       </button>
@@ -1796,14 +1796,14 @@ export default function StaffDashboard() {
                 className={cn(
                   "flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-left transition-colors duration-300",
                   tab === t.k
-                    ? "bg-gradient-to-r from-[#D9B06A] to-[#B8904F] text-[#1A1308]"
+                    ? "bg-gradient-to-r from-[#CE6A4A] to-[#B5573A] text-[#0B0A0A]"
                     : "text-[color:var(--st-soft)] hover:bg-[rgb(var(--st-gold-rgb)/0.08)]",
                 )}
               >
                 <Icon strokeWidth={1.6} className="h-5 w-5 shrink-0" />
                 <span className="flex-1">{t.l}</span>
                 {badge > 0 && (
-                  <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-[10px] font-semibold bg-[#D9B06A] text-[#121110]">
+                  <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-[10px] font-semibold bg-[#CE6A4A] text-[#121110]">
                     {badge}
                   </span>
                 )}
@@ -1934,7 +1934,7 @@ export default function StaffDashboard() {
             >
               {t.l}
               {badge > 0 && (
-                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[9px] font-medium bg-[#D9B06A] text-[#121110]">
+                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[9px] font-medium bg-[#CE6A4A] text-[#121110]">
                   {badge}
                 </span>
               )}
@@ -1946,9 +1946,9 @@ export default function StaffDashboard() {
       <div className="mt-10 sm:mt-14">
       {tab === "overview" && (
         <div className="space-y-6 animate-fade-up">
-          <div className="relative overflow-hidden rounded-2xl border border-[color:var(--st-border)] bg-[#171614] text-[#F4F1EC] min-h-[15rem] [&_.overline]:text-[#D9D2C6]">
+          <div className="relative overflow-hidden rounded-2xl border border-[color:var(--st-border)] bg-[#171614] text-[#F2EDE7] min-h-[15rem] [&_.overline]:text-[#D9D2C6]">
             {selectedVenue.image_url && (
-              <img src={selectedVenue.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={assetUrl(selectedVenue.image_url)} alt="" className="absolute inset-0 h-full w-full object-cover" />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
             <div className="relative z-10 p-4 pb-0 lg:p-0 lg:absolute lg:top-4 lg:right-4">

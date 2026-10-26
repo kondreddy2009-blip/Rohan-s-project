@@ -12,9 +12,9 @@ const STATUS = {
   pending: { label: "Awaiting the room", color: "text-[#E8A33D]" },
   confirmed: { label: "Confirmed", color: "text-[#7DBE8A]" },
   awaiting_payment: { label: "Awaiting payment", color: "text-[#E8A33D]" },
-  seated: { label: "Dined", color: "text-[#8E8982]" },
-  declined: { label: "Declined", color: "text-[#F0D3AE]" },
-  cancelled: { label: "Cancelled", color: "text-[#8E8982]" },
+  seated: { label: "Dined", color: "text-[#8F8781]" },
+  declined: { label: "Declined", color: "text-[#EE9B79]" },
+  cancelled: { label: "Cancelled", color: "text-[#8F8781]" },
 };
 const ACTIVE = ["pending", "confirmed", "awaiting_payment"];
 
@@ -29,12 +29,12 @@ function startsAt(b) {
 
 function BookingCard({ b, image, onCancel }) {
   const [confirming, setConfirming] = useState(false);
-  const st = STATUS[b.status] || { label: b.status, color: "text-[#8E8982]" };
+  const st = STATUS[b.status] || { label: b.status, color: "text-[#8F8781]" };
   const live = ACTIVE.includes(b.status);
   const upcoming = live && startsAt(b).getTime() + 90 * 60000 > Date.now();
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-[#1B140F]" data-testid={`booking-card-${b.id}`}>
+    <article className="overflow-hidden rounded-2xl bg-[#1B1917]" data-testid={`booking-card-${b.id}`}>
       <div className="flex">
         {image && (
           <Link to={`/venues/${b.venue_id}`} className="hidden sm:block w-40 shrink-0">
@@ -44,7 +44,7 @@ function BookingCard({ b, image, onCancel }) {
         <div className="flex-1 p-5 sm:p-6 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <Link to={`/venues/${b.venue_id}`} className="block truncate text-xl font-extrabold tracking-tight hover:text-[#E8C9A0] transition-colors">
+              <Link to={`/venues/${b.venue_id}`} className="block truncate text-xl font-extrabold tracking-tight hover:text-[#CE6A4A] transition-colors">
                 {b.venue_name}
               </Link>
               <div className="mt-1 text-sm text-[#B8B2AA]">
@@ -56,17 +56,17 @@ function BookingCard({ b, image, onCancel }) {
           </div>
 
           <div className="mt-3 flex items-baseline gap-3">
-            <span className="text-xs text-[#8E8982]">Code</span>
-            <span className="font-mono tracking-[0.28em] text-[#E8C9A0]">{b.code}</span>
+            <span className="text-xs text-[#8F8781]">Code</span>
+            <span className="font-mono tracking-[0.28em] text-[#CE6A4A]">{b.code}</span>
           </div>
           {b.payment_status === "paid" && (
-            <div className="mt-2 text-xs text-[#8E8982]">₹{b.deposit_amount} deposit paid · adjusted against your bill</div>
+            <div className="mt-2 text-xs text-[#8F8781]">₹{b.deposit_amount} deposit paid · adjusted against your bill</div>
           )}
           {b.payment_status === "refunded" && <div className="mt-2 text-xs text-[#7DBE8A]">₹{b.deposit_amount} deposit refunded</div>}
           {b.note && <p className="mt-3 text-sm italic text-[#B8B2AA]">&ldquo;{b.note}&rdquo;</p>}
           {b.staff_reply && (
             <div className="mt-3 border-t border-white/[0.08] pt-3">
-              <div className="text-xs font-bold text-[#E8C9A0]">The room replied</div>
+              <div className="text-xs font-bold text-[#CE6A4A]">The room replied</div>
               <p className="mt-1 text-sm text-[#B8B2AA]">{b.staff_reply}</p>
             </div>
           )}
@@ -76,22 +76,22 @@ function BookingCard({ b, image, onCancel }) {
               <AddToCalendar booking={b} />
               {confirming ? (
                 <span className="flex items-center gap-3 text-sm">
-                  <button type="button" onClick={() => onCancel(b.id)} data-testid={`booking-confirm-cancel-${b.id}`} className="font-bold text-[#F0D3AE] hover:text-[#F87171]">
+                  <button type="button" onClick={() => onCancel(b.id)} data-testid={`booking-confirm-cancel-${b.id}`} className="font-bold text-[#EE9B79] hover:text-[#F87171]">
                     Yes, release it
                   </button>
-                  <button type="button" onClick={() => setConfirming(false)} className="font-semibold text-[#8E8982] hover:text-white">
+                  <button type="button" onClick={() => setConfirming(false)} className="font-semibold text-[#8F8781] hover:text-white">
                     Keep
                   </button>
                 </span>
               ) : (
-                <button type="button" onClick={() => setConfirming(true)} data-testid={`booking-cancel-${b.id}`} className="text-sm font-semibold text-[#8E8982] hover:text-[#E8A33D] transition-colors">
+                <button type="button" onClick={() => setConfirming(true)} data-testid={`booking-cancel-${b.id}`} className="text-sm font-semibold text-[#8F8781] hover:text-[#E8A33D] transition-colors">
                   Release the table
                 </button>
               )}
             </div>
           )}
           {b.status === "seated" && (
-            <Link to={`/venues/${b.venue_id}#venue-reviews`} className="mt-4 inline-block text-sm font-bold text-[#F0D3AE] hover:text-[#E8C9A0]">
+            <Link to={`/venues/${b.venue_id}#venue-reviews`} className="mt-4 inline-block text-sm font-bold text-[#EE9B79] hover:text-[#CE6A4A]">
               Rate your visit →
             </Link>
           )}
@@ -115,11 +115,11 @@ function PartnerRow({ v }) {
     <Link
       to={`/venues/${v.id}`}
       data-testid={`partner-${v.id}`}
-      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-[#17110C]/90 p-2.5 pr-4 transition-colors hover:border-[#E8C9A0]/40"
+      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-[#141312]/90 p-2.5 pr-4 transition-colors hover:border-[#CE6A4A]/40"
     >
       <img src={assetUrl(v.image_url)} alt="" loading="lazy" className="h-[88px] w-[88px] shrink-0 rounded-xl object-cover" />
       <div className="min-w-0 flex-1">
-        <div className={cn(serif, "truncate text-[22px] font-semibold leading-tight text-[#F4F1EC]")}>{v.name}</div>
+        <div className={cn(serif, "truncate text-[22px] font-semibold leading-tight text-[#F2EDE7]")}>{v.name}</div>
         <div className="mt-0.5 truncate text-[13px] text-[#B8AA98]">{[v.cuisine, v.neighborhood].filter(Boolean).join(" · ")}</div>
         {v.rating_avg > 0 && (
           <div className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#B8AA98]">
@@ -129,7 +129,7 @@ function PartnerRow({ v }) {
           </div>
         )}
       </div>
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#E8C9A0]/60 text-[#E8C9A0] transition-colors group-hover:bg-[#E8C9A0] group-hover:text-[#1A0F0B]">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#CE6A4A]/60 text-[#CE6A4A] transition-colors group-hover:bg-[#CE6A4A] group-hover:text-[#0B0A0A]">
         <ArrowRight className="h-4 w-4" />
       </span>
     </Link>
@@ -195,7 +195,7 @@ export default function Bookings() {
       <div className="relative mx-auto max-w-[1280px]">
         <div className="pt-4">
           <Eyebrow>Bookings</Eyebrow>
-          <h1 className={cn(serif, "mt-4 text-5xl sm:text-6xl font-semibold tracking-[-0.01em] text-[#F4F1EC]")}>Your reservations</h1>
+          <h1 className={cn(serif, "mt-4 text-5xl sm:text-6xl font-semibold tracking-[-0.01em] text-[#F2EDE7]")}>Your reservations</h1>
           <p className="mt-2 text-lg text-[#B8AA98]">Every table, all in one place.</p>
         </div>
 
@@ -212,7 +212,7 @@ export default function Bookings() {
               data-testid={`bookings-tab-${t.key}`}
               className={cn(
                 "rounded-full px-6 py-3 text-[15px] font-semibold transition-colors",
-                tab === t.key ? "bg-[#F5F5F3] text-[#130E0B]" : "bg-[#271E17] text-[#B8B2AA] hover:text-white",
+                tab === t.key ? "bg-[#F5F5F3] text-[#121110]" : "bg-[#23201E] text-[#B8B2AA] hover:text-white",
               )}
             >
               {t.label} <span className="opacity-60">{t.n}</span>
@@ -223,14 +223,14 @@ export default function Bookings() {
         <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
           <div className="space-y-4">
             {bookings === null ? (
-              <div className="py-16 text-center text-sm text-[#8E8982]">Loading…</div>
+              <div className="py-16 text-center text-sm text-[#8F8781]">Loading…</div>
             ) : shown.length === 0 ? (
               <div
-                className="flex min-h-[380px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#17110C]/90 px-6 py-14 text-center"
+                className="flex min-h-[380px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#141312]/90 px-6 py-14 text-center"
                 data-testid="bookings-empty"
               >
                 <CalendarCheck strokeWidth={1.2} className="h-14 w-14 text-[#E8A27F]" />
-                <div className={cn(serif, "mt-6 text-4xl font-semibold text-[#F4F1EC]")}>
+                <div className={cn(serif, "mt-6 text-4xl font-semibold text-[#F2EDE7]")}>
                   {tab === "upcoming" ? "Your next great evening starts here" : "No past reservations yet"}
                 </div>
                 <p className="mt-2 text-[16px] text-[#B8AA98]">Discover a restaurant or book a seat at an upcoming event.</p>
@@ -243,7 +243,7 @@ export default function Bookings() {
                   </Link>
                   <Link
                     to="/events"
-                    className="inline-flex items-center rounded-full border border-[#E8C9A0]/60 px-7 py-3.5 text-[15px] font-semibold text-[#F0D3AE] transition-colors hover:border-[#E8C9A0] hover:text-white"
+                    className="inline-flex items-center rounded-full border border-[#CE6A4A]/60 px-7 py-3.5 text-[15px] font-semibold text-[#EE9B79] transition-colors hover:border-[#CE6A4A] hover:text-white"
                   >
                     Browse events
                   </Link>
@@ -257,7 +257,7 @@ export default function Bookings() {
           {partners.length > 0 && (
             <aside className="lg:border-l lg:border-white/[0.08] lg:pl-8" data-testid="bookings-partners">
               <Eyebrow>A little inspiration</Eyebrow>
-              <h2 className={cn(serif, "mt-3 text-3xl font-semibold text-[#F4F1EC]")}>Explore our partners</h2>
+              <h2 className={cn(serif, "mt-3 text-3xl font-semibold text-[#F2EDE7]")}>Explore our partners</h2>
               <p className="mt-1 text-[15px] text-[#B8AA98]">Handpicked restaurants loved by the community.</p>
               <div className="mt-5 space-y-3">
                 {partners.map((v) => (

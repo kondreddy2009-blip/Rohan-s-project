@@ -25,7 +25,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi.middleware.cors import CORSMiddleware
 from cryptography.fernet import Fernet, InvalidToken
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -72,38 +72,6 @@ TIER_THRESHOLDS = {
     "Insider": 1500,
     "Inner Circle": 3000,
 }
-
-PERKS = [
-    {
-        "code": "priority",
-        "name": "Priority Seating",
-        "cost": 250,
-        "description": "Skip the wait. A table opens for you on arrival.",
-        "tier_required": "Guest",
-    },
-    {
-        "code": "complimentary",
-        "name": "Complimentary Signature",
-        "cost": 500,
-        "description": "A signature offering, from the house.",
-        "tier_required": "Regular",
-    },
-    {
-        "code": "early_access",
-        "name": "Early Access Booking",
-        "cost": 750,
-        "description": "Reserve before the room opens to the public.",
-        "tier_required": "Regular",
-    },
-    {
-        "code": "inner_experience",
-        "name": "Inner Circle Experience",
-        "cost": 1000,
-        "description": "A curated tasting, chef's counter, or off-menu pour.",
-        "tier_required": "Insider",
-    },
-]
-
 
 def calc_tier(lifetime_points: int) -> str:
     tier = "Guest"
@@ -275,7 +243,7 @@ class CheckInIn(BaseModel):
 
 class RedeemIn(BaseModel):
     venue_id: str
-    perk_code: str
+    reward_id: str
 
 
 class StatusIn(BaseModel):
@@ -398,6 +366,14 @@ class LoyaltyRewardIn(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     description: str = Field(default="", max_length=280)
     cost: int = Field(ge=1, le=100000)
+    tier_required: str = "Guest"
+
+    @field_validator("tier_required")
+    @classmethod
+    def _valid_tier(cls, v):
+        if v not in TIER_ORDER:
+            raise ValueError(f"tier_required must be one of {TIER_ORDER}")
+        return v
 
 
 class LoyaltyConfigIn(BaseModel):
@@ -866,19 +842,22 @@ async def get_wallet(user: dict = Depends(get_current_user)):
     }
 
 
-@api.get("/perks")
-async def list_perks():
-    return PERKS
-
-
 @api.post("/wallet/redeem")
 async def redeem(payload: RedeemIn, user: dict = Depends(get_current_user)):
-    perk = next((p for p in PERKS if p["code"] == payload.perk_code), None)
-    if not perk:
-        raise HTTPException(status_code=404, detail="Perk not found")
     venue = await db.venues.find_one({"id": payload.venue_id}, {"_id": 0})
     if not venue:
         raise HTTPException(status_code=404, detail="Venue not found")
+    # Perks are whatever this restaurant has configured as rewards.
+    reward = next((r for r in venue.get("loyalty_rewards", []) if r["id"] == payload.reward_id), None)
+    if not reward:
+        raise HTTPException(status_code=404, detail="Perk not found")
+    perk = {
+        "code": reward["id"],
+        "name": reward["name"],
+        "description": reward.get("description", ""),
+        "cost": reward["cost"],
+        "tier_required": reward.get("tier_required", "Guest"),
+    }
     # Tier gate — checked BEFORE balance so a tier violation reads clearly
     user_tier_idx = TIER_ORDER.index(user.get("tier", "Guest"))
     perk_tier_idx = TIER_ORDER.index(perk["tier_required"])
@@ -1885,6 +1864,7 @@ async def update_venue_loyalty_config(
             "name": r.name.strip(),
             "description": r.description.strip(),
             "cost": r.cost,
+            "tier_required": r.tier_required,
         })
     updates = {
         "loyalty_points_per_checkin": payload.points_per_checkin,

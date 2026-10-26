@@ -29,6 +29,24 @@ def _session(creds=None):
     return s
 
 
+def _reward_id(venue_id, name, cost=150, tier="Guest"):
+    """Return the id of a venue reward by name, having the venue's staff create it if missing."""
+    ss = _session(STAFF_VERRE)
+    cfg = ss.get(f"{API}/venues/{venue_id}/loyalty", timeout=10).json()["config"]
+    for r in cfg["rewards"]:
+        if r["name"] == name:
+            return r["id"]
+    rewards = cfg["rewards"] + [{"name": name, "cost": cost, "tier_required": tier}]
+    r = ss.patch(f"{API}/staff/venues/{venue_id}/loyalty", json={
+        "points_per_checkin": cfg["points_per_checkin"],
+        "points_per_booking": cfg["points_per_booking"],
+        "rewards": rewards,
+    }, timeout=10)
+    assert r.status_code == 200, r.text
+    cfg = ss.get(f"{API}/venues/{venue_id}/loyalty", timeout=10).json()["config"]
+    return next(x["id"] for x in cfg["rewards"] if x["name"] == name)
+
+
 # --- Auth ---
 class TestAuth:
     def test_login_admin_and_me(self):
@@ -132,14 +150,14 @@ class TestCheckInAndRedeem:
         assert w1["balance"] == balance0 + 100
         assert w1["ledger"][0]["type"] == "earn"
 
-        # Redeem complimentary (500) at Verre
+        # Redeem Free Dessert (150) at Verre
         r = s.post(f"{API}/wallet/redeem", json={
             "venue_id": "venue-verre",
-            "perk_code": "complimentary",
+            "reward_id": _reward_id("venue-verre", "Free Dessert"),
         }, timeout=10)
         assert r.status_code == 200, r.text
         red = r.json()
-        assert red["balance"] == balance0 + 100 - 500
+        assert red["balance"] == balance0 + 100 - 150
         assert red["redemption"]["code"].startswith("R-")
         assert red["redemption"]["venue_id"] == "venue-verre"
 
@@ -151,7 +169,7 @@ class TestCheckInAndRedeem:
         s = _session(ALEX)
         r = s.post(f"{API}/wallet/redeem", json={
             "venue_id": "venue-verre",
-            "perk_code": "inner_experience",
+            "reward_id": _reward_id("venue-verre", "Inner Circle Experience", 1000, "Insider"),
         }, timeout=10)
         assert r.status_code == 403
 
@@ -162,7 +180,7 @@ class TestCheckInAndRedeem:
             pytest.skip("mila balance insufficient")
         r = s.post(f"{API}/wallet/redeem", json={
             "venue_id": "venue-verre",
-            "perk_code": "inner_experience",
+            "reward_id": _reward_id("venue-verre", "Inner Circle Experience", 1000, "Insider"),
         }, timeout=10)
         assert r.status_code == 200
 
@@ -174,15 +192,17 @@ class TestCheckInAndRedeem:
         assert sum(held.values()) <= wallet["balance"]
         # A restaurant where Alex has earned nothing can't honour his points, however large his total is.
         other = next(v for v in ("venue-chambre", "venue-osteria", "venue-ikigai") if v not in held)
-        r = s.post(f"{API}/wallet/redeem", json={"venue_id": other, "perk_code": "priority"}, timeout=10)
+        r = s.post(f"{API}/wallet/redeem", json={"venue_id": other, "reward_id": _reward_id("venue-verre", "Free Dessert")}, timeout=10)
         assert r.status_code == 400, r.text
         assert "where you earned" in r.json()["detail"]
 
-    def test_perks_endpoint(self):
+    def test_perks_come_from_the_restaurant(self):
+        rid = _reward_id("venue-verre", "Free Dessert")
+        ss = _session(STAFF_VERRE)
+        cfg = ss.get(f"{API}/venues/venue-verre/loyalty", timeout=10).json()["config"]
+        assert rid in [r["id"] for r in cfg["rewards"]]
         r = requests.get(f"{API}/perks", timeout=10)
-        assert r.status_code == 200
-        codes = [p["code"] for p in r.json()]
-        assert set(codes) == {"priority", "complimentary", "early_access", "inner_experience"}
+        assert r.status_code == 404
 
 
 # --- Staff ---
@@ -333,7 +353,7 @@ class TestTierGateOrdering:
     def test_regular_low_balance_gets_403_not_400(self):
         s = _session(ALEX)
         r = s.post(f"{API}/wallet/redeem", json={
-            "venue_id": "venue-verre", "perk_code": "inner_experience"
+            "venue_id": "venue-verre", "reward_id": _reward_id("venue-verre", "Inner Circle Experience", 1000, "Insider")
         }, timeout=10)
         assert r.status_code == 403
 

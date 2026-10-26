@@ -1246,15 +1246,15 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
   const [pointsPerCheckin, setPointsPerCheckin] = useState(config.points_per_checkin);
   const [pointsPerBooking, setPointsPerBooking] = useState(config.points_per_booking);
   const [rewards, setRewards] = useState(config.rewards);
-  const [draft, setDraft] = useState({ name: "", description: "", cost: "" });
+  const [draft, setDraft] = useState({ name: "", description: "", cost: "", tier_required: "Guest" });
   const [busy, setBusy] = useState(false);
 
   const addReward = (e) => {
     e.preventDefault();
     const cost = Number(draft.cost);
     if (!draft.name.trim() || !cost || cost <= 0) return;
-    setRewards((r) => [...r, { name: draft.name.trim(), description: draft.description.trim(), cost }]);
-    setDraft({ name: "", description: "", cost: "" });
+    setRewards((r) => [...r, { name: draft.name.trim(), description: draft.description.trim(), cost, tier_required: draft.tier_required }]);
+    setDraft({ name: "", description: "", cost: "", tier_required: "Guest" });
   };
 
   const removeReward = (idx) => setRewards((r) => r.filter((_, i) => i !== idx));
@@ -1355,6 +1355,7 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
                 <div className="min-w-0">
                   <div className="font-semibold">{r.name}</div>
                   {r.description && <p className="text-sm text-[color:var(--st-muted)]">{r.description}</p>}
+                  <p className="text-xs text-[color:var(--st-faint)]">Available to {r.tier_required || "Guest"}+</p>
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0">
                   <span className="text-[color:var(--st-gold)] font-semibold">{r.cost} pts</span>
@@ -1375,7 +1376,7 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
 
         <form
           onSubmit={addReward}
-          className="mt-5 grid grid-cols-1 xl:grid-cols-[1.4fr_0.6fr_1.4fr_auto] gap-4 items-end rounded-2xl border border-[color:var(--st-border)] bg-[color:var(--st-card)] p-6"
+          className="mt-5 grid grid-cols-1 xl:grid-cols-[1.4fr_0.6fr_0.8fr_1.4fr_auto] gap-4 items-end rounded-2xl border border-[color:var(--st-border)] bg-[color:var(--st-card)] p-6"
         >
           <div>
             <label className="block mb-2 text-sm text-[color:var(--st-muted)]">Reward name</label>
@@ -1399,6 +1400,19 @@ function LoyaltyConfigForm({ venueId, config, stats, onSaved }) {
               data-testid="loyalty-reward-cost-input"
               className={field}
             />
+          </div>
+          <div>
+            <label className="block mb-2 text-sm text-[color:var(--st-muted)]">Minimum tier</label>
+            <select
+              value={draft.tier_required}
+              onChange={(e) => setDraft((d) => ({ ...d, tier_required: e.target.value }))}
+              data-testid="loyalty-reward-tier-select"
+              className={field}
+            >
+              {["Guest", "Regular", "Insider", "Inner Circle"].map((t) => (
+                <option key={t} value={t}>{t}+</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block mb-2 text-sm text-[color:var(--st-muted)]">Short description (optional)</label>

@@ -25,10 +25,9 @@ export default function Redeem() {
   useEffect(() => {
     async function load() {
       try {
-        const [w, p] = await Promise.all([api.get("/wallet"), api.get("/perks")]);
+        const w = await api.get("/wallet");
         const owned = (w.data.venues || []).map((v) => ({ ...v, id: v.venue_id, name: v.venue_name }));
         setVenues(owned);
-        setPerks(p.data);
         const preset = owned.find((v) => v.id === searchParams.get("venue"));
         if (preset) {
           setSelectedVenue(preset);
@@ -42,6 +41,22 @@ export default function Redeem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Perks are whatever the selected restaurant has configured as rewards.
+  useEffect(() => {
+    if (!selectedVenue) return;
+    let cancelled = false;
+    setPerks([]);
+    api
+      .get(`/venues/${selectedVenue.id}/loyalty`)
+      .then(({ data }) => {
+        if (!cancelled) setPerks(data.config.rewards || []);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedVenue]);
+
   const userTierIdx = TIER_ORDER.indexOf(user?.tier || "Guest");
   // Points are bound to the restaurant that issued them, so only this room's balance can be spent here.
   const balance = selectedVenue?.balance || 0;
@@ -49,7 +64,7 @@ export default function Redeem() {
   const affordablePerks = useMemo(
     () =>
       perks.map((p) => {
-        const perkTierIdx = TIER_ORDER.indexOf(p.tier_required);
+        const perkTierIdx = TIER_ORDER.indexOf(p.tier_required || "Guest");
         return {
           ...p,
           affordable: balance >= p.cost,
@@ -65,7 +80,7 @@ export default function Redeem() {
     try {
       const { data } = await api.post("/wallet/redeem", {
         venue_id: selectedVenue.id,
-        perk_code: selectedPerk.code,
+        reward_id: selectedPerk.id,
       });
       setRedemption(data.redemption);
       await refresh();
@@ -166,17 +181,22 @@ export default function Redeem() {
           </button>
 
           <div className="mt-10 space-y-3">
+            {perks.length === 0 && (
+              <div className="border border-[#3D3128] p-8 text-center text-sm text-[#8E8982] font-light" data-testid="redeem-no-perks">
+                {selectedVenue.name} hasn&apos;t added any perks yet.
+              </div>
+            )}
             {affordablePerks.map((p) => {
               const disabled = !p.affordable || !p.tier_ok;
               return (
                 <button
-                  key={p.code}
+                  key={p.id}
                   disabled={disabled}
                   onClick={() => {
                     setSelectedPerk(p);
                     setStep("confirm");
                   }}
-                  data-testid={`perk-${p.code}`}
+                  data-testid={`perk-${p.id}`}
                   className={cn(
                     "w-full text-left p-5 sm:p-6 border transition-colors duration-300 flex items-center justify-between gap-6",
                     disabled
@@ -199,7 +219,7 @@ export default function Redeem() {
                         ? `${p.tier_required} tier required`
                         : !p.affordable
                           ? `Needs ${p.cost - balance} more points at ${selectedVenue.name}`
-                          : `Reserved for ${p.tier_required}+`}
+                          : `Reserved for ${p.tier_required || "Guest"}+`}
                     </div>
                   </div>
                   <div className="text-right">

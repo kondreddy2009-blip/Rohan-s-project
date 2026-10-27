@@ -1598,6 +1598,25 @@ def _generate_slots(hours: str) -> list:
     return slots
 
 
+PAYMENT_HOLD_MINUTES = 15  # an unpaid deposit booking holds its slot this long
+
+
+def _slot_taken_filter(venue_id: str, date: str, time: str = None) -> dict:
+    """Bookings that occupy a slot: live ones, plus unpaid deposit holds that haven't expired."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_HOLD_MINUTES)).isoformat()
+    q = {
+        "venue_id": venue_id,
+        "date": date,
+        "$or": [
+            {"status": {"$in": ["pending", "confirmed"]}},
+            {"status": "awaiting_payment", "created_at": {"$gte": cutoff}},
+        ],
+    }
+    if time:
+        q["time"] = time
+    return q
+
+
 def _generate_booking_code() -> str:
     import secrets
     alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # skip lookalikes
@@ -1613,12 +1632,7 @@ async def venue_availability(venue_id: str, date: str, user: dict = Depends(get_
         raise HTTPException(status_code=404, detail="Venue not found")
     slots = _generate_slots(venue.get("hours", ""))
     booked_docs = await db.bookings.find(
-        {
-            "venue_id": venue_id,
-            "date": date,
-            "status": {"$in": ["pending", "confirmed"]},
-        },
-        {"_id": 0, "time": 1},
+        _slot_taken_filter(venue_id, date), {"_id": 0, "time": 1}
     ).to_list(500)
     booked_times = [b["time"] for b in booked_docs]
     result = []
@@ -1642,12 +1656,7 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
     slots = _generate_slots(venue.get("hours", ""))
     if slots and payload.time not in slots:
         raise HTTPException(status_code=400, detail="That time isn't offered by this room")
-    taken = await db.bookings.count_documents({
-        "venue_id": payload.venue_id,
-        "date": payload.date,
-        "time": payload.time,
-        "status": {"$in": ["pending", "confirmed"]},
-    })
+    taken = await db.bookings.count_documents(_slot_taken_filter(payload.venue_id, payload.date, payload.time))
     if taken >= SLOT_CAPACITY_PER_TIME:
         raise HTTPException(status_code=409, detail="That time is full — try another slot.")
 

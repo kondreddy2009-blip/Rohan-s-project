@@ -501,6 +501,25 @@ export default function Discover() {
         </div>
       </section>
 
+      {!loading && !searching && filtered.length > 0 && (
+        <section className="w-full px-5 sm:px-10 lg:px-16 pb-10" data-testid="all-restaurants-section">
+          <div className={cn(inner, "border-t border-white/[0.06] pt-10")}>
+            <div className="flex items-center gap-3 text-[11px] font-semibold tracking-[0.22em] uppercase text-[#E8A27F]">
+              <span className="h-px w-5 bg-[#E8A27F]" /> The network
+            </div>
+            <h2 className={cn(serif, "mt-2 text-[52px] font-medium leading-none text-white")}>All restaurants</h2>
+            <p className="mt-3 text-[16px] text-[#CDBFAE]">
+              Every partner, {filtered.length} in all. Earn points at one, redeem at the same room.
+            </p>
+            <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {filtered.map((v) => (
+                <FillingFastCard key={v.id} venue={v} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {!loading && !searching && (
         <section className="w-full px-5 sm:px-10 lg:px-16 pb-10" data-testid="filling-fast-section">
           <div className={cn(inner, "border-t border-white/[0.06] pt-10")}>

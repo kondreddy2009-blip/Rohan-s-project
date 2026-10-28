@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { FillingFastCard, fillingFastStatus } from "@/components/FillingFastCard";
+import { FillingFastCard, fillingFastStatus, isClosed } from "@/components/FillingFastCard";
 import { EventCard } from "@/components/EventCard";
 import { SiteHeader } from "@/components/SiteHeader";
 import { BrandLockup } from "@/components/BrandLockup";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 const TIER_THRESHOLDS = { Guest: 0, Regular: 500, Insider: 1500, "Inner Circle": 3000 };
 
 const isWalkIn = (v) =>
-  v.availability !== "fully_booked" && v.status !== "At Capacity" && !(v.wait_minutes > 0);
+  !isClosed(v) && v.availability !== "fully_booked" && v.status !== "At Capacity" && !(v.wait_minutes > 0);
 
 const FILTERS = [
   { key: "all", label: "All", match: () => true },
@@ -37,7 +37,7 @@ const SORTS = [
 ];
 
 function waitRank(v) {
-  if (v.availability === "fully_booked" || v.availability === "closed" || v.status === "At Capacity") return 1e6;
+  if (v.availability === "fully_booked" || isClosed(v) || v.status === "At Capacity") return 1e6;
   return v.wait_minutes || 0;
 }
 
@@ -437,7 +437,7 @@ export default function Discover() {
           <div className="relative z-10 mt-10">
             <div className="flex items-center gap-2 text-sm text-[#D8CBB9]">
               <span className="h-2 w-2 rounded-full bg-[#7DBE8A]" />
-              {venues.length} partners live tonight
+              {venues.filter((v) => !isClosed(v)).length} of {venues.length} partners open now
             </div>
             <h1 className="mt-4 text-5xl sm:text-[58px] font-extrabold tracking-[-0.03em] leading-tight">
               {user ? (

@@ -1,20 +1,8 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, User, Users, Crown, ChevronRight, ArrowRight, Store } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Store } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-
-const DEMO_ACCOUNTS = [
-  { email: "bhandariyashvee@gmail.com", label: "Owner · Admin (Insider)", password: "ritual2026", icon: Crown, accent: true },
-  { email: "mila@ritual.app", label: "Mila · Inner Circle", password: "ritual2026", icon: User },
-  { email: "alex@ritual.app", label: "Alex · Regular", password: "ritual2026", icon: Users },
-  { email: "staff.lumen@ritual.app", label: "Staff · Lumen", password: "ritual2026", icon: Users },
-];
-
-const STAFF_DEMO_ACCOUNTS = [
-  { email: "staff.lumen@ritual.app", label: "Ikigai · Staff", password: "ritual2026", icon: Store },
-  { email: "staff.verre@ritual.app", label: "Verre · Staff", password: "ritual2026", icon: Store },
-];
 
 const fieldWrap =
   "flex items-center gap-3 rounded-xl border border-white/10 bg-[#1A1917] px-4 focus-within:border-[#CE6A4A]/70 transition-colors";
@@ -399,53 +387,18 @@ export default function Login({ staff = false }) {
           </p>
 
           {mode === "signin" && (
-
-            <>
-              <div className="mt-7 flex items-center gap-4 text-xs text-[#B8B2AA]">
-                <span className="h-px flex-1 bg-white/10" />
-                {staff ? "Or try a demo venue" : "Or continue as a demo guest"}
-                <span className="h-px flex-1 bg-white/10" />
-              </div>
-              <div className="mt-5 space-y-3">
-                {(staff ? STAFF_DEMO_ACCOUNTS : DEMO_ACCOUNTS).map((a) => (
-                  <button
-                    key={a.email}
-                    type="button"
-                    onClick={() => {
-                      setEmail(a.email);
-                      setPassword(a.password);
-                      doLogin(a.email, a.password);
-                    }}
-                    disabled={busy}
-                    data-testid={`demo-login-${a.email}`}
-                    className="flex w-full items-center gap-4 rounded-xl border border-white/10 bg-[#121110] px-4 py-3.5 text-left hover:border-[#CE6A4A]/50 transition-colors disabled:opacity-60"
-                  >
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#1F1D1B]">
-                      <a.icon strokeWidth={1.8} className="h-5 w-5 text-[#CE6A4A]" />
-                    </span>
-                    <span className="flex-1 min-w-0">
-                      <span className={"block text-[15px] font-semibold " + (a.accent ? "text-[#CE6A4A]" : "text-white")}>
-                        {a.label}
-                      </span>
-                      <span className="block text-sm text-[#8F8781] truncate">{a.email}</span>
-                    </span>
-                    <ChevronRight className="h-5 w-5 text-white" />
-                  </button>
-                ))}
-              </div>
-              {/* TEMP: login bypass for development — remove before shipping */}
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() =>
-                  staff ? doLogin("staff.lumen@ritual.app", "ritual2026") : doLogin("mila@ritual.app", "ritual2026")
-                }
-                data-testid={staff ? "temp-bypass-staff-login" : "temp-bypass-login"}
-                className="mt-5 w-full text-center text-xs text-[#8F8781] hover:text-white transition-colors disabled:opacity-50"
-              >
-                {staff ? "Skip login as staff (temporary)" : "Skip login (temporary)"}
-              </button>
-            </>
+            /* TEMP: login bypass for development — remove before shipping */
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                staff ? doLogin("staff.mekong@ritual.app", "ritual2026") : doLogin("mila@ritual.app", "ritual2026")
+              }
+              data-testid={staff ? "temp-bypass-staff-login" : "temp-bypass-login"}
+              className="mt-5 w-full text-center text-xs text-[#8F8781] hover:text-white transition-colors disabled:opacity-50"
+            >
+              {staff ? "Skip login as staff (temporary)" : "Skip login (temporary)"}
+            </button>
           )}
         </div>
       </div>

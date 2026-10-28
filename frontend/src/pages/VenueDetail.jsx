@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Calendar, Clock, MapPin, MessageSquare, ChefHat, CalendarCheck, Users, Gift, Sparkles, Leaf, ChevronRight, ArrowRight } from "lucide-react";
+import { Calendar, Clock, MapPin, MessageSquare, ChefHat, CalendarCheck, Users, Gift, Sparkles, Leaf, ChevronRight, ArrowRight, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { api, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useFavorites } from "@/lib/favorites-context";
 import { queueLabel } from "@/components/StatusIndicator";
-import { fillingFastStatus } from "@/components/FillingFastCard";
+import { fillingFastStatus, isClosed, closedLabel } from "@/components/FillingFastCard";
 import { ConciergeModal } from "@/components/ConciergeModal";
 import { BookingModal } from "@/components/BookingModal";
 import { PhotoGallery } from "@/components/PhotoGallery";
@@ -20,6 +21,7 @@ const TIER_ORDER = ["Guest", "Regular", "Insider", "Inner Circle"];
 export default function VenueDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { has, toggle } = useFavorites();
   const navigate = useNavigate();
   const [venue, setVenue] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -110,12 +112,13 @@ export default function VenueDetail() {
 
   const userTierIdx = TIER_ORDER.indexOf(user?.tier || "Guest");
   const { dot: statusDot } = fillingFastStatus(venue);
-  const statusText =
-    venue.availability === "fully_booked"
+  const statusText = isClosed(venue)
+    ? venue.is_open === false
+      ? closedLabel(venue)
+      : "Closed for the night"
+    : venue.availability === "fully_booked"
       ? "Fully booked"
-      : venue.availability === "closed"
-        ? "Closed for the night"
-        : venue.status === "At Capacity"
+      : venue.status === "At Capacity"
           ? "At capacity"
           : venue.status === "Filling In"
             ? "Filling in"
@@ -161,6 +164,17 @@ export default function VenueDetail() {
           <span className={cn("h-1.5 w-1.5 rounded-full", statusDot)} />
           {statusText}
         </div>
+        <button
+          type="button"
+          onClick={() => toggle(venue.id)}
+          aria-pressed={has(venue.id)}
+          aria-label={has(venue.id) ? "Remove from saved restaurants" : "Save restaurant"}
+          data-testid="venue-save-button"
+          className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-black/80"
+        >
+          <Heart strokeWidth={1.8} className={cn("h-4 w-4", has(venue.id) && "fill-[#F07F5E] text-[#F07F5E]")} />
+          {has(venue.id) ? "Saved" : "Save"}
+        </button>
         <div className="absolute inset-x-6 bottom-6">
           <div className="text-[13px] font-semibold text-white/75">
             {venue.neighborhood} · {venue.cuisine}

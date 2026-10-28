@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { api, assetUrl, formatApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { HoursEditor } from "@/components/HoursEditor";
 import { BrandLockup } from "@/components/BrandLockup";
 import { StatusIndicator, queueLabel } from "@/components/StatusIndicator";
 import { QRDisplay } from "@/components/QRDisplay";
@@ -557,8 +558,8 @@ function VenueProfileForm({ venue, onSaved }) {
       });
       toast.success("Venue profile saved.");
       onSaved?.();
-    } catch {
-      toast.error("Could not save the profile.");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail) || "Could not save the profile.");
     } finally {
       setBusy(false);
     }
@@ -598,9 +599,9 @@ function VenueProfileForm({ venue, onSaved }) {
             <label className={label}>Neighborhood</label>
             {renderField({ icon: MapPin, name: "neighborhood", required: true, testId: "profile-neighborhood-input" })}
           </div>
-          <div>
-            <label className={label}>Hours</label>
-            {renderField({ icon: Clock, name: "hours", required: true, placeholder: "18:00 – 23:00", testId: "profile-hours-input" })}
+          <div className="lg:col-span-2">
+            <label className={label}>Opening hours</label>
+            <HoursEditor value={form.hours} onChange={(hours) => setForm((f) => ({ ...f, hours }))} />
           </div>
           <div>
             <label className={label}>Chef</label>
@@ -1647,6 +1648,7 @@ function RedemptionsTab({ venue, perkRedemptions, loyaltyRedemptions, onChanged,
 
 export default function StaffDashboard() {
   const [venues, setVenues] = useState([]);
+  const [venuesLoaded, setVenuesLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [redemptions, setRedemptions] = useState([]);
@@ -1688,10 +1690,14 @@ export default function StaffDashboard() {
   const setTab = (next) => navigate(next === "overview" ? "/staff" : `/staff/${next}`);
 
   const loadVenues = useCallback(async () => {
-    const { data } = await api.get("/staff/venues");
-    setVenues(data);
-    if (data.length > 0) {
-      setSelectedId((prev) => prev || data[0].id);
+    try {
+      const { data } = await api.get("/staff/venues");
+      setVenues(data);
+      if (data.length > 0) {
+        setSelectedId((prev) => prev || data[0].id);
+      }
+    } finally {
+      setVenuesLoaded(true);
     }
   }, []);
 
@@ -1770,6 +1776,28 @@ export default function StaffDashboard() {
       toast.error("Could not update availability.");
     }
   };
+
+  if (venuesLoaded && venues.length === 0) {
+    return (
+      <div className="mx-auto max-w-lg px-5 py-24 text-center" data-testid="staff-no-venue">
+        <h1 className="text-3xl font-extrabold tracking-tight">No restaurant linked</h1>
+        <p className="mt-3 text-[color:var(--st-muted)]">
+          This staff account isn&apos;t connected to a restaurant, so there&apos;s no dashboard to show. Sign in with
+          a restaurant&apos;s own login, or register a restaurant.
+        </p>
+        <button
+          onClick={async () => {
+            await logout();
+            navigate("/restaurant-login", { replace: true });
+          }}
+          data-testid="staff-no-venue-signout"
+          className="mt-8 rounded-full bg-[#F07F5E] px-7 py-3.5 text-[15px] font-semibold text-[#2A0F07] transition-colors hover:bg-[#F59273]"
+        >
+          Sign out
+        </button>
+      </div>
+    );
+  }
 
   if (!analytics || !selectedVenue) {
     return <div className="mx-auto max-w-4xl px-5 py-16 overline text-center">Loading dashboard…</div>;

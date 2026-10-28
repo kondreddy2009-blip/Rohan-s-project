@@ -1,9 +1,21 @@
-import { useState } from "react";
 import { assetUrl } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { Heart, Star } from "lucide-react";
+import { useFavorites } from "@/lib/favorites-context";
+
+// Closed = outside the opening hours the restaurant set (computed by the API), or switched off by staff.
+export function isClosed(venue) {
+  return venue.is_open === false || venue.availability === "closed";
+}
+
+export function closedLabel(venue) {
+  return venue.is_open === false && venue.opens_at ? `Closed · opens ${venue.opens_at}` : "Closed";
+}
 
 export function fillingFastStatus(venue) {
+  if (isClosed(venue)) {
+    return { label: closedLabel(venue), dot: "bg-[#6B6560]" };
+  }
   if (venue.availability === "fully_booked" || venue.status === "At Capacity") {
     return { label: "Full", dot: "bg-[#EE9B79]" };
   }
@@ -16,7 +28,8 @@ export function fillingFastStatus(venue) {
 export function FillingFastCard({ venue }) {
   const { label, dot } = fillingFastStatus(venue);
   const points = venue.loyalty_points_per_checkin;
-  const [liked, setLiked] = useState(false);
+  const { has, toggle } = useFavorites();
+  const liked = has(venue.id);
 
   return (
     <Link
@@ -37,11 +50,12 @@ export function FillingFastCard({ venue }) {
         </div>
         <button
           type="button"
-          aria-label={liked ? "Remove from favourites" : "Save to favourites"}
+          aria-label={liked ? "Remove from saved restaurants" : "Save restaurant"}
+          data-testid={`save-${venue.id}`}
           aria-pressed={liked}
           onClick={(e) => {
             e.preventDefault();
-            setLiked((v) => !v);
+            toggle(venue.id);
           }}
           className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-black/55 backdrop-blur-sm text-white hover:bg-black/75 transition-colors"
         >

@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import "@/App.css";
 
 import { AuthProvider } from "@/lib/auth-context";
+import { FavoritesProvider } from "@/lib/favorites-context";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "@/components/Layout";
 
@@ -149,7 +150,9 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <FavoritesProvider>
+            <AppRoutes />
+          </FavoritesProvider>
           <Toaster
             theme="dark"
             position="top-center"

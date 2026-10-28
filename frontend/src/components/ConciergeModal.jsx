@@ -4,16 +4,13 @@ import { X } from "lucide-react";
 import { api } from "@/lib/api";
 
 const TYPES = [
-  { code: "hold_table", label: "Hold a table" },
   { code: "preview_menu", label: "Preview the menu" },
   { code: "request", label: "A quiet request" },
 ];
 
 export function ConciergeModal({ venue, onClose, onSent }) {
-  const [type, setType] = useState("hold_table");
+  const [type, setType] = useState("preview_menu");
   const [message, setMessage] = useState("");
-  const [partySize, setPartySize] = useState("");
-  const [arrivalTime, setArrivalTime] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async (e) => {
@@ -23,8 +20,6 @@ export function ConciergeModal({ venue, onClose, onSent }) {
       await api.post(`/venues/${venue.id}/concierge`, {
         request_type: type,
         message: message.trim(),
-        party_size: type === "hold_table" && partySize ? parseInt(partySize, 10) : null,
-        arrival_time: type === "hold_table" && arrivalTime ? arrivalTime : null,
       });
       toast.success(`Your note has been sent to ${venue.name}.`);
       onSent?.();
@@ -60,13 +55,13 @@ export function ConciergeModal({ venue, onClose, onSent }) {
           Speak with {venue.name}.
         </h2>
         <p className="text-sm text-[#8F8781] font-light mt-2">
-          A quiet note ahead of your arrival — held for the room.
+          A question for the room. To hold a table, use Reserve a table.
         </p>
 
         <form onSubmit={submit} className="mt-8 space-y-5" data-testid="concierge-form">
           <div>
             <label className="overline block mb-3">What may we do</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {TYPES.map((t) => (
                 <button
                   key={t.code}
@@ -85,34 +80,6 @@ export function ConciergeModal({ venue, onClose, onSent }) {
             </div>
           </div>
 
-          {type === "hold_table" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="overline block mb-2">Party</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={partySize}
-                  onChange={(e) => setPartySize(e.target.value)}
-                  placeholder="2"
-                  data-testid="concierge-party-input"
-                  className="w-full bg-transparent border-b border-[#262321] py-2 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300"
-                />
-              </div>
-              <div>
-                <label className="overline block mb-2">Arrival</label>
-                <input
-                  type="time"
-                  value={arrivalTime}
-                  onChange={(e) => setArrivalTime(e.target.value)}
-                  data-testid="concierge-arrival-input"
-                  className="w-full bg-transparent border-b border-[#262321] py-2 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300"
-                />
-              </div>
-            </div>
-          )}
-
           <div>
             <label className="overline block mb-2">Your note</label>
             <textarea
@@ -121,11 +88,9 @@ export function ConciergeModal({ venue, onClose, onSent }) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={
-                type === "hold_table"
-                  ? "A quiet corner if possible. Celebrating an anniversary."
-                  : type === "preview_menu"
-                    ? "Would you send tonight's tasting menu ahead?"
-                    : "Anything the room should know."
+                type === "preview_menu"
+                  ? "Would you send tonight's tasting menu ahead?"
+                  : "Anything the room should know."
               }
               data-testid="concierge-message-input"
               className="w-full bg-transparent border border-[#262321] p-3 text-[#F2EDE7] font-light focus:border-[#CE6A4A] outline-none transition-colors duration-300 resize-none placeholder:text-[#6B6560]"

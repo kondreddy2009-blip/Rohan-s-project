@@ -345,7 +345,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
                                 type="button"
                                 disabled={disabled}
                                 onClick={() => setSelectedTime(s.time)}
-                                title={disabled ? "Fully booked" : undefined}
+                                title={s.passed ? "This time has passed" : disabled ? "Fully booked" : undefined}
                                 data-testid={`booking-slot-${s.time}`}
                                 className={cn(
                                   "rounded-xl border px-2 py-2.5 text-center tabular-nums transition-all duration-200",
@@ -363,7 +363,7 @@ export function BookingModal({ venue, onClose, onBooked }) {
                                     active ? "text-[#2A0F07]/70" : disabled ? "text-[#6B6560]" : few ? "text-[#E8A33D]" : "text-[#7DBE8A]",
                                   )}
                                 >
-                                  {disabled ? "Booked" : few ? `${s.remaining} left` : "Open"}
+                                  {s.passed ? "Passed" : disabled ? "Booked" : few ? `${s.remaining} left` : "Open"}
                                 </span>
                               </button>
                             );

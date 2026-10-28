@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { api, formatApiError, assetUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useFavorites } from "@/lib/favorites-context";
+import { FillingFastCard } from "@/components/FillingFastCard";
 import { User, Crown, CalendarDays, BarChart3, Star, Compass, ArrowRight, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -229,6 +231,8 @@ export default function Profile() {
   const [correspondence, setCorrespondence] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [coverImage, setCoverImage] = useState(null);
+  const [allVenues, setAllVenues] = useState([]);
+  const { ids: savedIds } = useFavorites();
 
   useEffect(() => {
     async function load() {
@@ -244,7 +248,10 @@ export default function Profile() {
       setBookings(b.data);
     }
     load().catch(() => {}); // 401s are handled globally (redirect to login)
-    api.get("/venues").then(({ data }) => setCoverImage(data?.[0]?.image_url || null)).catch(() => {});
+    api.get("/venues").then(({ data }) => {
+      setAllVenues(data || []);
+      setCoverImage(data?.[0]?.image_url || null);
+    }).catch(() => {});
   }, []);
 
   const saveName = async (name) => {
@@ -261,8 +268,11 @@ export default function Profile() {
 
   const cancelBooking = async (id) => {
     try {
-      await api.post(`/bookings/${id}/cancel`);
-      toast.success("Reservation cancelled.");
+      const { data: res } = await api.post(`/bookings/${id}/cancel`);
+      if (res.refund === "refunded") toast.success("Reservation cancelled. Your deposit is being refunded.");
+      else if (res.refund === "not_eligible") toast("Cancelled. This was less than 24 hours before, so the deposit isn't refunded.");
+      else if (res.refund === "refund_failed") toast.error("Cancelled, but the refund failed. Please contact us.");
+      else toast.success("Reservation cancelled.");
       const { data } = await api.get("/members/me/bookings");
       setBookings(data);
     } catch (e) {
@@ -389,6 +399,23 @@ export default function Profile() {
           </Link>
         </section>
       </div>
+
+      <section className={card} data-testid="saved-restaurants">
+        <h2 className={sectionTitle}>Saved restaurants</h2>
+        <p className={sub}>Places you want to come back to.</p>
+        {allVenues.filter((v) => savedIds.includes(v.id)).length === 0 ? (
+          <p className="mt-4 text-sm text-[#8E8982]">
+            Tap the heart on any restaurant to save it here.{" "}
+            <Link to="/discover" className="font-bold text-[#F0D3AE] hover:text-[#E8C9A0]">Find a restaurant →</Link>
+          </p>
+        ) : (
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {allVenues.filter((v) => savedIds.includes(v.id)).map((v) => (
+              <FillingFastCard key={v.id} venue={v} />
+            ))}
+          </div>
+        )}
+      </section>
 
       {(user.role === "staff" || user.role === "admin") && (
         <section className={card}>

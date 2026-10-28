@@ -63,6 +63,12 @@ function BookingCard({ b, image, onCancel }) {
             <div className="mt-2 text-xs text-[#8F8781]">₹{b.deposit_amount} deposit paid · adjusted against your bill</div>
           )}
           {b.payment_status === "refunded" && <div className="mt-2 text-xs text-[#7DBE8A]">₹{b.deposit_amount} deposit refunded</div>}
+          {b.payment_status === "refund_failed" && (
+            <div className="mt-2 text-xs text-[#E8A33D]">We couldn&apos;t refund your ₹{b.deposit_amount} deposit automatically. Contact us with code {b.code}.</div>
+          )}
+          {upcoming && b.payment_status === "paid" && (
+            <div className="mt-2 text-xs text-[#8E8982]">Cancel at least 24 hours before to get your deposit back.</div>
+          )}
           {b.note && <p className="mt-3 text-sm italic text-[#B8B2AA]">&ldquo;{b.note}&rdquo;</p>}
           {b.staff_reply && (
             <div className="mt-3 border-t border-white/[0.08] pt-3">
@@ -176,8 +182,11 @@ export default function Bookings() {
 
   const cancel = async (id) => {
     try {
-      await api.post(`/bookings/${id}/cancel`);
-      toast.success("Reservation cancelled.");
+      const { data } = await api.post(`/bookings/${id}/cancel`);
+      if (data.refund === "refunded") toast.success("Reservation cancelled. Your deposit is being refunded (5 to 7 business days).");
+      else if (data.refund === "refund_failed") toast.error("Cancelled, but we couldn't refund your deposit automatically. Please contact us with your booking code.");
+      else if (data.refund === "not_eligible") toast("Cancelled. This was less than 24 hours before, so the deposit isn't refunded.");
+      else toast.success("Reservation cancelled.");
       load();
     } catch (e) {
       toast.error(formatApiError(e.response?.data?.detail) || "Could not cancel just now.");

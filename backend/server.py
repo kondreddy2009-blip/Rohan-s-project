@@ -14,6 +14,12 @@ import logging
 import bcrypt
 import jwt
 import requests
+import asyncio
+import json
+import smtplib
+import ssl
+from email.message import EmailMessage
+from zoneinfo import ZoneInfo
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 
@@ -44,6 +50,19 @@ ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_API_BASE = "https://api.razorpay.com/v1"
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+
+# Booking emails — off until SMTP_HOST is set (then every send is logged and skipped).
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587") or 587)
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+SMTP_STARTTLS = os.environ.get("SMTP_STARTTLS", "true").lower() != "false"
+EMAIL_FROM = os.environ.get("EMAIL_FROM", "") or SMTP_USER
+
+HOURS_RANGE_RE = re.compile(r"(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})")
+BOOKING_TZ = ZoneInfo("Asia/Kolkata")  # restaurants are in India; slot times are local
+REFUND_WINDOW_HOURS = 24  # a member who cancels at least this long before the slot gets the deposit back
 
 # Sensitive payout fields (PAN, bank account number) are encrypted at rest.
 # Set PAYOUT_ENCRYPTION_KEY (a Fernet key) in production; falling back to a key
@@ -124,15 +143,159 @@ def verify_razorpay_signature(order_id: str, payment_id: str, signature: str) ->
     return hmac.compare_digest(expected, signature)
 
 
-def refund_razorpay_payment(payment_id: str) -> None:
-    resp = requests.post(
-        f"{RAZORPAY_API_BASE}/payments/{payment_id}/refund",
-        auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
-        json={},
-        timeout=10,
-    )
+def refund_razorpay_payment(payment_id: str) -> bool:
+    """Ask Razorpay for a full refund. True only if Razorpay accepted it."""
+    try:
+        resp = requests.post(
+            f"{RAZORPAY_API_BASE}/payments/{payment_id}/refund",
+            auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+            json={},
+            timeout=10,
+        )
+    except requests.RequestException as e:
+        logger.error("Razorpay refund request failed for %s: %s", payment_id, e)
+        return False
     if resp.status_code >= 300:
         logger.error("Razorpay refund failed for %s: %s", payment_id, resp.text)
+        return False
+    return True
+
+
+def _booking_start(b: dict) -> datetime:
+    """When the slot begins. 00:00-05:59 slots belong to the previous evening's service."""
+    h, m = (int(x) for x in b["time"].split(":"))
+    d = datetime.fromisoformat(b["date"]).date()
+    if h < 6:
+        d += timedelta(days=1)
+    return datetime(d.year, d.month, d.day, h, m, tzinfo=BOOKING_TZ)
+
+
+def parse_hours(hours: str) -> list:
+    """'12:00 – 15:00, 19:00 – 01:00' -> [(720, 900), (1140, 1500)] in minutes; a range that crosses
+    midnight ends past 1440."""
+    out = []
+    for sh, sm, eh, em in HOURS_RANGE_RE.findall(hours or ""):
+        start, end = int(sh) * 60 + int(sm), int(eh) * 60 + int(em)
+        if end <= start:
+            end += 1440
+        out.append((start, end))
+    return out
+
+
+def _fmt_minutes(m: int) -> str:
+    m %= 1440
+    return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def open_state(hours: str, now: Optional[datetime] = None) -> dict:
+    """Is the restaurant inside its opening hours right now (local time)? Also when it closes / next opens."""
+    ranges = parse_hours(hours)
+    if not ranges:
+        return {"is_open": True, "closes_at": None, "opens_at": None}  # nothing to judge by: don't hide it
+    now = (now or datetime.now(timezone.utc)).astimezone(BOOKING_TZ)
+    t = now.hour * 60 + now.minute
+    for start, end in ranges:
+        for shift in (0, 1440):  # the second pass catches yesterday's service that ran past midnight
+            if start <= t + shift < end:
+                return {"is_open": True, "closes_at": _fmt_minutes(end), "opens_at": None}
+    upcoming = sorted(start for start, _ in ranges if start > t)
+    nxt = upcoming[0] if upcoming else min(start for start, _ in ranges)
+    return {"is_open": False, "closes_at": None, "opens_at": _fmt_minutes(nxt)}
+
+
+def with_open_state(venue: dict) -> dict:
+    return {**venue, **open_state(venue.get("hours", ""))}
+
+
+async def _refund_booking(b: dict) -> str:
+    """Refund a paid booking's deposit and record what really happened."""
+    ok = await run_in_threadpool(refund_razorpay_payment, b["razorpay_payment_id"])
+    outcome = "refunded" if ok else "refund_failed"
+    await db.bookings.update_one({"id": b["id"]}, {"$set": {"payment_status": outcome}})
+    return outcome
+
+
+def verify_webhook_signature(body: bytes, signature: str) -> bool:
+    if not RAZORPAY_WEBHOOK_SECRET or not signature:
+        return False
+    expected = hmac.new(RAZORPAY_WEBHOOK_SECRET.encode("utf-8"), body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
+# ---------------------------------------------------------------------------
+# Booking emails
+# ---------------------------------------------------------------------------
+def _send_email_sync(to: str, subject: str, text: str, html: str) -> None:
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = EMAIL_FROM
+    msg["To"] = to
+    msg.set_content(text)
+    msg.add_alternative(html, subtype="html")
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as smtp:
+        if SMTP_STARTTLS:
+            smtp.starttls(context=ssl.create_default_context())
+        if SMTP_USER:
+            smtp.login(SMTP_USER, SMTP_PASSWORD)
+        smtp.send_message(msg)
+
+
+BOOKING_EMAIL_COPY = {
+    "received": ("Your table request at {venue}", "We've received your request. The restaurant will confirm it shortly."),
+    "confirmed": ("Confirmed: your table at {venue}", "Good news: {venue} has confirmed your table."),
+    "declined": ("Your table at {venue} couldn't be confirmed", "Sorry, {venue} couldn't host you at that time."),
+    "cancelled": ("Your reservation at {venue} is cancelled", "Your reservation has been cancelled."),
+}
+
+
+def _deposit_line(b: dict) -> str:
+    amt = b.get("deposit_amount") or 0
+    status = b.get("payment_status")
+    if not amt:
+        return ""
+    if status == "paid":
+        return f"Your ₹{amt} deposit is paid and will be adjusted against your bill."
+    if status == "refunded":
+        return f"Your ₹{amt} deposit has been refunded to your original payment method. It can take 5 to 7 business days to appear."
+    if status == "refund_failed":
+        return f"We couldn't refund your ₹{amt} deposit automatically. Please contact us with code {b['code']}."
+    if status == "paid_kept":
+        return f"Because this was cancelled less than {REFUND_WINDOW_HOURS} hours before, your ₹{amt} deposit is not refunded."
+    return ""
+
+
+async def send_booking_email(b: dict, kind: str) -> None:
+    """Best-effort: never raises, so an email problem can't break a booking."""
+    try:
+        if not SMTP_HOST or not EMAIL_FROM:
+            logger.info("Email skipped (SMTP not configured): %s for booking %s", kind, b.get("code"))
+            return
+        member = await db.users.find_one({"id": b["member_id"]}, {"_id": 0, "email": 1, "name": 1})
+        if not member or not member.get("email"):
+            return
+        subject_t, lead_t = BOOKING_EMAIL_COPY[kind]
+        venue = b["venue_name"]
+        when = datetime.fromisoformat(b["date"]).strftime("%a %d %b")
+        details = f"{when} at {b['time']}, party of {b['party_size']}"
+        extra = _deposit_line(b)
+        first = (member.get("name") or "there").split(" ")[0]
+        text = "\n".join(
+            x for x in [f"Hi {first},", "", lead_t.format(venue=venue), "", f"{venue}: {details}", f"Reservation code: {b['code']}", extra, "", "Table"] if x is not None
+        )
+        html = (
+            '<div style="background:#110C09;padding:32px;font-family:Helvetica,Arial,sans-serif;color:#F4F1EC">'
+            '<div style="max-width:480px;margin:auto;background:#17110C;border:1px solid #2a2118;border-radius:16px;padding:28px">'
+            '<div style="letter-spacing:.3em;font-size:12px;color:#E8C9A0">TABLE</div>'
+            f'<h2 style="font-family:Georgia,serif;font-weight:600;margin:12px 0">{lead_t.format(venue=venue)}</h2>'
+            f'<p style="color:#B8AA98;margin:0 0 16px">Hi {first},</p>'
+            f'<p style="margin:0 0 6px"><b>{venue}</b></p><p style="margin:0 0 16px;color:#B8AA98">{details}</p>'
+            f'<div style="border:1px solid #E8C9A0;border-radius:12px;padding:14px;text-align:center;letter-spacing:.3em;color:#E8C9A0;font-size:20px">{b["code"]}</div>'
+            + (f'<p style="color:#B8AA98;margin:16px 0 0">{extra}</p>' if extra else "")
+            + "</div></div>"
+        )
+        await run_in_threadpool(_send_email_sync, member["email"], subject_t.format(venue=venue), text, html)
+    except Exception as e:  # noqa: BLE001
+        logger.error("Could not send %s email for booking %s: %s", kind, b.get("code"), e)
 
 
 # ---------------------------------------------------------------------------
@@ -271,13 +434,27 @@ class VenueProfileIn(BaseModel):
     cuisine: Optional[str] = Field(default=None, max_length=60)
     price_level: int = Field(ge=1, le=4)
     neighborhood: str = Field(min_length=1, max_length=60)
-    hours: str = Field(min_length=1, max_length=60)
+    hours: str = Field(min_length=1, max_length=120)
     tagline: str = Field(min_length=1, max_length=140)
     description: str = Field(min_length=1, max_length=1000)
     image_url: str = Field(min_length=1)
     chef: Optional[str] = Field(default=None, max_length=80)
     vibes: List[str] = Field(default_factory=list)
     regulars_order: List[str] = Field(default_factory=list)
+
+
+    @field_validator("hours")
+    @classmethod
+    def _valid_hours(cls, v):
+        found = HOURS_RANGE_RE.findall(v)
+        if not found:
+            raise ValueError("Enter opening hours like 12:00 – 15:00, 19:00 – 23:00")
+        for sh, sm, eh, em in found:
+            if int(sh) > 23 or int(eh) > 23 or int(sm) > 59 or int(em) > 59:
+                raise ValueError("Opening hours must be real times between 00:00 and 23:59")
+            if (int(sh), int(sm)) == (int(eh), int(em)):
+                raise ValueError("A service can't open and close at the same time")
+        return v
 
 
 class PublishIn(BaseModel):
@@ -647,7 +824,7 @@ async def list_venues(daypart: Optional[str] = None):
     venues = await db.venues.find(query, {"_id": 0, "seed_offerings": 0}).to_list(200)
     # Custom sort: featured first, then name
     venues.sort(key=lambda v: (not v.get("featured", False), v["name"]))
-    return venues
+    return [with_open_state(v) for v in venues]
 
 
 @api.get("/events")
@@ -723,7 +900,7 @@ async def get_venue(venue_id: str):
     events = await db.events.find({"venue_id": venue["id"]}, {"_id": 0}).to_list(50)
     events.sort(key=lambda e: (e["date"], e["time"]))
     venue["events"] = events
-    return venue
+    return with_open_state(venue)
 
 
 @api.post("/venues/{venue_id}/checkin")
@@ -955,6 +1132,30 @@ async def my_redemptions(user: dict = Depends(get_current_user)):
 # ---------------------------------------------------------------------------
 # Member profile
 # ---------------------------------------------------------------------------
+@api.get("/members/me/favorites")
+async def my_favorites(user: dict = Depends(get_current_user)):
+    docs = await db.favorites.find({"member_id": user["id"]}, {"_id": 0, "venue_id": 1}).to_list(500)
+    return [d["venue_id"] for d in docs]
+
+
+@api.put("/venues/{venue_id}/favorite")
+async def add_favorite(venue_id: str, user: dict = Depends(get_current_user)):
+    if not await db.venues.find_one({"id": venue_id}, {"_id": 1}):
+        raise HTTPException(status_code=404, detail="Venue not found")
+    await db.favorites.update_one(
+        {"member_id": user["id"], "venue_id": venue_id},
+        {"$setOnInsert": {"created_at": _now_iso()}},
+        upsert=True,
+    )
+    return {"ok": True, "saved": True}
+
+
+@api.delete("/venues/{venue_id}/favorite")
+async def remove_favorite(venue_id: str, user: dict = Depends(get_current_user)):
+    await db.favorites.delete_one({"member_id": user["id"], "venue_id": venue_id})
+    return {"ok": True, "saved": False}
+
+
 @api.patch("/members/me")
 async def update_my_profile(payload: ProfileUpdateIn, user: dict = Depends(get_current_user)):
     name = " ".join(payload.name.split())
@@ -993,7 +1194,7 @@ async def staff_venues(user: dict = Depends(require_staff_or_admin)):
     else:
         vid = user.get("staff_venue_id")
         venues = await db.venues.find({"id": vid}, {"_id": 0, "seed_offerings": 0}).to_list(10)
-    return venues
+    return [with_open_state(v) for v in venues]
 
 
 @api.post("/admin/venues", status_code=201)
@@ -1574,9 +1775,6 @@ async def update_concierge_message(
 SLOT_CAPACITY_PER_TIME = 6  # seats-worth of parties per 30-min slot
 
 
-HOURS_RANGE_RE = re.compile(r"(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})")
-
-
 def _generate_slots(hours: str) -> list:
     """Parse '18:00 – 23:00', '18:00 – 01:00' or split service like
     '12:00 – 15:00 buffet, 19:00 – 23:00 à la carte' into 30-min slots.
@@ -1638,10 +1836,12 @@ async def venue_availability(venue_id: str, date: str, user: dict = Depends(get_
     result = []
     for s in slots:
         count = booked_times.count(s)
+        passed = _booking_start({"date": date, "time": s}) <= datetime.now(timezone.utc)
         result.append({
             "time": s,
-            "remaining": max(0, SLOT_CAPACITY_PER_TIME - count),
-            "available": count < SLOT_CAPACITY_PER_TIME,
+            "remaining": 0 if passed else max(0, SLOT_CAPACITY_PER_TIME - count),
+            "available": count < SLOT_CAPACITY_PER_TIME and not passed,
+            "passed": passed,
         })
     return {"date": date, "venue_id": venue_id, "hours": venue.get("hours"), "slots": result}
 
@@ -1656,6 +1856,8 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
     slots = _generate_slots(venue.get("hours", ""))
     if slots and payload.time not in slots:
         raise HTTPException(status_code=400, detail="That time isn't offered by this room")
+    if _booking_start({"date": payload.date, "time": payload.time}) <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="That time has already passed — pick a later slot.")
     taken = await db.bookings.count_documents(_slot_taken_filter(payload.venue_id, payload.date, payload.time))
     if taken >= SLOT_CAPACITY_PER_TIME:
         raise HTTPException(status_code=409, detail="That time is full — try another slot.")
@@ -1702,7 +1904,52 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
 
     await db.bookings.insert_one(booking)
     booking.pop("_id", None)
+    if not requires_payment:
+        asyncio.create_task(send_booking_email(dict(booking), "received"))
     return {"booking": booking, "requires_payment": requires_payment, "razorpay": razorpay_info}
+
+
+async def _settle_payment(order_id: str, payment_id: str):
+    """Mark a booking paid exactly once. Used by both the browser callback and the webhook, so
+    whichever arrives second is a no-op. A payment that lands on an already-released booking is refunded."""
+    b = await db.bookings.find_one({"razorpay_order_id": order_id}, {"_id": 0})
+    if not b:
+        return None, False
+    if b.get("payment_status") != "created":
+        return b, False
+    cancelled = b["status"] == "cancelled"
+    updates = {"payment_status": "paid", "razorpay_payment_id": payment_id}
+    if not cancelled:
+        updates["status"] = "pending"
+    res = await db.bookings.update_one({"id": b["id"], "payment_status": "created"}, {"$set": updates})
+    if res.modified_count == 0:
+        return await db.bookings.find_one({"id": b["id"]}, {"_id": 0}), False
+    b.update(updates)
+    if cancelled:
+        await _refund_booking(b)
+        b = await db.bookings.find_one({"id": b["id"]}, {"_id": 0})
+    return b, True
+
+
+@api.post("/razorpay/webhook")
+async def razorpay_webhook(request: Request):
+    """Razorpay calls this when a payment succeeds, even if the member closed the tab first."""
+    if not RAZORPAY_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook not configured")
+    body = await request.body()
+    if not verify_webhook_signature(body, request.headers.get("x-razorpay-signature", "")):
+        raise HTTPException(status_code=400, detail="Bad signature")
+    try:
+        event = json.loads(body)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Bad payload")
+    if event.get("event") in ("payment.captured", "order.paid"):
+        pay = (event.get("payload", {}).get("payment", {}) or {}).get("entity", {}) or {}
+        if pay.get("order_id") and pay.get("id"):
+            settled, changed = await _settle_payment(pay["order_id"], pay["id"])
+            if changed and settled and settled["status"] == "pending":
+                asyncio.create_task(send_booking_email(dict(settled), "received"))
+    return {"ok": True}
 
 
 @api.post("/bookings/{booking_id}/verify-payment")
@@ -1714,7 +1961,7 @@ async def verify_booking_payment(
         raise HTTPException(status_code=404, detail="Booking not found")
     if b["member_id"] != user["id"]:
         raise HTTPException(status_code=403, detail="Not your booking")
-    if b["payment_status"] != "created" or b["razorpay_order_id"] != payload.razorpay_order_id:
+    if b.get("razorpay_order_id") != payload.razorpay_order_id:
         raise HTTPException(status_code=400, detail="This booking isn't awaiting payment")
 
     if not verify_razorpay_signature(
@@ -1722,14 +1969,15 @@ async def verify_booking_payment(
     ):
         raise HTTPException(status_code=400, detail="Payment could not be verified")
 
-    updates = {
-        "status": "pending",
-        "payment_status": "paid",
-        "razorpay_payment_id": payload.razorpay_payment_id,
-    }
-    await db.bookings.update_one({"id": booking_id}, {"$set": updates})
-    b.update(updates)
-    return b
+    settled, changed = await _settle_payment(payload.razorpay_order_id, payload.razorpay_payment_id)
+    if settled["status"] == "cancelled":
+        raise HTTPException(
+            status_code=409,
+            detail="Your hold on this table had already been released, so the payment is being refunded. Please book again.",
+        )
+    if changed:
+        asyncio.create_task(send_booking_email(dict(settled), "received"))
+    return settled
 
 
 @api.get("/members/me/bookings")
@@ -1753,7 +2001,20 @@ async def cancel_booking(booking_id: str, user: dict = Depends(get_current_user)
         {"id": booking_id},
         {"$set": {"status": "cancelled", "responded_at": _now_iso()}},
     )
-    return {"ok": True, "status": "cancelled"}
+    # A paid deposit comes back if the member cancels early enough; otherwise the restaurant keeps it.
+    refund = None
+    shown = {**b, "status": "cancelled"}
+    if b.get("payment_status") == "paid" and b.get("razorpay_payment_id"):
+        hours_left = (_booking_start(b) - datetime.now(timezone.utc)).total_seconds() / 3600
+        if hours_left >= REFUND_WINDOW_HOURS:
+            refund = await _refund_booking(b)
+            shown["payment_status"] = refund
+        else:
+            refund = "not_eligible"
+            shown["payment_status"] = "paid_kept"
+    if b["status"] != "awaiting_payment":
+        asyncio.create_task(send_booking_email(shown, "cancelled"))
+    return {"ok": True, "status": "cancelled", "refund": refund}
 
 
 @api.get("/staff/venues/{venue_id}/bookings")
@@ -1792,9 +2053,10 @@ async def update_booking(
             )
 
     if payload.status == "declined" and b.get("payment_status") == "paid" and b.get("razorpay_payment_id"):
-        refund_razorpay_payment(b["razorpay_payment_id"])
-        updates["payment_status"] = "refunded"
-        await db.bookings.update_one({"id": booking_id}, {"$set": {"payment_status": "refunded"}})
+        updates["payment_status"] = await _refund_booking(b)
+
+    if payload.status in ("confirmed", "declined") and b["status"] != payload.status:
+        asyncio.create_task(send_booking_email({**b, **updates}, payload.status))
 
     return {"ok": True, **updates}
 
@@ -2494,6 +2756,7 @@ async def seed_database():
 
     # Indexes
     await db.users.create_index("email", unique=True)
+    await db.favorites.create_index([("member_id", 1), ("venue_id", 1)], unique=True)
     await db.venues.create_index("id", unique=True)
     await db.venue_payouts.create_index("venue_id", unique=True)
     await db.reviews.create_index([("venue_id", 1), ("member_id", 1)], unique=True)
